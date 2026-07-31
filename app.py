@@ -7,7 +7,7 @@ import calendar
 import streamlit.components.v1 as components
 
 # ==========================================
-# 1. 頁面設定 (強制限制為手機直式寬度)
+# 1. 頁面設定 (使用 centered 約束最大寬度)
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 莫蘭迪奶茶背景
+# 2. 最高權限 CSS 覆寫 (壓制 Streamlit 手機原生折行)
 # ==========================================
 st.markdown("""
 <style>
@@ -37,110 +37,114 @@ st.markdown("""
         background-attachment: fixed !important;
     }
     
-    /* 隱藏頂端預設白框與按鈕 */
+    /* 隱藏頂端預設白框與頁首頁尾 */
     [data-testid="stAppViewContainer"] { background: transparent !important; }
     header[data-testid="stHeader"], footer { display: none !important; }
 
-    /* 📱 限制最大寬度，呈現手機 App 視覺 */
+    /* 📱 限制最大寬度為手機尺寸 */
     .block-container {
         max-width: 480px !important;
         margin: 0 auto !important;
         padding: 1rem 0.5rem 3rem 0.5rem !important;
     }
 
-    /* 🛑 彈出視窗(Popover)內部的表單恢復正常上下排列 */
+    /* ========================================================
+       🚀 核彈級高特異性選擇器：擊敗 Streamlit 原生手機折行規則
+       ======================================================== */
+    @media screen and (max-width: 1024px) {
+        html body .stApp div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important; /* 絕對不准拆行 */
+            align-items: center !important;
+            width: 100% !important;
+            gap: 4px !important;
+        }
+        
+        html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"],
+        html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+            width: 0 !important; /* 蓋掉 width: 100% */
+            min-width: 0 !important;
+            flex: 1 1 0% !important; /* 由 flex 重新配比 */
+            padding: 0 1px !important;
+        }
+    }
+
+    /* 🛑 彈出選單內部 Form 保持正常單欄上下排列 */
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] {
         flex-wrap: wrap !important;
         flex-direction: column !important;
-        align-items: stretch !important;
     }
+    div[data-testid="stPopoverBody"] div[data-testid="stColumn"],
     div[data-testid="stPopoverBody"] div[data-testid="column"] {
         width: 100% !important;
         flex: none !important;
     }
 
-    /* ========================================================
-       🚀 終極核彈防跑版：利用 JS 注入的專屬 Class 強制並排
-       ======================================================== */
-       
-    /* --- 1. 日曆區塊 (置頂與 7 等分) --- */
-    .mobile-cal-grid {
-        position: -webkit-sticky !important; position: sticky !important;
-        top: 0px !important; z-index: 9999 !important;
-        background: rgba(253, 249, 245, 0.98) !important; backdrop-filter: blur(12px) !important;
-        border-radius: 0 0 20px 20px !important; border-bottom: 2px solid #E2D5C5 !important;
-        margin: -1rem -0.5rem 12px -0.5rem !important; padding: 10px 10px 14px 10px !important;
-        box-shadow: 0 4px 16px rgba(160, 120, 85, 0.1) !important;
+    /* 📌 容器卡片統一樣式 */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #FDF9F5 !important;
+        border-radius: 12px !important;
+        padding: 8px 10px !important;
+        margin-bottom: 8px !important;
+        border: 1px solid #EAE0D5 !important;
+        box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important;
     }
-    .mobile-cal-block div[data-testid="stHorizontalBlock"] {
-        display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; width: 100% !important;
-    }
-    /* 第一列：年月 */
-    .mobile-cal-block div[data-testid="stHorizontalBlock"]:nth-of-type(1) div[data-testid="column"]:nth-child(1) { width: 60% !important; flex: 6 !important; min-width:0 !important; }
-    .mobile-cal-block div[data-testid="stHorizontalBlock"]:nth-of-type(1) div[data-testid="column"]:nth-child(2) { width: 40% !important; flex: 4 !important; min-width:0 !important; }
-    /* 日曆網格 */
-    .mobile-cal-block div[data-testid="stHorizontalBlock"]:not(:nth-of-type(1)) div[data-testid="column"] {
-        width: 14.28% !important; flex: 1 1 0px !important; min-width: 0 !important; padding: 0 1px !important;
-    }
-    .mobile-cal-block .stButton > button {
-        border-radius: 50% !important; background-color: transparent !important; color: #3D322C !important;
-        border: none !important; font-size: 15px !important; font-weight: 700 !important;
-        height: 38px !important; padding: 0 !important; box-shadow: none !important;
-    }
-    .mobile-cal-block .stButton > button[kind="primary"] { background-color: #A07855 !important; color: white !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"] p { margin-bottom: 0 !important; }
 
-    /* --- 2. 三大按鈕 (3 等分) --- */
-    .mobile-action-grid div[data-testid="stHorizontalBlock"] {
-        display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; gap: 6px !important;
-    }
-    .mobile-action-grid div[data-testid="column"] { width: 33.33% !important; flex: 1 1 0px !important; min-width: 0 !important; }
-    .mobile-action-grid div[data-testid="stPopover"] > button {
-        width: 100% !important; background-color: #EEDFD2 !important; color: #5C4A3E !important;
-        border: 1.5px solid #D4C3B3 !important; border-radius: 12px !important; padding: 8px 0px !important;
-        font-weight: 800 !important; font-size: 14px !important; box-shadow: 0 2px 6px rgba(160, 120, 85, 0.08) !important;
+    /* 📌 日曆永遠置頂 (第一個 Container) */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 0px !important;
+        z-index: 9999 !important;
+        backdrop-filter: blur(12px) !important;
+        background: rgba(253, 249, 245, 0.96) !important;
+        margin-top: -10px !important;
     }
 
-    /* --- 3. 通用列卡片 (明細、備忘、購物、設定) --- */
-    .mobile-tx-grid, .mobile-memo-grid, .mobile-setting-grid {
-        background-color: #FDF9F5 !important; border-radius: 12px !important; padding: 8px 10px !important;
-        margin-bottom: 8px !important; border: 1px solid #EAE0D5 !important; box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important;
+    /* 🔘 按鈕視覺優化 */
+    .stButton > button, div[data-testid="stPopover"] > button {
+        background-color: #FFFFFF !important;
+        color: #3D322C !important;
+        border: 1px solid #E2D5C5 !important;
+        border-radius: 10px !important;
+        font-weight: 800 !important;
+        font-size: 14px !important;
+        padding: 0 !important;
+        width: 100% !important;
+        min-height: 34px !important;
+        box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important;
+        display: inline-flex !important;
+        justify-content: center !important;
+        align-items: center !important;
     }
-    .mobile-tx-grid div[data-testid="stHorizontalBlock"], .mobile-memo-grid div[data-testid="stHorizontalBlock"], .mobile-setting-grid div[data-testid="stHorizontalBlock"] {
-        display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; gap: 4px !important;
+    .stButton > button:hover, div[data-testid="stPopover"] > button:hover {
+        background-color: #FAF5F0 !important;
     }
-    /* 小按鈕樣式 */
-    .mobile-tx-grid .stButton>button, .mobile-tx-grid div[data-testid="stPopover"]>button,
-    .mobile-memo-grid .stButton>button, .mobile-memo-grid div[data-testid="stPopover"]>button,
-    .mobile-setting-grid .stButton>button, .mobile-setting-grid div[data-testid="stPopover"]>button {
-        border-radius: 8px !important; background-color: #FFFFFF !important; border: 1px solid #E2D5C5 !important;
-        font-size: 14px !important; padding: 0 !important; height: 32px !important; width: 34px !important;
-        display: inline-flex !important; justify-content: center !important; align-items: center !important; color: #3D322C !important;
+    
+    /* 日曆選中天數 & 查詢主按鈕 */
+    .stButton > button[kind="primary"] {
+        background-color: #A07855 !important;
+        color: #FFFFFF !important;
+        border: 1px solid #A07855 !important;
     }
 
-    /* 流水帳比例 4:3:1.5:1.5 */
-    .mobile-tx-grid div[data-testid="column"]:nth-child(1) { width: 40% !important; flex: 4 !important; min-width: 0 !important; }
-    .mobile-tx-grid div[data-testid="column"]:nth-child(2) { width: 30% !important; flex: 3 !important; min-width: 0 !important; }
-    .mobile-tx-grid div[data-testid="column"]:nth-child(3) { width: 15% !important; flex: 1.5 !important; min-width: 0 !important; }
-    .mobile-tx-grid div[data-testid="column"]:nth-child(4) { width: 15% !important; flex: 1.5 !important; min-width: 0 !important; }
-
-    /* 備忘購物比例 1:5:1.2:1.2 */
-    .mobile-memo-grid div[data-testid="column"]:nth-child(1) { width: 10% !important; flex: 1 !important; min-width: 0 !important; }
-    .mobile-memo-grid div[data-testid="column"]:nth-child(2) { width: 60% !important; flex: 6 !important; min-width: 0 !important; }
-    .mobile-memo-grid div[data-testid="column"]:nth-child(3) { width: 15% !important; flex: 1.5 !important; min-width: 0 !important; }
-    .mobile-memo-grid div[data-testid="column"]:nth-child(4) { width: 15% !important; flex: 1.5 !important; min-width: 0 !important; }
-
-    /* 設定比例 5:1.2:1.2 */
-    .mobile-setting-grid div[data-testid="column"]:nth-child(1) { width: 70% !important; flex: 5 !important; min-width: 0 !important; }
-    .mobile-setting-grid div[data-testid="column"]:nth-child(2) { width: 15% !important; flex: 1.5 !important; min-width: 0 !important; }
-    .mobile-setting-grid div[data-testid="column"]:nth-child(3) { width: 15% !important; flex: 1.5 !important; min-width: 0 !important; }
-
-    /* --- 4. 底部區間查詢框 --- */
-    .bottom-query-box {
-        background: rgba(255, 255, 255, 0.92) !important; border: 1.5px solid #E2D5C5 !important; border-radius: 18px !important;
-        padding: 18px !important; margin-top: 30px !important; margin-bottom: 30px !important; box-shadow: 0 4px 14px rgba(160, 120, 85, 0.08) !important;
+    /* 日曆數字按鈕圓形化 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button {
+        border-radius: 50% !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        height: 36px !important;
+        font-size: 14px !important;
     }
-    .bottom-query-box div[data-testid="stHorizontalBlock"] { display: flex !important; flex-wrap: nowrap !important; gap: 8px !important; flex-direction: row !important; }
-    .bottom-query-box div[data-testid="column"] { flex: 1 !important; min-width: 0 !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button[kind="primary"] {
+        background-color: #A07855 !important;
+        color: #FFFFFF !important;
+    }
+
+    /* 調整日期選擇器字體 */
     div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
     
     /* 分頁 Tabs 導覽列 */
@@ -151,14 +155,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 注入 Class 佈局鎖定 + 防日期鍵盤
+# ⚡ 隱藏 JavaScript: 阻擋 iPhone 日期鍵盤
 # ==========================================
 components.html(
     """
     <script>
-    function forceMobileLayout() {
-        // 1. Disable Keyboard for Date Inputs only
-        document.querySelectorAll('input[type="text"]').forEach(input => {
+    function disableKeyboard() {
+        const inputs = window.parent.document.querySelectorAll('input[type="text"]');
+        inputs.forEach(input => {
             const label = input.getAttribute('aria-label') || '';
             if (label.includes('日期') || label.includes('起始') || label.includes('結束')) {
                 if (input.getAttribute('inputmode') !== 'none') {
@@ -169,28 +173,8 @@ components.html(
                 }
             }
         });
-
-        // 2. Add polyfill classes for ALL browsers to completely lock horizontal layouts
-        const mappings = [
-            { marker: '.cal-marker', class: 'mobile-cal-grid', parent: '[data-testid="stVerticalBlockBorderWrapper"]' },
-            { marker: '.cal-marker', class: 'mobile-cal-block', parent: '[data-testid="stVerticalBlock"]' },
-            { marker: '.action-marker', class: 'mobile-action-grid', parent: '[data-testid="stVerticalBlock"]' },
-            { marker: '.tx-marker', class: 'mobile-tx-grid', parent: '[data-testid="stVerticalBlockBorderWrapper"]' },
-            { marker: '.memo-marker', class: 'mobile-memo-grid', parent: '[data-testid="stVerticalBlockBorderWrapper"]' },
-            { marker: '.setting-marker', class: 'mobile-setting-grid', parent: '[data-testid="stVerticalBlockBorderWrapper"]' },
-            { marker: '.query-marker', class: 'bottom-query-box', parent: '[data-testid="stVerticalBlockBorderWrapper"]' }
-        ];
-
-        mappings.forEach(map => {
-            document.querySelectorAll(map.marker).forEach(el => {
-                let p = el.closest(map.parent);
-                if(p && !p.classList.contains(map.class)) {
-                    p.classList.add(map.class);
-                }
-            });
-        });
     }
-    setInterval(forceMobileLayout, 300); 
+    setInterval(disableKeyboard, 400); 
     </script>
     """,
     height=0, width=0
@@ -242,10 +226,8 @@ tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
 # TAB 1: 🏠 主頁記帳
 # ==========================================
 with tab_home:
-    # 📌 置頂區塊：緊湊日曆 
+    # 📌 置頂區塊：緊湊日曆 (因為是第一個 st.container(border=True)，會被 CSS 鎖定置頂)
     with st.container(border=True):
-        st.markdown("<span class='cal-marker'></span>", unsafe_allow_html=True)
-        
         # 年月切換
         cal_head_1, cal_head_2 = st.columns([1.5, 1])
         with cal_head_1:
@@ -258,12 +240,12 @@ with tab_home:
             st.session_state.cal_selected_date = date(sel_year, sel_month, 1)
             st.rerun()
 
-        # 日曆表頭 (7 欄扁平化)
+        # 日曆表頭 (7 欄)
         w_cols = st.columns(7)
         for idx, w_name in enumerate(["日", "一", "二", "三", "四", "五", "六"]):
             w_cols[idx].markdown(f"<div style='text-align:center; font-size:12px; color:#8C7A6B; font-weight:800;'>{w_name}</div>", unsafe_allow_html=True)
 
-        # 日曆網格 (7 欄扁平化)
+        # 日曆網格 (7 欄)
         cal = calendar.Calendar(firstweekday=6)
         for week in cal.monthdayscalendar(int(sel_year), int(sel_month)):
             cols = st.columns(7)
@@ -280,7 +262,6 @@ with tab_home:
 
     # 🍵 三大功能按鈕區塊
     with st.container(border=False):
-        st.markdown("<span class='action-marker'></span>", unsafe_allow_html=True)
         top_col1, top_col2, top_col3 = st.columns(3)
         with top_col1:
             with st.popover("💸 記支出", use_container_width=True):
@@ -334,7 +315,7 @@ with tab_home:
                         st.success("🎉 已完成結帳！")
                         st.rerun()
 
-    # 📌 顯示當前檢視區間與明細
+    # 📌 顯示當前檢視區間與標題
     if st.session_state.filter_to_single_day:
         display_title = f"📅 {st.session_state.cal_selected_date}"
     else:
@@ -358,7 +339,7 @@ with tab_home:
     if not filtered_df.empty: filtered_df = filtered_df.sort_values(by="日期", ascending=False)
     week_days_tw = ["一", "二", "三", "四", "五", "六", "日"]
 
-    # 📌 淺色橫列收支卡片 (扁平化 4 欄，保證防跑版並排)
+    # 📌 淺色橫列收支卡片 (扁平化 4 欄並排)
     if filtered_df.empty:
         st.info("此區間內無紀錄。")
     else:
@@ -367,10 +348,7 @@ with tab_home:
             day_week_str = week_days_tw[r_date.weekday()]
             
             with st.container(border=True):
-                st.markdown("<span class='tx-marker'></span>", unsafe_allow_html=True)
-                
-                # 完全扁平化 4 欄
-                c_name, c_amt, c_edit, c_del = st.columns(4)
+                c_name, c_amt, c_edit, c_del = st.columns([3.5, 2.5, 1, 1])
                 
                 with c_name:
                     st.markdown(f"<div style='font-size:16px; font-weight:800; color:#3D322C; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{row['項目']}</div>", unsafe_allow_html=True)
@@ -404,7 +382,6 @@ with tab_home:
 
     # 📌 底部自訂區間查詢框
     with st.container(border=True):
-        st.markdown("<span class='query-marker'></span>", unsafe_allow_html=True)
         st.markdown("<h3 style='color:#7A573C; margin-bottom:10px; font-size:18px;'>🔍 底部區間查詢</h3>", unsafe_allow_html=True)
         
         picked_range = st.date_input("選擇起始與結束日期", value=(st.session_state.start_date, st.session_state.end_date), key="bottom_date_picker")
@@ -458,7 +435,6 @@ with tab_memo:
             
     for memo in list(st.session_state.memos):
         with st.container(border=True):
-            st.markdown("<span class='memo-marker'></span>", unsafe_allow_html=True)
             c1, c2, c3, c4 = st.columns(4)
             if c1.checkbox("", key=f"mc_{memo['id']}"):
                 st.session_state.memos.remove(memo)
@@ -471,7 +447,7 @@ with tab_memo:
                         memo["text"] = new_text
                         st.rerun()
             with c4:
-                st.write("") # 佔位保留比例
+                st.write("")
 
 with tab_shopping:
     st.subheader("🛒 購物清單")
@@ -484,7 +460,6 @@ with tab_shopping:
             
     for item in list(st.session_state.shopping_list):
         with st.container(border=True):
-            st.markdown("<span class='memo-marker'></span>", unsafe_allow_html=True)
             c1, c2, c3, c4 = st.columns(4)
             if c1.checkbox("", key=f"sc_{item['id']}"):
                 st.session_state.shopping_list.remove(item)
@@ -497,7 +472,7 @@ with tab_shopping:
                         item["item"] = new_item
                         st.rerun()
             with c4:
-                st.write("") # 佔位
+                st.write("")
 
 with tab_settings:
     st.subheader("⚙️ 小窩設定")
@@ -513,8 +488,7 @@ with tab_settings:
             
     for idx, m in enumerate(st.session_state.members):
         with st.container(border=True):
-            st.markdown("<span class='setting-marker'></span>", unsafe_allow_html=True)
-            m_col1, c_edit, c_del = st.columns(3)
+            m_col1, c_edit, c_del = st.columns([4.5, 1, 1])
             m_col1.write(f"• **{m}**")
             with c_edit:
                 with st.popover("✏️"):
@@ -540,8 +514,7 @@ with tab_settings:
             
     for idx, c in enumerate(st.session_state.expense_categories):
         with st.container(border=True):
-            st.markdown("<span class='setting-marker'></span>", unsafe_allow_html=True)
-            c_col1, c_edit, c_del = st.columns(3)
+            c_col1, c_edit, c_del = st.columns([4.5, 1, 1])
             c_col1.write(f"• **{c}**")
             with c_edit:
                 with st.popover("✏️"):
@@ -567,8 +540,7 @@ with tab_settings:
             
     for idx, ic in enumerate(st.session_state.income_categories):
         with st.container(border=True):
-            st.markdown("<span class='setting-marker'></span>", unsafe_allow_html=True)
-            ic_col1, c_edit, c_del = st.columns(3)
+            ic_col1, c_edit, c_del = st.columns([4.5, 1, 1])
             ic_col1.write(f"• **{ic}**")
             with c_edit:
                 with st.popover("✏️"):
