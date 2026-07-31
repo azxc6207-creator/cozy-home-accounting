@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + Popover 滾動與安全邊距最佳化
+# 2. 莫蘭迪奶茶背景與介面 CSS
 # ==========================================
 st.markdown("""
 <style>
@@ -49,7 +49,7 @@ st.markdown("""
     }
 
     /* ========================================================
-       🚀 手機橫向不折行霸道 CSS 覆寫
+       🚀 手機橫向不拆行霸道 CSS 覆寫
        ======================================================== */
     @media screen and (max-width: 1024px) {
         html body .stApp div[data-testid="stHorizontalBlock"] {
@@ -70,14 +70,12 @@ st.markdown("""
         }
     }
 
-    /* ========================================================
-       📲 修正：解決 Popover 彈窗底部按鈕被遮擋無法滑到底的問題
-       ======================================================== */
+    /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 */
     div[data-testid="stPopoverBody"] {
-        max-height: 60vh !important; /* 降低容器高度避開 Safari 底欄 */
-        overflow-y: scroll !important; /* 強制開啟垂直滾動條 */
-        -webkit-overflow-scrolling: touch !important; /* iOS 手勢平滑滾動 */
-        padding: 12px 14px 60px 14px !important; /* 底部加高留白 */
+        max-height: 60vh !important;
+        overflow-y: scroll !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 12px 14px 60px 14px !important;
     }
 
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] {
@@ -90,7 +88,6 @@ st.markdown("""
         flex: none !important;
     }
     
-    /* 為表單底部強制新增大型安全距離 */
     div[data-testid="stPopoverBody"] form {
         margin-bottom: 60px !important;
         padding-bottom: 20px !important;
@@ -170,14 +167,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 全方位封鎖 DateInput 鍵盤彈出
+# ⚡ 隱藏 JavaScript: 監控與封鎖 DateInput 鍵盤
 # ==========================================
 components.html(
     """
     <script>
-    function blockDateInputKeyboards() {
+    function disableKeyboardForDatePickers() {
         const doc = window.parent.document;
-        // 抓取所有出現在 DateInput 組件容器內部的 input 元素（包含單選與雙選區間）
         const dateContainers = doc.querySelectorAll('[data-testid="stDateInput"]');
         dateContainers.forEach(container => {
             const inputs = container.querySelectorAll('input');
@@ -192,10 +188,9 @@ components.html(
         });
     }
 
-    // 啟動頁面 MutationObserver 進行即時 DOM 監控，防範動態載入的元件
-    const observer = new MutationObserver(blockDateInputKeyboards);
+    const observer = new MutationObserver(disableKeyboardForDatePickers);
     observer.observe(window.parent.document.body, { childList: true, subtree: true });
-    setInterval(blockDateInputKeyboards, 300);
+    setInterval(disableKeyboardForDatePickers, 800); // 調整間隔以提升硬體運算順暢度
     </script>
     """,
     height=0, width=0
@@ -216,10 +211,12 @@ if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": 
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
 
 # ==========================================
-# 4. 連接 Google Sheets 資料庫
+# 4. 連接 Google Sheets 資料庫與效能快取 (Cache)
 # ==========================================
 conn = st.connection("gsheets", type=GSheetsConnection)
-def load_data():
+
+def load_data_from_sheet():
+    """從 Google Sheets 重新載入最新資料"""
     try:
         df = conn.read(ttl="0s")
         cols = ["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人"]
@@ -227,12 +224,16 @@ def load_data():
             if c not in df.columns: df[c] = ""
         df["類型"] = df["類型"].replace("", "支出")
         df["金額"] = pd.to_numeric(df["金額"], errors="coerce").fillna(0)
+        st.session_state.expenses_df = df
         return df
     except Exception:
-        return pd.DataFrame(columns=["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人"])
+        df = pd.DataFrame(columns=["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人"])
+        st.session_state.expenses_df = df
+        return df
 
+# 首次載入時讀取，之後除非操作寫入，否則皆直接使用 Session 快取（極速響應）
 if "expenses_df" not in st.session_state:
-    st.session_state.expenses_df = load_data()
+    load_data_from_sheet()
 
 # ==========================================
 # 5. 主選單 Header & 分頁
@@ -276,6 +277,7 @@ with tab_home:
                 else:
                     curr_d = date(int(sel_year), int(sel_month), day_num)
                     btn_type = "primary" if curr_d == st.session_state.cal_selected_date else "secondary"
+                    # 點擊日期按鈕：僅更新本地 Session 狀態並 Rerun，無網路卡頓
                     if cols[day_idx].button(str(day_num), key=f"c_day_{curr_d}", type=btn_type):
                         st.session_state.cal_selected_date = curr_d
                         st.session_state.filter_to_single_day = True
@@ -346,7 +348,7 @@ with tab_home:
     
     st.markdown(f"<h2 style='text-align:center; color:#7A573C; font-weight:900; font-size:20px; margin:14px 0 8px 0;'>{display_title}</h2>", unsafe_allow_html=True)
 
-    # 📊 過濾資料
+    # 📊 快速過濾快取資料（不打網絡請求，達到極速響應）
     df_current = st.session_state.expenses_df.copy()
     if not df_current.empty:
         df_current["日期_dt"] = pd.to_datetime(df_current["日期"]).dt.date
