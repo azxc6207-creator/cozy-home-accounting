@@ -6,7 +6,7 @@ from datetime import datetime, date
 import calendar
 
 # ==========================================
-# 1. 頁面設定與莫蘭迪奶茶色系 CSS
+# 1. 頁面設定與莫蘭迪奶茶色系 CSS (放大字體版)
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
@@ -19,7 +19,7 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap');
 
-    /* 🎨 莫蘭迪奶茶色背景 + 🐾 不規則散落狗狗腳印 */
+    /* 🎨 全局莫蘭迪奶茶色背景 + 放大字體 */
     html, body, [class*="css"], .stApp {
         font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background-color: #FAF5F0 !important;
@@ -32,7 +32,7 @@ st.markdown("""
             radial-gradient(circle at 85% 80%, rgba(180, 145, 115, 0.25) 0%, transparent 45%) !important;
         background-attachment: fixed !important;
         color: #3D322C !important;
-        font-size: 16px !important;
+        font-size: 18px !important;
     }
     
     header[data-testid="stHeader"] { visibility: hidden; }
@@ -40,17 +40,17 @@ st.markdown("""
 
     /* 📌 日期選擇區塊標題放大 */
     div[data-testid="stDateInput"] label {
-        font-size: 20px !important;
+        font-size: 22px !important;
         font-weight: 800 !important;
         color: #7A573C !important;
     }
 
-    /* 📱 手機直式專用置頂頂欄 */
+    /* 📱 手機直式專用頂欄 */
     .vertical-header-box {
         background: rgba(255, 255, 255, 0.92) !important;
         border: 1.5px solid #E2D5C5 !important;
         border-radius: 18px !important;
-        padding: 12px 16px !important;
+        padding: 14px 18px !important;
         margin-bottom: 12px !important;
         box-shadow: 0 4px 14px rgba(160, 120, 85, 0.08) !important;
     }
@@ -62,29 +62,30 @@ st.markdown("""
         color: #5C4A3E !important;
         border: 1.5px solid #D4C3B3 !important;
         border-radius: 16px !important;
-        padding: 8px 2px !important;
+        padding: 10px 4px !important;
         font-weight: 800 !important;
-        font-size: 14px !important;
+        font-size: 16px !important;
         box-shadow: 0 2px 8px rgba(160, 120, 85, 0.08) !important;
     }
 
-    /* 流水帳卡片樣式 */
-    .item-title { font-size: 17px; font-weight: 800; color: #3D322C; }
-    .item-amount { font-size: 19px; font-weight: 900; color: #8C6239; text-align: right; }
+    /* 流水帳卡片字體放大 */
+    .item-title { font-size: 20px !important; font-weight: 800; color: #3D322C; }
+    .item-amount { font-size: 22px !important; font-weight: 900; color: #8C6239; text-align: right; }
     .badge-tag {
         background-color: #EEDFD2; color: #7A573C;
-        font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 700;
+        font-size: 13px !important; padding: 3px 10px; border-radius: 12px; font-weight: 700;
     }
-    .sub-info { font-size: 13px; color: #8C7A6B; margin-top: 2px; }
+    .sub-info { font-size: 15px !important; color: #8C7A6B; margin-top: 4px; }
 
-    /* 🗑️ 刪除按鈕與 ✏️ 編輯按鈕白底樣式 */
+    /* 🗑️ 刪除按鈕與 ✏️ 編輯按鈕白底精緻樣式 (並排專用) */
     .stButton>button, div[data-testid="stPopover"]>button {
         border-radius: 14px !important;
         background-color: #FFFFFF !important;
         color: #3D322C !important;
         border: 1px solid #E2D5C5 !important;
         font-weight: 700 !important;
-        font-size: 14px !important;
+        font-size: 16px !important;
+        padding: 6px 10px !important;
         box-shadow: 0 2px 6px rgba(160, 120, 85, 0.06) !important;
         transition: all 0.2s ease !important;
     }
@@ -93,30 +94,35 @@ st.markdown("""
         border-color: #A07855 !important;
     }
 
-    /* 分頁 Tabs 導覽列 */
+    /* 分頁 Tabs 導覽列放大 */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 6px;
+        gap: 8px;
         background-color: #E8DDD0;
-        padding: 4px;
+        padding: 6px;
         border-radius: 25px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
     }
     .stTabs [data-baseweb="tab"] {
         border-radius: 18px;
-        padding: 6px 14px;
+        padding: 8px 18px;
         color: #6E5A4C;
         font-weight: 700;
-        font-size: 14px !important;
+        font-size: 16px !important;
     }
     .stTabs [aria-selected="true"] {
         background-color: #A07855 !important;
         color: #FFFFFF !important;
     }
+
+    /* 輸入框字體放大 */
+    .stTextInput input, .stSelectbox select, .stNumberInput input, .stDateInput input {
+        font-size: 17px !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. Session State 初始化 (預設成員使用貓咪 🐱 ICON)
+# 2. Session State 初始化
 # ==========================================
 if "members" not in st.session_state:
     st.session_state.members = ["🐱 鼠", "🐱 熊"]
@@ -163,7 +169,7 @@ if "expenses_df" not in st.session_state:
 # ==========================================
 # 4. 主選單 Header & 分頁
 # ==========================================
-st.markdown("<h3 style='color:#7A573C; font-weight:800; margin-bottom:8px;'>🏠 小窩記帳 🐾</h3>", unsafe_allow_html=True)
+st.markdown("<h2 style='color:#7A573C; font-weight:900; margin-bottom:10px;'>🏠 小窩記帳 🐾</h2>", unsafe_allow_html=True)
 
 tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
     "🏠 主頁記帳", "📊 統計圖表", "💬 備忘錄", "🛒 購物清單", "⚙️ 設定"
@@ -173,9 +179,9 @@ tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
 # TAB 1: 🏠 主頁記帳
 # ==========================================
 with tab_home:
-    # 📌 需求 2：手向日期選擇 (標題改為「日期」並放大字體)
+    # 直向日期選擇卡片區塊
     st.markdown("<div class='vertical-header-box'>", unsafe_allow_html=True)
-    v_col1, v_col2 = st.columns([2, 1])
+    v_col1, v_col2 = st.columns([2.2, 1])
     
     with v_col1:
         picked_date = st.date_input(
@@ -298,22 +304,22 @@ with tab_home:
 
     st.divider()
 
-    # 📌 需求 3：下面的日期標記「放大置中」
+    # 下方日期標示「放大置中」
     sel_year = st.session_state.cal_selected_date.year
     sel_month = st.session_state.cal_selected_date.month
 
     if st.session_state.filter_to_single_day:
         st.markdown(
-            f"<h3 style='text-align: center; color: #7A573C; font-weight: 800; font-size: 22px;'>📅 {st.session_state.cal_selected_date}</h3>", 
+            f"<h2 style='text-align: center; color: #7A573C; font-weight: 900; font-size: 26px; margin: 10px 0;'>📅 {st.session_state.cal_selected_date}</h2>", 
             unsafe_allow_html=True
         )
     else:
         st.markdown(
-            f"<h3 style='text-align: center; color: #7A573C; font-weight: 800; font-size: 22px;'>📅 {sel_year}年{sel_month:02d}月</h3>", 
+            f"<h2 style='text-align: center; color: #7A573C; font-weight: 900; font-size: 26px; margin: 10px 0;'>📅 {sel_year}年{sel_month:02d}月</h2>", 
             unsafe_allow_html=True
         )
 
-    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
     # 數據篩選
     df_current = st.session_state.expenses_df.copy()
@@ -334,7 +340,7 @@ with tab_home:
 
     week_days_tw = ["一", "二", "三", "四", "五", "六", "日"]
 
-    # 逐條收支卡片 (📌 需求 1：刪除按鈕改為白底)
+    # 逐條收支卡片 (📌 需求 1：編輯與刪除 ICON 水平並排)
     if filtered_df.empty:
         st.info("此區間內尚無任何收支紀錄。")
     else:
@@ -342,7 +348,8 @@ with tab_home:
             r_date = datetime.strptime(row["日期"], "%Y-%m-%d")
             day_week_str = week_days_tw[r_date.weekday()]
             
-            c_card1, c_card2, c_edit, c_del = st.columns([3, 2, 0.8, 0.8])
+            # 使用 3 欄式佈局，右側專屬欄位存放 [編輯 + 刪除] 並排 ICON
+            c_card1, c_card2, c_actions = st.columns([3, 2, 1.4])
             
             with c_card1:
                 st.markdown(f"<div class='item-title'>{row['項目']}</div>", unsafe_allow_html=True)
@@ -358,41 +365,45 @@ with tab_home:
                 amt_color = "#558B6E" if row["類型"] == "收入" else "#8C6239"
                 st.markdown(f"<div class='item-amount' style='color:{amt_color};'>{amt_prefix}{row['金額']:,.0f} 元</div>", unsafe_allow_html=True)
             
-            with c_edit:
-                with st.popover("✏️"):
-                    st.markdown("### ✏️ 編輯這筆紀錄")
-                    with st.form(f"edit_form_{row['ID']}"):
-                        e_date_val = st.date_input("日期", r_date)
-                        e_type_val = st.radio("類型", ["支出", "收入"], index=0 if row["類型"] == "支出" else 1)
-                        cats = st.session_state.expense_categories if e_type_val == "支出" else st.session_state.income_categories
-                        cat_idx = cats.index(row["類別"]) if row["類別"] in cats else 0
-                        e_cat_val = st.selectbox("分類", cats, index=cat_idx)
-                        e_item_val = st.text_input("項目", value=row["項目"])
-                        e_amt_val = st.number_input("金額", value=float(row["金額"]))
-                        e_payer_val = st.selectbox("成員", st.session_state.members, index=st.session_state.members.index(row["記帳人"]) if row["記帳人"] in st.session_state.members else 0)
-                        e_note_val = st.text_input("備註", value=row["備註"])
+            # ✏️ 與 🗑️ ICON 嚴格水平並排
+            with c_actions:
+                act_col1, act_col2 = st.columns(2)
+                
+                with act_col1:
+                    with st.popover("✏️"):
+                        st.markdown("### ✏️ 編輯這筆紀錄")
+                        with st.form(f"edit_form_{row['ID']}"):
+                            e_date_val = st.date_input("日期", r_date)
+                            e_type_val = st.radio("類型", ["支出", "收入"], index=0 if row["類型"] == "支出" else 1)
+                            cats = st.session_state.expense_categories if e_type_val == "支出" else st.session_state.income_categories
+                            cat_idx = cats.index(row["類別"]) if row["類別"] in cats else 0
+                            e_cat_val = st.selectbox("分類", cats, index=cat_idx)
+                            e_item_val = st.text_input("項目", value=row["項目"])
+                            e_amt_val = st.number_input("金額", value=float(row["金額"]))
+                            e_payer_val = st.selectbox("成員", st.session_state.members, index=st.session_state.members.index(row["記帳人"]) if row["記帳人"] in st.session_state.members else 0)
+                            e_note_val = st.text_input("備註", value=row["備註"])
 
-                        if st.form_submit_button("儲存修改"):
-                            match_idx = st.session_state.expenses_df[st.session_state.expenses_df["ID"] == row["ID"]].index
-                            st.session_state.expenses_df.loc[match_idx, ["日期", "類型", "類別", "項目", "金額", "記帳人", "備註"]] = [
-                                str(e_date_val), e_type_val, e_cat_val, e_item_val, float(e_amt_val), e_payer_val, e_note_val
-                            ]
-                            try:
-                                conn.update(data=st.session_state.expenses_df)
-                            except Exception:
-                                pass
-                            st.toast("✅ 修改成功！")
-                            st.rerun()
+                            if st.form_submit_button("儲存修改"):
+                                match_idx = st.session_state.expenses_df[st.session_state.expenses_df["ID"] == row["ID"]].index
+                                st.session_state.expenses_df.loc[match_idx, ["日期", "類型", "類別", "項目", "金額", "記帳人", "備註"]] = [
+                                    str(e_date_val), e_type_val, e_cat_val, e_item_val, float(e_amt_val), e_payer_val, e_note_val
+                                ]
+                                try:
+                                    conn.update(data=st.session_state.expenses_df)
+                                except Exception:
+                                    pass
+                                st.toast("✅ 修改成功！")
+                                st.rerun()
 
-            with c_del:
-                if st.button("🗑️", key=f"del_btn_{row['ID']}"):
-                    st.session_state.expenses_df = st.session_state.expenses_df[st.session_state.expenses_df["ID"] != row["ID"]]
-                    try:
-                        conn.update(data=st.session_state.expenses_df)
-                    except Exception:
-                        pass
-                    st.toast("🗑️ 已成功刪除紀錄！")
-                    st.rerun()
+                with act_col2:
+                    if st.button("🗑️", key=f"del_btn_{row['ID']}"):
+                        st.session_state.expenses_df = st.session_state.expenses_df[st.session_state.expenses_df["ID"] != row["ID"]]
+                        try:
+                            conn.update(data=st.session_state.expenses_df)
+                        except Exception:
+                            pass
+                        st.toast("🗑️ 已成功刪除紀錄！")
+                        st.rerun()
             st.divider()
 
 # ==========================================
@@ -414,9 +425,9 @@ with tab_charts:
                 exp_df, names="類別", values="金額", hole=0.45,
                 color_discrete_sequence=["#A07855", "#C5A880", "#8C6239", "#7A573C", "#B08968"]
             )
-            fig_pie.update_traces(textfont=dict(size=15), textinfo='percent+label')
+            fig_pie.update_traces(textfont=dict(size=16), textinfo='percent+label')
             fig_pie.update_layout(
-                font=dict(size=14), 
+                font=dict(size=15), 
                 showlegend=True, 
                 legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"),
                 margin=dict(t=10, b=10, l=10, r=10), 
@@ -433,11 +444,11 @@ with tab_charts:
             fig_bar = px.bar(
                 daily_sum, x="日期_dt", y="金額", color_discrete_sequence=["#A07855"], text_auto=',.0f'
             )
-            fig_bar.update_traces(textfont=dict(size=15), textposition='outside')
+            fig_bar.update_traces(textfont=dict(size=16), textposition='outside')
             fig_bar.update_layout(
-                font=dict(size=14),
-                xaxis=dict(title=dict(text="日期 (日)", font=dict(size=14))),
-                yaxis=dict(title=dict(text="金額 ($)", font=dict(size=14))),
+                font=dict(size=15),
+                xaxis=dict(title=dict(text="日期 (日)", font=dict(size=15))),
+                yaxis=dict(title=dict(text="金額 ($)", font=dict(size=15))),
                 margin=dict(t=30, b=10, l=10, r=10),
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)"
@@ -471,7 +482,7 @@ with tab_memo:
                 st.toast("✅ 已完成並刪除！")
                 st.rerun()
         with col_txt:
-            st.markdown(f"<div style='font-size:16px; padding-top:4px;'>• {memo['text']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:18px; padding-top:4px;'>• {memo['text']}</div>", unsafe_allow_html=True)
         with col_edit:
             with st.popover("✏️"):
                 edited_text = st.text_input("修改備忘內容", value=memo["text"], key=f"edit_memo_input_{memo['id']}")
@@ -508,7 +519,7 @@ with tab_shopping:
                 st.toast("🎉 已採買完成並移除！")
                 st.rerun()
         with col_txt:
-            st.markdown(f"<div style='font-size:16px; padding-top:4px;'>🛒 {shop_item['item']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size:18px; padding-top:4px;'>🛒 {shop_item['item']}</div>", unsafe_allow_html=True)
         with col_edit:
             with st.popover("✏️"):
                 edited_item = st.text_input("修改商品名稱", value=shop_item["item"], key=f"edit_shop_input_{shop_item['id']}")
@@ -519,7 +530,7 @@ with tab_shopping:
         st.divider()
 
 # ==========================================
-# TAB 5: ⚙️ 設定 (📌 需求 4：標題改為「小窩設定」，需求 5：成員預設 Icon 為 🐱)
+# TAB 5: ⚙️ 設定 (小窩設定)
 # ==========================================
 with tab_settings:
     st.subheader("⚙️ 小窩設定")
@@ -527,7 +538,7 @@ with tab_settings:
 
     set_col1, set_col2, set_col3 = st.columns(3)
 
-    # 👥 1. 成員管理 (預設貓咪 🐱 ICON)
+    # 🐱 1. 成員管理 (✏️ 與 🗑️ ICON 並排)
     with set_col1:
         st.markdown(f"### 🐱 成員管理 (`{len(st.session_state.members)}` / 30 人)")
         with st.form("add_member_form", clear_on_submit=True):
@@ -543,29 +554,31 @@ with tab_settings:
                     st.rerun()
 
         for idx, m in enumerate(st.session_state.members):
-            m_col1, m_edit, m_del = st.columns([3, 1, 1])
+            m_col1, m_actions = st.columns([3, 1.8])
             m_col1.write(f"• **{m}**")
             
-            with m_edit:
-                with st.popover("✏️"):
-                    parts = m.split(" ", 1)
-                    cur_icon = parts[0] if len(parts) > 1 else "🐱"
-                    cur_name = parts[1] if len(parts) > 1 else parts[0]
-                    
-                    edit_icon = st.text_input("修改 Icon", value=cur_icon, key=f"m_icon_{idx}")
-                    edit_name = st.text_input("修改名稱", value=cur_name, key=f"m_name_{idx}")
-                    if st.button("儲存", key=f"save_m_{idx}"):
-                        st.session_state.members[idx] = f"{edit_icon.strip()} {edit_name.strip()}"
-                        st.toast("✅ 成員修改成功！")
-                        st.rerun()
-            
-            with m_del:
-                if st.button("🗑️", key=f"del_mem_{idx}"):
-                    if len(st.session_state.members) > 1:
-                        st.session_state.members.pop(idx)
-                        st.rerun()
+            with m_actions:
+                act1, act2 = st.columns(2)
+                with act1:
+                    with st.popover("✏️"):
+                        parts = m.split(" ", 1)
+                        cur_icon = parts[0] if len(parts) > 1 else "🐱"
+                        cur_name = parts[1] if len(parts) > 1 else parts[0]
+                        
+                        edit_icon = st.text_input("修改 Icon", value=cur_icon, key=f"m_icon_{idx}")
+                        edit_name = st.text_input("修改名稱", value=cur_name, key=f"m_name_{idx}")
+                        if st.button("儲存", key=f"save_m_{idx}"):
+                            st.session_state.members[idx] = f"{edit_icon.strip()} {edit_name.strip()}"
+                            st.toast("✅ 成員修改成功！")
+                            st.rerun()
+                
+                with act2:
+                    if st.button("🗑️", key=f"del_mem_{idx}"):
+                        if len(st.session_state.members) > 1:
+                            st.session_state.members.pop(idx)
+                            st.rerun()
 
-    # 🏷️ 2. 支出類別管理
+    # 🏷️ 2. 支出類別管理 (✏️ 與 🗑️ ICON 並排)
     with set_col2:
         st.markdown(f"### 🏷️ 支出類別 (`{len(st.session_state.expense_categories)}` / 30 項)")
         with st.form("add_exp_cat_form", clear_on_submit=True):
@@ -581,29 +594,31 @@ with tab_settings:
                     st.rerun()
 
         for idx, c in enumerate(st.session_state.expense_categories):
-            c_col1, c_edit, c_del = st.columns([3, 1, 1])
+            c_col1, c_actions = st.columns([3, 1.8])
             c_col1.write(f"• **{c}**")
             
-            with c_edit:
-                with st.popover("✏️"):
-                    parts = c.split(" ", 1)
-                    cur_icon = parts[0] if len(parts) > 1 else "📦"
-                    cur_name = parts[1] if len(parts) > 1 else parts[0]
-                    
-                    edit_icon = st.text_input("修改 Icon", value=cur_icon, key=f"ec_icon_{idx}")
-                    edit_name = st.text_input("修改名稱", value=cur_name, key=f"ec_name_{idx}")
-                    if st.button("儲存", key=f"save_ec_{idx}"):
-                        st.session_state.expense_categories[idx] = f"{edit_icon.strip()} {edit_name.strip()}"
-                        st.toast("✅ 支出類別修改成功！")
-                        st.rerun()
+            with c_actions:
+                act1, act2 = st.columns(2)
+                with act1:
+                    with st.popover("✏️"):
+                        parts = c.split(" ", 1)
+                        cur_icon = parts[0] if len(parts) > 1 else "📦"
+                        cur_name = parts[1] if len(parts) > 1 else parts[0]
+                        
+                        edit_icon = st.text_input("修改 Icon", value=cur_icon, key=f"ec_icon_{idx}")
+                        edit_name = st.text_input("修改名稱", value=cur_name, key=f"ec_name_{idx}")
+                        if st.button("儲存", key=f"save_ec_{idx}"):
+                            st.session_state.expense_categories[idx] = f"{edit_icon.strip()} {edit_name.strip()}"
+                            st.toast("✅ 支出類別修改成功！")
+                            st.rerun()
 
-            with c_del:
-                if st.button("🗑️", key=f"del_exp_cat_{idx}"):
-                    if len(st.session_state.expense_categories) > 1:
-                        st.session_state.expense_categories.pop(idx)
-                        st.rerun()
+                with act2:
+                    if st.button("🗑️", key=f"del_exp_cat_{idx}"):
+                        if len(st.session_state.expense_categories) > 1:
+                            st.session_state.expense_categories.pop(idx)
+                            st.rerun()
 
-    # 💰 3. 收入類別管理
+    # 💰 3. 收入類別管理 (✏️ 與 🗑️ ICON 並排)
     with set_col3:
         st.markdown(f"### 💰 收入類別 (`{len(st.session_state.income_categories)}` / 10 項)")
         with st.form("add_inc_cat_form", clear_on_submit=True):
@@ -619,24 +634,26 @@ with tab_settings:
                     st.rerun()
 
         for idx, ic in enumerate(st.session_state.income_categories):
-            ic_col1, ic_edit, ic_del = st.columns([3, 1, 1])
+            ic_col1, ic_actions = st.columns([3, 1.8])
             ic_col1.write(f"• **{ic}**")
             
-            with ic_edit:
-                with st.popover("✏️"):
-                    parts = ic.split(" ", 1)
-                    cur_icon = parts[0] if len(parts) > 1 else "💵"
-                    cur_name = parts[1] if len(parts) > 1 else parts[0]
-                    
-                    edit_icon = st.text_input("修改 Icon", value=cur_icon, key=f"ic_icon_{idx}")
-                    edit_name = st.text_input("修改名稱", value=cur_name, key=f"ic_name_{idx}")
-                    if st.button("儲存", key=f"save_ic_{idx}"):
-                        st.session_state.income_categories[idx] = f"{edit_icon.strip()} {edit_name.strip()}"
-                        st.toast("✅ 收入類別修改成功！")
-                        st.rerun()
+            with ic_actions:
+                act1, act2 = st.columns(2)
+                with act1:
+                    with st.popover("✏️"):
+                        parts = ic.split(" ", 1)
+                        cur_icon = parts[0] if len(parts) > 1 else "💵"
+                        cur_name = parts[1] if len(parts) > 1 else parts[0]
+                        
+                        edit_icon = st.text_input("修改 Icon", value=cur_icon, key=f"ic_icon_{idx}")
+                        edit_name = st.text_input("修改名稱", value=cur_name, key=f"ic_name_{idx}")
+                        if st.button("儲存", key=f"save_ic_{idx}"):
+                            st.session_state.income_categories[idx] = f"{edit_icon.strip()} {edit_name.strip()}"
+                            st.toast("✅ 收入類別修改成功！")
+                            st.rerun()
 
-            with ic_del:
-                if st.button("🗑️", key=f"del_inc_cat_{idx}"):
-                    if len(st.session_state.income_categories) > 1:
-                        st.session_state.income_categories.pop(idx)
-                        st.rerun()
+                with act2:
+                    if st.button("🗑️", key=f"del_inc_cat_{idx}"):
+                        if len(st.session_state.income_categories) > 1:
+                            st.session_state.income_categories.pop(idx)
+                            st.rerun()
