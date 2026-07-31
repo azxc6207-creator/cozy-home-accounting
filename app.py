@@ -7,7 +7,7 @@ import calendar
 import streamlit.components.v1 as components
 
 # ==========================================
-# 1. 頁面設定 (強制限制為手機直式寬度)
+# 1. 頁面設定 (使用 centered 限制最大寬度，呈現手機版型)
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
@@ -64,19 +64,22 @@ st.markdown("""
     /* 讓內容自動伸縮佔據空間，打破 100% 寬度限制 */
     div[data-testid="column"] {
         width: auto !important;
-        flex: 1 1 auto !important;
+        flex: 1 1 0px !important;
         min-width: 0 !important;
         padding: 0 1px !important;
+        overflow: hidden !important; /* 防止內容撐爆版面 */
     }
 
     /* 🛑 彈出視窗(Popover)內部的表單恢復正常上下排列 */
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] {
         flex-wrap: wrap !important;
         flex-direction: column !important;
+        align-items: stretch !important;
     }
     div[data-testid="stPopoverBody"] div[data-testid="column"] {
         width: 100% !important;
         flex: none !important;
+        overflow: visible !important;
     }
 
     /* 📌 容器卡片統一樣式 (日曆、明細列、查詢框) */
@@ -101,7 +104,7 @@ st.markdown("""
         margin-top: -10px !important;
     }
 
-    /* 🔘 通用按鈕優化 (白底高質感) */
+    /* 🔘 統一的按鈕樣式 (日曆天數、編輯、刪除) */
     .stButton > button, div[data-testid="stPopover"] > button {
         background-color: #FFFFFF !important;
         color: #3D322C !important;
@@ -115,12 +118,29 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important;
         display: inline-flex !important; justify-content: center !important; align-items: center !important;
     }
+    .stButton > button:hover, div[data-testid="stPopover"] > button:hover {
+        background-color: #FAF5F0 !important;
+    }
     
-    /* 點選的日曆數字 (Primary 樣式) */
+    /* 點選的日曆數字與主按鈕 (Primary 樣式) */
     .stButton > button[kind="primary"] {
         background-color: #A07855 !important;
         color: #FFFFFF !important;
         border: 1px solid #A07855 !important;
+    }
+
+    /* 日曆數字按鈕變成圓形壓縮版 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button {
+        border-radius: 50% !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        height: 38px !important;
+        font-size: 15px !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button[kind="primary"] {
+        background-color: #A07855 !important;
+        color: #FFFFFF !important;
     }
 
     /* 調整日期選擇器字體 */
@@ -134,7 +154,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 徹底封鎖 iPhone 日期鍵盤
+# ⚡ 隱藏 JavaScript: 精準阻擋 iPhone 日期鍵盤跳出
 # ==========================================
 components.html(
     """
