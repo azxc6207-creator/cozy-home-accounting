@@ -6,7 +6,7 @@ from datetime import datetime, date
 import calendar
 
 # ==========================================
-# 1. 頁面設定與「莫蘭迪多色塊 + 狗狗腳印」CSS
+# 1. 頁面設定與「置頂緊湊日曆 + 不規則腳印」CSS
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
@@ -15,24 +15,27 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 注入多樣化不規則色塊 + 半透明狗狗腳印 CSS
+# 注入 CSS
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap');
 
-    /* 🎨 多樣化色塊背景 (結合附圖色調) + 🐾 半透明狗狗腳印 SVG 紋理 */
+    /* 🎨 莫蘭迪奶茶色背景 + 🐾 不規則散落狗狗腳印 */
     html, body, [class*="css"], .stApp {
         font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background-color: #FAF5F0 !important;
         background-image: 
-            /* 1. 半透明狗狗腳印花紋 */
-            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="%23A07855" opacity="0.06"><path d="M12,11.5 C10.6,11.5 9.5,12.6 9.5,14 C9.5,15.4 10.6,17.5 12,17.5 C13.4,17.5 14.5,15.4 14.5,14 C14.5,12.6 13.4,11.5 12,11.5 Z M7.5,12 C8.3,12 9,11.3 9,10.5 C9,9.7 8.3,9 7.5,9 C6.7,9 6,9.7 6,10.5 C6,11.3 6.7,12 7.5,12 Z M16.5,12 C17.3,12 18,11.3 18,10.5 C18,9.7 17.3,9 16.5,9 C15.7,9 15,9.7 15,10.5 C15,11.3 15.7,12 16.5,12 Z M9.5,8 C10.3,8 11,7.3 11,6.5 C11,5.7 10.3,5 9.5,5 C8.7,5 8,5.7 8,6.5 C8,7.3 8.7,8 9.5,8 Z M14.5,8 C15.3,8 16,7.3 16,6.5 C16,5.7 15.3,5 14.5,5 C13.7,5 13,5.7 13,6.5 C13,7.3 13.7,8 14.5,8 Z"/></svg>'),
-            /* 2. 模仿附圖的不規則多色斑塊 */
-            radial-gradient(circle at 10% 15%, rgba(232, 221, 208, 0.85) 0%, transparent 45%),
-            radial-gradient(circle at 85% 10%, rgba(212, 195, 179, 0.75) 0%, transparent 40%),
-            radial-gradient(circle at 25% 65%, rgba(242, 232, 223, 0.9) 0%, transparent 50%),
-            radial-gradient(circle at 80% 85%, rgba(180, 145, 115, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.6) 0%, transparent 60%) !important;
+            /* 不規則角度與位置的狗狗腳印 */
+            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%23A07855" opacity="0.08" transform="rotate(18)"><path d="M12,11.5 C10.6,11.5 9.5,12.6 9.5,14 C9.5,15.4 10.6,17.5 12,17.5 C13.4,17.5 14.5,15.4 14.5,14 C14.5,12.6 13.4,11.5 12,11.5 Z M7.5,12 C8.3,12 9,11.3 9,10.5 C9,9.7 8.3,9 7.5,9 C6.7,9 6,9.7 6,10.5 C6,11.3 6.7,12 7.5,12 Z M16.5,12 C17.3,12 18,11.3 18,10.5 C18,9.7 17.3,9 16.5,9 C15.7,9 15,9.7 15,10.5 C15,11.3 15.7,12 16.5,12 Z M9.5,8 C10.3,8 11,7.3 11,6.5 C11,5.7 10.3,5 9.5,5 C8.7,5 8,5.7 8,6.5 C8,7.3 8.7,8 9.5,8 Z M14.5,8 C15.3,8 16,7.3 16,6.5 C16,5.7 15.3,5 14.5,5 C13.7,5 13,5.7 13,6.5 C13,7.3 13.7,8 14.5,8 Z"/></svg>'),
+            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="130" height="130" viewBox="0 0 24 24" fill="%238C6239" opacity="0.06" transform="rotate(-32)"><path d="M12,11.5 C10.6,11.5 9.5,12.6 9.5,14 C9.5,15.4 10.6,17.5 12,17.5 C13.4,17.5 14.5,15.4 14.5,14 C14.5,12.6 13.4,11.5 12,11.5 Z M7.5,12 C8.3,12 9,11.3 9,10.5 C9,9.7 8.3,9 7.5,9 C6.7,9 6,9.7 6,10.5 C6,11.3 6.7,12 7.5,12 Z M16.5,12 C17.3,12 18,11.3 18,10.5 C18,9.7 17.3,9 16.5,9 C15.7,9 15,9.7 15,10.5 C15,11.3 15.7,12 16.5,12 Z M9.5,8 C10.3,8 11,7.3 11,6.5 C11,5.7 10.3,5 9.5,5 C8.7,5 8,5.7 8,6.5 C8,7.3 8.7,8 9.5,8 Z M14.5,8 C15.3,8 16,7.3 16,6.5 C16,5.7 15.3,5 14.5,5 C13.7,5 13,5.7 13,6.5 C13,7.3 13.7,8 14.5,8 Z"/></svg>'),
+            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="90" height="90" viewBox="0 0 24 24" fill="%237A573C" opacity="0.07" transform="rotate(45)"><path d="M12,11.5 C10.6,11.5 9.5,12.6 9.5,14 C9.5,15.4 10.6,17.5 12,17.5 C13.4,17.5 14.5,15.4 14.5,14 C14.5,12.6 13.4,11.5 12,11.5 Z M7.5,12 C8.3,12 9,11.3 9,10.5 C9,9.7 8.3,9 7.5,9 C6.7,9 6,9.7 6,10.5 C6,11.3 6.7,12 7.5,12 Z M16.5,12 C17.3,12 18,11.3 18,10.5 C18,9.7 17.3,9 16.5,9 C15.7,9 15,9.7 15,10.5 C15,11.3 15.7,12 16.5,12 Z M9.5,8 C10.3,8 11,7.3 11,6.5 C11,5.7 10.3,5 9.5,5 C8.7,5 8,5.7 8,6.5 C8,7.3 8.7,8 9.5,8 Z M14.5,8 C15.3,8 16,7.3 16,6.5 C16,5.7 15.3,5 14.5,5 C13.7,5 13,5.7 13,6.5 C13,7.3 13.7,8 14.5,8 Z"/></svg>'),
+            /* 多重不規則柔和色塊 */
+            radial-gradient(circle at 12% 18%, rgba(232, 221, 208, 0.85) 0%, transparent 40%),
+            radial-gradient(circle at 88% 12%, rgba(212, 195, 179, 0.75) 0%, transparent 35%),
+            radial-gradient(circle at 20% 70%, rgba(242, 232, 223, 0.9) 0%, transparent 45%),
+            radial-gradient(circle at 85% 80%, rgba(180, 145, 115, 0.25) 0%, transparent 45%) !important;
+        background-position: 10% 12%, 85% 28%, 30% 75%, 0 0, 0 0, 0 0, 0 0 !important;
+        background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat, repeat, repeat !important;
         background-attachment: fixed !important;
         color: #3D322C !important;
         font-size: 16px !important;
@@ -41,36 +44,66 @@ st.markdown("""
     header[data-testid="stHeader"] { visibility: hidden; }
     footer { visibility: hidden; }
 
-    /* 📱 需求 1：直式日期按鈕列表樣式 */
-    .vertical-date-btn button {
-        width: 100% !important;
-        background-color: #FFFFFF !important;
-        color: #5C4A3E !important;
-        border: 1px solid #E2D5C5 !important;
-        border-radius: 12px !important;
-        padding: 10px 14px !important;
-        font-weight: 700 !important;
-        font-size: 15px !important;
-        margin-bottom: 4px !important;
-        box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important;
-        display: flex !important;
-        justify-content: space-between !important;
-    }
-    .vertical-date-btn button:hover {
-        background-color: #A07855 !important;
-        color: #FFFFFF !important;
-        border-color: #A07855 !important;
+    /* 📌 永遠置頂的日曆與按鈕容器 (Sticky Top) */
+    .sticky-calendar-bar {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 0px !important;
+        z-index: 99999 !important;
+        background: rgba(250, 245, 240, 0.96) !important;
+        backdrop-filter: blur(10px) !important;
+        padding: 10px 12px 12px 12px !important;
+        border-bottom: 2px solid #E2D5C5 !important;
+        margin-bottom: 12px !important;
+        border-radius: 0 0 20px 20px !important;
+        box-shadow: 0 4px 16px rgba(160, 120, 85, 0.12) !important;
     }
 
-    /* 🍵 淺奶茶色三大功能區塊 */
+    /* 強迫 7 欄並排網格 */
+    .cal-compact-grid div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 2px !important;
+    }
+    
+    .cal-compact-grid div[data-testid="column"] {
+        min-width: 0 !important;
+        flex: 1 1 0px !important;
+    }
+
+    /* 緊湊型日曆按鈕樣式 */
+    .cal-compact-grid div[data-testid="column"] .stButton>button {
+        width: 100% !important;
+        border-radius: 50% !important;
+        padding: 0px !important;
+        background-color: transparent !important;
+        color: #3D322C !important;
+        border: none !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        height: 38px !important;
+        width: 38px !important;
+        margin: 0 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .cal-compact-grid div[data-testid="column"] .stButton>button:hover {
+        background-color: #E2D5C5 !important;
+        color: #3D322C !important;
+    }
+
+    /* ✨ 可愛三大按鈕樣式 */
     .action-block div[data-testid="column"] .stPopover>button {
         width: 100% !important;
         background-color: #EEDFD2 !important;
         color: #5C4A3E !important;
         border: 1.5px solid #D4C3B3 !important;
-        border-radius: 14px !important;
-        padding: 10px 4px !important;
-        font-weight: 700 !important;
+        border-radius: 16px !important;
+        padding: 8px 2px !important;
+        font-weight: 800 !important;
         font-size: 14px !important;
         box-shadow: 0 2px 8px rgba(160, 120, 85, 0.08) !important;
     }
@@ -169,50 +202,57 @@ tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
 ])
 
 # ==========================================
-# TAB 1: 🏠 主頁記帳 (直式日期選擇 + 無金額 + 腳印斑塊背景)
+# TAB 1: 🏠 主頁記帳 (置頂緊湊日曆 + 可愛按鈕 + 不規則腳印)
 # ==========================================
 with tab_home:
-    # 📌 月份與年份選擇
-    cal_m_col1, cal_m_col2 = st.columns([1, 1])
-    sel_year = cal_m_col1.number_input("年份", min_value=2020, max_value=2030, value=st.session_state.cal_selected_date.year, label_visibility="collapsed")
-    sel_month = cal_m_col2.selectbox("月份", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
-
-    # 📌 需求 1 & 2：手機直式日期編排，且隱藏金額
-    st.markdown("##### 📅 請選擇日期 (直式滑動視窗)：")
+    # 📌 需求 1 & 2：永遠置頂的緊湊日曆區塊 (Sticky Bar)
+    st.markdown("<div class='sticky-calendar-bar'>", unsafe_allow_html=True)
     
-    cal = calendar.Calendar(firstweekday=0)
-    month_days_flat = [d for week in cal.monthdayscalendar(int(sel_year), int(sel_month)) for d in week if d != 0]
-    week_days_tw = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"]
+    # 頂部年月選擇
+    cal_head_1, cal_head_2 = st.columns([1.5, 1])
+    with cal_head_1:
+        st.markdown(f"<div style='font-weight:900; font-size:18px; color:#3D322C; padding-top:4px;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月%d日')}</div>", unsafe_allow_html=True)
+    with cal_head_2:
+        sel_month = st.selectbox("切換月份", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
 
-    # 採用手風琴 (Expander) 收納直式日期列表，保持主頁乾淨
-    with st.expander(f"📅 展開 {sel_year}年{sel_month}月 直式日期選單", expanded=False):
-        # 以每行 2 列的直式卡片堆疊呈現，適合手機垂直閱讀
-        d_cols = st.columns(2)
-        for idx, day_num in enumerate(month_days_flat):
-            curr_d = date(int(sel_year), int(sel_month), day_num)
-            w_str = week_days_tw[curr_d.weekday()]
-            
-            # 純日期標示，不含金額
-            date_label = f"📅 {sel_month}月{day_num}日 ({w_str})"
-            
-            col_target = d_cols[idx % 2]
-            with col_target:
-                st.markdown("<div class='vertical-date-btn'>", unsafe_allow_html=True)
-                if st.button(date_label, key=f"v_date_btn_{curr_d}", use_container_width=True):
+    sel_year = st.session_state.cal_selected_date.year
+
+    # 7 欄表頭 (日、一、二、三、四、五、六 - 以星期日開頭比照參考圖)
+    st.markdown("<div class='cal-compact-grid'>", unsafe_allow_html=True)
+    week_names = ["日", "一", "二", "三", "四", "五", "六"]
+    w_cols = st.columns(7)
+    for idx, w_name in enumerate(week_names):
+        w_cols[idx].markdown(f"<div style='text-align:center; font-size:12px; color:#8C7A6B; font-weight:800;'>{w_name}</div>", unsafe_allow_html=True)
+
+    # 建立月曆 (星期日為第一天: firstweekday=6)
+    cal = calendar.Calendar(firstweekday=6)
+    month_days = cal.monthdayscalendar(int(sel_year), int(sel_month))
+
+    for week in month_days:
+        cols = st.columns(7)
+        for day_idx, day_num in enumerate(week):
+            if day_num == 0:
+                cols[day_idx].write("")
+            else:
+                curr_d = date(int(sel_year), int(sel_month), day_num)
+                is_selected = (curr_d == st.session_state.cal_selected_date)
+                
+                # 選中日期樣式標記
+                btn_str = f"**{day_num}**" if is_selected else f"{day_num}"
+                
+                if cols[day_idx].button(btn_str, key=f"c_day_{curr_d}"):
                     st.session_state.cal_selected_date = curr_d
                     st.session_state.filter_to_single_day = True
                     st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True) # cal-compact-grid 結束
 
-    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
-
-    # 🍵 三大淺奶茶色功能按鈕並排
-    st.markdown("<div class='action-block'>", unsafe_allow_html=True)
+    # 📌 需求 3：換成超可愛 icon 的三大按鈕區塊 (放在置頂欄下方)
+    st.markdown("<div class='action-block' style='margin-top:8px;'>", unsafe_allow_html=True)
     top_col1, top_col2, top_col3 = st.columns(3)
     
     with top_col1:
-        with st.popover("🔴 登記支出", use_container_width=True):
-            st.markdown("### 🔴 新增支出筆數")
+        with st.popover("💸 記一筆支出", use_container_width=True):
+            st.markdown("### 💸 新增支出筆數")
             with st.form("add_exp_form", clear_on_submit=True):
                 e_date = st.date_input("支出日期", datetime.now())
                 e_payer = st.selectbox("付款人", st.session_state.members)
@@ -245,8 +285,8 @@ with tab_home:
                     st.rerun()
 
     with top_col2:
-        with st.popover("🟢 登記收入", use_container_width=True):
-            st.markdown("### 🟢 新增收入筆數")
+        with st.popover("✨ 記一筆收入", use_container_width=True):
+            st.markdown("### ✨ 新增收入筆數")
             with st.form("add_inc_form", clear_on_submit=True):
                 i_date = st.date_input("收入日期", datetime.now())
                 i_receiver = st.selectbox("收款人", st.session_state.members)
@@ -279,8 +319,8 @@ with tab_home:
                     st.rerun()
 
     with top_col3:
-        with st.popover("🤝 進行結帳", use_container_width=True):
-            st.markdown("### 🤝 結帳專區")
+        with st.popover("🐾 歡樂算算帳", use_container_width=True):
+            st.markdown("### 🐾 結帳專區")
             unsettled_df = st.session_state.expenses_df[st.session_state.expenses_df["結帳狀態"] != "已結帳"].copy()
             if unsettled_df.empty:
                 st.info("目前沒有待結帳筆數。")
@@ -300,19 +340,18 @@ with tab_home:
                         pass
                     st.success("🎉 已完成結帳！")
                     st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True) # action-block 結束
+    st.markdown("</div>", unsafe_allow_html=True) # sticky-calendar-bar 結束
 
-    st.divider()
-
-    # 檢視狀態說明
+    # 檢視狀態列
     list_header_col1, list_header_col2 = st.columns([3, 1])
     if st.session_state.filter_to_single_day:
         list_header_col1.markdown(f"#### 📅 正在檢視單日：`{st.session_state.cal_selected_date}`")
-        if list_header_col2.button("↺ 看全月紀錄"):
+        if list_header_col2.button("↺ 看全月"):
             st.session_state.filter_to_single_day = False
             st.rerun()
     else:
-        list_header_col1.markdown(f"#### 📅 本月全月收支紀錄 ({sel_year}年{sel_month}月)")
+        list_header_col1.markdown(f"#### 📅 本月收支紀錄 ({sel_year}年{sel_month}月)")
 
     # 數據篩選
     df_current = st.session_state.expenses_df.copy()
@@ -331,7 +370,9 @@ with tab_home:
     if not filtered_df.empty:
         filtered_df = filtered_df.sort_values(by="日期", ascending=False)
 
-    # 逐條收支卡片
+    week_days_tw = ["一", "二", "三", "四", "五", "六", "日"]
+
+    # 下方滑動逐條收支卡片
     if filtered_df.empty:
         st.info("此區間內尚無任何收支紀錄。")
     else:
@@ -393,7 +434,7 @@ with tab_home:
             st.divider()
 
 # ==========================================
-# TAB 2: 📊 統計圖表 (置中 + 移除工具列)
+# TAB 2: 📊 統計圖表
 # ==========================================
 with tab_charts:
     st.subheader("📊 統計圖表視覺化分析")
