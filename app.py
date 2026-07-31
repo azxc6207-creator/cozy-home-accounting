@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + Popover 滾動最佳化
+# 2. 終極防跑版 CSS + Popover 滾動與安全邊距最佳化
 # ==========================================
 st.markdown("""
 <style>
@@ -49,13 +49,13 @@ st.markdown("""
     }
 
     /* ========================================================
-       🚀 核彈級高特異性選擇器：擊敗 Streamlit 原生手機折行規則
+       🚀 手機橫向不折行霸道 CSS 覆寫
        ======================================================== */
     @media screen and (max-width: 1024px) {
         html body .stApp div[data-testid="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
-            flex-wrap: nowrap !important; /* 絕對不准拆行 */
+            flex-wrap: nowrap !important;
             align-items: center !important;
             width: 100% !important;
             gap: 4px !important;
@@ -71,16 +71,15 @@ st.markdown("""
     }
 
     /* ========================================================
-       📲 解決 Popover 彈窗底部「確認新增」被吃掉、無法下滑的問題
+       📲 修正：解決 Popover 彈窗底部按鈕被遮擋無法滑到底的問題
        ======================================================== */
     div[data-testid="stPopoverBody"] {
-        max-height: 75vh !important; /* 限制最高為螢幕 75% */
-        overflow-y: auto !important; /* 強制開啟垂直滾動條 */
-        -webkit-overflow-scrolling: touch !important; /* iOS 順暢原滑動 */
-        padding: 12px 14px 40px 14px !important; /* 底部加大留白至 40px，防止按鈕被遮住 */
+        max-height: 60vh !important; /* 降低容器高度避開 Safari 底欄 */
+        overflow-y: scroll !important; /* 強制開啟垂直滾動條 */
+        -webkit-overflow-scrolling: touch !important; /* iOS 手勢平滑滾動 */
+        padding: 12px 14px 60px 14px !important; /* 底部加高留白 */
     }
 
-    /* 彈出視窗(Popover)內部的表單恢復正常上下排列 */
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] {
         flex-wrap: wrap !important;
         flex-direction: column !important;
@@ -91,9 +90,10 @@ st.markdown("""
         flex: none !important;
     }
     
-    /* 確保表單送出按鈕置底並且明顯 */
-    div[data-testid="stPopoverBody"] div[data-testid="stForm"] {
-        margin-bottom: 20px !important;
+    /* 為表單底部強制新增大型安全距離 */
+    div[data-testid="stPopoverBody"] form {
+        margin-bottom: 60px !important;
+        padding-bottom: 20px !important;
     }
 
     /* 📌 容器卡片統一樣式 */
@@ -170,26 +170,32 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 阻擋 iPhone 日期鍵盤
+# ⚡ 隱藏 JavaScript: 全方位封鎖 DateInput 鍵盤彈出
 # ==========================================
 components.html(
     """
     <script>
-    function disableKeyboard() {
-        const inputs = window.parent.document.querySelectorAll('input[type="text"]');
-        inputs.forEach(input => {
-            const label = input.getAttribute('aria-label') || '';
-            if (label.includes('日期') || label.includes('起始') || label.includes('結束')) {
+    function blockDateInputKeyboards() {
+        const doc = window.parent.document;
+        // 抓取所有出現在 DateInput 組件容器內部的 input 元素（包含單選與雙選區間）
+        const dateContainers = doc.querySelectorAll('[data-testid="stDateInput"]');
+        dateContainers.forEach(container => {
+            const inputs = container.querySelectorAll('input');
+            inputs.forEach(input => {
                 if (input.getAttribute('inputmode') !== 'none') {
                     input.setAttribute('inputmode', 'none');
                     input.setAttribute('readonly', 'true');
                     input.style.caretColor = 'transparent';
                     input.style.cursor = 'pointer';
                 }
-            }
+            });
         });
     }
-    setInterval(disableKeyboard, 400); 
+
+    // 啟動頁面 MutationObserver 進行即時 DOM 監控，防範動態載入的元件
+    const observer = new MutationObserver(blockDateInputKeyboards);
+    observer.observe(window.parent.document.body, { childList: true, subtree: true });
+    setInterval(blockDateInputKeyboards, 300);
     </script>
     """,
     height=0, width=0
