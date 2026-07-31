@@ -7,12 +7,12 @@ import calendar
 import streamlit.components.v1 as components
 
 # ==========================================
-# 1. 頁面設定與莫蘭迪奶茶色系 CSS (強制手機直式版面)
+# 1. 頁面設定與莫蘭迪奶茶色系 CSS (強制手機防跑版)
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
     page_icon="🏡",
-    layout="centered", # 關鍵：改回 centered，啟動手機直式排版
+    layout="centered",  # 關鍵：啟動置中手機直式排版
     initial_sidebar_state="collapsed"
 )
 
@@ -44,6 +44,33 @@ st.markdown("""
         padding: 1rem 1rem 3rem 1rem !important;
     }
 
+    /* ========================================================
+       🚀 終極防跑版：在手機螢幕下強制欄位水平並排，取消自動 100% 折行
+       ======================================================== */
+    @media (max-width: 768px) {
+        /* 取消橫向區塊的垂直折行 */
+        div[data-testid="stVerticalBlock"]:has(.cal-marker) div[data-testid="stHorizontalBlock"],
+        div[data-testid="stVerticalBlock"]:has(.action-marker) div[data-testid="stHorizontalBlock"],
+        div[data-testid="stVerticalBlock"]:has(.tx-marker) div[data-testid="stHorizontalBlock"],
+        div[data-testid="stVerticalBlock"]:has(.edit-del-btn) div[data-testid="stHorizontalBlock"],
+        div[data-testid="stVerticalBlock"]:has(.setting-row) div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+        }
+
+        /* 取消各欄位的 100% 寬度，恢復 inline flex 比例分配 */
+        div[data-testid="stVerticalBlock"]:has(.cal-marker) div[data-testid="column"],
+        div[data-testid="stVerticalBlock"]:has(.action-marker) div[data-testid="column"],
+        div[data-testid="stVerticalBlock"]:has(.tx-marker) div[data-testid="column"],
+        div[data-testid="stVerticalBlock"]:has(.edit-del-btn) div[data-testid="column"],
+        div[data-testid="stVerticalBlock"]:has(.setting-row) div[data-testid="column"] {
+            width: auto !important;
+            min-width: 0 !important;
+            padding: 0 2px !important;
+        }
+    }
+
     /* 📌 永遠置頂的日曆容器 (Sticky Top) */
     div[data-testid="stVerticalBlock"]:has(.cal-marker) {
         position: -webkit-sticky !important;
@@ -59,22 +86,6 @@ st.markdown("""
         box-shadow: 0 4px 16px rgba(160, 120, 85, 0.1) !important;
     }
 
-    /* 🛑 強制局部容器內「絕對水平並排」，防止折行 */
-    div[data-testid="stVerticalBlock"]:has(.cal-marker) div[data-testid="stHorizontalBlock"],
-    div[data-testid="stVerticalBlock"]:has(.action-marker) div[data-testid="stHorizontalBlock"],
-    div[data-testid="stVerticalBlock"]:has(.tx-marker) div[data-testid="stHorizontalBlock"],
-    div[data-testid="stVerticalBlock"]:has(.setting-row) div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-    }
-    
-    div[data-testid="stVerticalBlock"]:has(.cal-marker) div[data-testid="stHorizontalBlock"] { gap: 2px !important; }
-    div[data-testid="stVerticalBlock"]:has(.action-marker) div[data-testid="stHorizontalBlock"] { gap: 6px !important; }
-    div[data-testid="stVerticalBlock"]:has(.tx-marker) div[data-testid="stHorizontalBlock"] { gap: 4px !important; }
-    div[data-testid="stVerticalBlock"]:has(.setting-row) div[data-testid="stHorizontalBlock"] { gap: 4px !important; }
-
     /* 緊湊型日曆按鈕樣式 */
     div[data-testid="stVerticalBlock"]:has(.cal-marker) .stButton>button {
         width: 100% !important; border-radius: 50% !important; padding: 0px !important;
@@ -83,7 +94,6 @@ st.markdown("""
         margin: 0 auto !important; display: flex !important; align-items: center !important; justify-content: center !important;
     }
     div[data-testid="stVerticalBlock"]:has(.cal-marker) .stButton>button:hover { background-color: #E2D5C5 !important; }
-    div[data-testid="stVerticalBlock"]:has(.cal-marker) .stButton>button p { margin-bottom: 0 !important; }
 
     /* 🍵 三大淺奶茶色功能按鈕 */
     div[data-testid="stVerticalBlock"]:has(.action-marker) div[data-testid="stPopover"]>button {
@@ -92,16 +102,17 @@ st.markdown("""
         font-weight: 800 !important; font-size: 14px !important; box-shadow: 0 2px 6px rgba(160, 120, 85, 0.08) !important;
     }
 
-    /* 📋 明細淺底色橫列卡片 */
+    /* 📋 明細淺底色橫列卡片 (高度壓縮) */
     div[data-testid="stVerticalBlock"]:has(.tx-marker) {
-        background-color: #FDF9F5 !important; border-radius: 12px !important; padding: 8px 12px !important;
+        background-color: #FDF9F5 !important; border-radius: 12px !important; padding: 8px 10px !important;
         margin-bottom: 8px !important; border: 1px solid #EAE0D5 !important;
         box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; gap: 0 !important;
     }
     div[data-testid="stVerticalBlock"]:has(.tx-marker) p { margin-bottom: 0 !important; }
     
-    /* 🗑️ 刪除與 ✏️ 編輯白底按鈕 (保證並排) */
-    .edit-del-btn .stButton>button, .edit-del-btn div[data-testid="stPopover"]>button {
+    /* 🗑️ 刪除與 ✏️ 編輯白底按鈕 (保證絕對並排置中) */
+    div[data-testid="stVerticalBlock"]:has(.edit-del-btn) .stButton>button, 
+    div[data-testid="stVerticalBlock"]:has(.edit-del-btn) div[data-testid="stPopover"]>button {
         border-radius: 10px !important; background-color: #FFFFFF !important; color: #3D322C !important;
         border: 1px solid #E2D5C5 !important; font-weight: 700 !important; font-size: 14px !important;
         padding: 0 !important; height: 32px !important; width: 34px !important;
@@ -303,7 +314,7 @@ with tab_home:
         end_str = st.session_state.end_date.strftime('%Y-%m-%d')
         display_title = f"📅 {start_str}" if start_str == end_str else f"📅 {start_str} ~ {end_str}"
     
-    st.markdown(f"<h2 style='text-align:center; color:#7A573C; font-weight:900; font-size:20px; margin:14px 0 8px 0;'>{display_title}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align:center; color:#7A573C; font-weight:900; font-size:18px; margin:14px 0 8px 0;'>{display_title}</h2>", unsafe_allow_html=True)
 
     df_current = st.session_state.expenses_df.copy()
     if not df_current.empty:
@@ -331,7 +342,7 @@ with tab_home:
                 c_card1, c_card2, c_actions = st.columns([3.5, 2, 1.8])
                 
                 with c_card1:
-                    st.markdown(f"<div style='font-size:16px; font-weight:800; color:#3D322C; line-height:1.1;'>{row['項目']}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-size:16px; font-weight:800; color:#3D322C; line-height:1.2;'>{row['項目']}</div>", unsafe_allow_html=True)
                     st.markdown(f"<div style='font-size:12px; color:#8C7A6B; margin-top:2px;'>{row['記帳人']} · {r_date.month}/{r_date.day}({day_week_str}) · {row['類別']}</div>", unsafe_allow_html=True)
                     
                 with c_card2:
@@ -339,7 +350,7 @@ with tab_home:
                     st.markdown(f"<div style='font-size:18px; font-weight:900; color:{amt_color}; text-align:right;'>{'+' if row['類型'] == '收入' else ''}{row['金額']:,.0f}</div>", unsafe_allow_html=True)
                 
                 with c_actions:
-                    st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
+                    st.markdown("<div class='edit-del-btn'></div>", unsafe_allow_html=True)
                     act_col1, act_col2 = st.columns(2)
                     with act_col1:
                         with st.popover("✏️"):
@@ -362,14 +373,13 @@ with tab_home:
                             try: conn.update(data=st.session_state.expenses_df)
                             except: pass
                             st.rerun()
-                    st.markdown("</div>", unsafe_allow_html=True)
 
-    # 📌 底部自訂區間查詢框
+    # 📌 底部自訂區間查詢框 (移至最下方)
     with st.container():
         st.markdown("<div class='query-marker'></div>", unsafe_allow_html=True)
         st.markdown("<h3 style='color:#7A573C; margin-bottom:10px; font-size:18px;'>🔍 底部區間查詢</h3>", unsafe_allow_html=True)
         
-        picked_range = st.date_input("選擇起始與結束", value=(st.session_state.start_date, st.session_state.end_date), key="bottom_date_picker")
+        picked_range = st.date_input("選擇起始與結束日期", value=(st.session_state.start_date, st.session_state.end_date), key="bottom_date_picker")
         
         q_col1, q_col2 = st.columns(2)
         if q_col1.button("✅ 查詢此區間", use_container_width=True):
@@ -426,13 +436,12 @@ with tab_memo:
                 st.rerun()
             c2.markdown(f"• {memo['text']}")
             with c3:
-                st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
+                st.markdown("<div class='edit-del-btn'></div>", unsafe_allow_html=True)
                 with st.popover("✏️"):
                     new_text = st.text_input("修改", value=memo["text"], key=f"mi_{memo['id']}")
                     if st.button("儲存", key=f"ms_{memo['id']}"):
                         memo["text"] = new_text
                         st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
 
 with tab_shopping:
     st.subheader("🛒 購物清單")
@@ -451,13 +460,12 @@ with tab_shopping:
                 st.rerun()
             c2.markdown(f"🛒 {item['item']}")
             with c3:
-                st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
+                st.markdown("<div class='edit-del-btn'></div>", unsafe_allow_html=True)
                 with st.popover("✏️"):
                     new_item = st.text_input("修改", value=item["item"], key=f"si_{item['id']}")
                     if st.button("儲存", key=f"ss_{item['id']}"):
                         item["item"] = new_item
                         st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
 
 with tab_settings:
     st.subheader("⚙️ 小窩設定")
@@ -476,7 +484,7 @@ with tab_settings:
             m_col1, m_actions = st.columns([3, 1.8])
             m_col1.write(f"• **{m}**")
             with m_actions:
-                st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
+                st.markdown("<div class='edit-del-btn'></div>", unsafe_allow_html=True)
                 act1, act2 = st.columns(2)
                 with act1:
                     with st.popover("✏️"):
@@ -490,7 +498,6 @@ with tab_settings:
                     if st.button("🗑️", key=f"d_m_{idx}") and len(st.session_state.members) > 1:
                         st.session_state.members.pop(idx)
                         st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
     st.divider()
 
     st.markdown(f"### 🏷️ 支出類別")
@@ -507,7 +514,7 @@ with tab_settings:
             c_col1, c_actions = st.columns([3, 1.8])
             c_col1.write(f"• **{c}**")
             with c_actions:
-                st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
+                st.markdown("<div class='edit-del-btn'></div>", unsafe_allow_html=True)
                 act1, act2 = st.columns(2)
                 with act1:
                     with st.popover("✏️"):
@@ -521,7 +528,6 @@ with tab_settings:
                     if st.button("🗑️", key=f"d_e_{idx}") and len(st.session_state.expense_categories) > 1:
                         st.session_state.expense_categories.pop(idx)
                         st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
     st.divider()
 
     st.markdown(f"### 💰 收入類別")
@@ -538,7 +544,7 @@ with tab_settings:
             ic_col1, ic_actions = st.columns([3, 1.8])
             ic_col1.write(f"• **{ic}**")
             with ic_actions:
-                st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
+                st.markdown("<div class='edit-del-btn'></div>", unsafe_allow_html=True)
                 act1, act2 = st.columns(2)
                 with act1:
                     with st.popover("✏️"):
@@ -552,4 +558,3 @@ with tab_settings:
                     if st.button("🗑️", key=f"d_i_{idx}") and len(st.session_state.income_categories) > 1:
                         st.session_state.income_categories.pop(idx)
                         st.rerun()
-                st.markdown("</div>", unsafe_allow_html=True)
