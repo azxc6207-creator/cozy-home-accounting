@@ -6,7 +6,7 @@ from datetime import datetime, date
 import calendar
 
 # ==========================================
-# 1. 頁面設定與 Noto Sans TC 美化字體 CSS
+# 1. 頁面設定與「莫蘭迪摩卡奶茶色系」CSS
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
@@ -15,163 +15,162 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 導入 Google Fonts (Noto Sans TC) 並優化樣式
+# 注入莫蘭迪大地奶茶色系 CSS (比照附圖色彩)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap');
 
-    /* 全局背景與美化字體 */
+    /* 全局奶茶大地色漸層背景 */
     html, body, [class*="css"], .stApp {
         font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        background-color: #FAF8F5;
-        color: #2D241E;
-        font-size: 17px !important;
-        letter-spacing: 0.2px;
+        background: linear-gradient(135deg, #FAF5F0 0%, #F2E8DF 50%, #E8DDD0 100%) !important;
+        color: #3D322C !important;
+        font-size: 16px !important;
     }
     
-    /* 隱藏預設 Streamlit 頂部狀態列與頁尾 */
     header[data-testid="stHeader"] { visibility: hidden; }
     footer { visibility: hidden; }
 
-    /* 頂部 小窩 Banner */
+    /* 頂部極簡 Banner */
     .cozy-banner {
-        background-color: #FFFDF0;
-        border: 2px dashed #FDE68A;
+        background-color: #FFFFFF;
+        border: 1.5px solid #E2D5C5;
         border-radius: 20px;
-        padding: 20px 28px;
+        padding: 18px 24px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 22px;
-        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.05);
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(160, 120, 85, 0.06);
     }
     .banner-title {
-        font-size: 28px !important;
+        font-size: 24px !important;
         font-weight: 800;
-        color: #EA580C;
+        color: #8C6239;
         margin: 0;
         letter-spacing: -0.5px;
     }
 
-    /* 白色/奶黃高質感卡片 */
-    .white-card {
-        background-color: #FFFFFF;
-        border: 1.5px solid #FEF3C7;
-        border-radius: 18px;
-        padding: 22px;
-        box-shadow: 0 4px 16px rgba(245, 158, 11, 0.06);
-        margin-bottom: 18px;
-        transition: transform 0.2s, box-shadow 0.2s;
+    /* 📱 關鍵修復：強制 7 欄日曆在手機版不跑版 */
+    [data-testid="column"] {
+        min-width: 0 !important;
+        padding: 0 1px !important;
     }
-    .white-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.1);
-    }
-    
-    .yellow-card {
-        background-color: #FFFBEB;
-        border: 2px solid #FDE68A;
-        border-radius: 18px;
-        padding: 22px;
-        margin-bottom: 18px;
-        box-shadow: 0 4px 14px rgba(245, 158, 11, 0.08);
+    div[data-testid="stHorizontalBlock"] {
+        gap: 2px !important;
     }
 
-    /* 結帳明細彙整表格樣式 */
-    .settlement-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 10px;
-        font-size: 15px;
+    /* 日曆按鈕奶茶色風格 */
+    div[data-testid="column"] .stButton>button {
+        width: 100% !important;
+        border-radius: 10px !important;
+        padding: 4px 0px !important;
+        background-color: #FFFFFF !important;
+        color: #5C4A3E !important;
+        border: 1px solid #E2D5C5 !important;
+        font-size: 11px !important;
+        min-height: 48px !important;
+        line-height: 1.2 !important;
+        transition: all 0.2s ease;
+    }
+    div[data-testid="column"] .stButton>button:hover {
+        background-color: #A07855 !important;
+        color: #FFFFFF !important;
+        border-color: #A07855 !important;
+    }
+
+    /* 比照附圖的奶茶色流水帳卡片樣式 */
+    .transaction-card {
+        background-color: #FFFFFF;
+        border: 1px solid #E2D5C5;
+        padding: 16px 18px;
+        border-radius: 16px;
+        margin-bottom: 10px;
+        box-shadow: 0 4px 12px rgba(160, 120, 85, 0.05);
+    }
+    .item-title {
+        font-size: 18px;
+        font-weight: 800;
+        color: #3D322C;
+    }
+    .item-amount {
+        font-size: 20px;
+        font-weight: 900;
+        color: #8C6239;
+        text-align: right;
+    }
+    .badge-tag {
+        background-color: #EEDFD2;
+        color: #7A573C;
+        font-size: 11px;
+        padding: 2px 8px;
         border-radius: 10px;
-        overflow: hidden;
-    }
-    .settlement-table th {
-        background-color: #FEF3C7;
-        color: #92400E;
-        padding: 10px;
-        text-align: center;
         font-weight: 700;
+        margin-right: 6px;
     }
-    .settlement-table td {
-        background-color: #FFFFFF;
-        border-bottom: 1px solid #F3F4F6;
-        padding: 10px;
-        text-align: center;
+    .sub-info {
+        font-size: 13px;
+        color: #8C7A6B;
+        margin-top: 4px;
     }
 
-    /* 分頁 Tabs 圓角選單 */
+    /* 分頁 Tabs 圓角導覽列 (摩卡奶茶風) */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 12px;
-        background-color: transparent;
-        padding: 4px;
+        gap: 8px;
+        background-color: #E8DDD0;
+        padding: 6px;
+        border-radius: 30px;
+        margin-bottom: 16px;
     }
     .stTabs [data-baseweb="tab"] {
-        border-radius: 30px;
-        padding: 10px 24px;
-        background-color: #FEF3C7;
-        color: #B45309;
+        border-radius: 20px;
+        padding: 8px 18px;
+        color: #6E5A4C;
         font-weight: 700;
-        font-size: 17px !important;
+        font-size: 15px !important;
         border: none;
     }
     .stTabs [aria-selected="true"] {
-        background-color: #EA580C !important;
+        background-color: #A07855 !important;
         color: #FFFFFF !important;
-        box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+        box-shadow: 0 4px 12px rgba(160, 120, 85, 0.3);
     }
 
-    /* 輸入框與按鈕美化 */
-    .stTextInput input, .stSelectbox select, .stNumberInput input, .stDateInput input {
-        border-radius: 12px !important;
-        font-size: 16px !important;
-    }
-    
+    /* 按鈕樣式美化 (深摩卡棕色) */
     .stButton>button {
-        border-radius: 24px;
-        background-color: #EA580C;
+        border-radius: 20px;
+        background-color: #A07855;
         color: white;
         border: none;
         font-weight: 700;
-        font-size: 16px !important;
-        padding: 8px 22px;
+        font-size: 15px !important;
+        padding: 6px 18px;
         transition: all 0.2s;
     }
     .stButton>button:hover {
-        background-color: #C2410C;
-        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+        background-color: #8A6443;
+        box-shadow: 0 4px 12px rgba(138, 100, 67, 0.3);
     }
 
-    /* 📱 RWD 手機版專屬優化 */
-    @media (max-width: 768px) {
-        html, body, [class*="css"], .stApp { font-size: 15px !important; }
-        .cozy-banner { padding: 14px 18px; }
-        .banner-title { font-size: 22px !important; }
-        .white-card, .yellow-card { padding: 16px; margin-bottom: 12px; }
-        
-        .stTabs [data-baseweb="tab-list"] {
-            overflow-x: auto;
-            white-space: nowrap;
-            flex-wrap: nowrap;
-        }
-        .stTabs [data-baseweb="tab"] {
-            padding: 6px 16px;
-            font-size: 15px !important;
-        }
+    /* 輸入框美化 */
+    .stTextInput input, .stSelectbox select, .stNumberInput input, .stDateInput input {
+        border-radius: 12px !important;
+        background-color: #FFFFFF !important;
+        border: 1px solid #E2D5C5 !important;
+        color: #3D322C !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. Session State 初始化 (資料快取與狀態管理)
+# 2. Session State 初始化
 # ==========================================
 if "members" not in st.session_state:
     st.session_state.members = ["鼠", "熊"]
 
 if "expense_categories" not in st.session_state:
     st.session_state.expense_categories = [
-        "🍽️ 餐飲美食", "🛋️ 居家日常", "🚗 交通出行", 
-        "⚡ 水電瓦斯", "🎬 休閒娛樂", "🏥 醫療健康", "📦 其他"
+        "🍽️ 餐費", "🛋️ 居家日用", "🚗 交通費", "🏠 水電瓦斯網路費", "🎬 休閒娛樂", "🏥 醫療健康", "📦 其他"
     ]
 
 if "income_categories" not in st.session_state:
@@ -179,38 +178,20 @@ if "income_categories" not in st.session_state:
         "💰 薪資收入", "🎁 獎金紅包", "📈 投資理財", "🤝 副業兼職", "💵 其他收入"
     ]
 
-# 固定收支規則清單 (Recurring Rules)
-if "recurring_rules" not in st.session_state:
-    st.session_state.recurring_rules = [
-        {
-            "id": 1, 
-            "type": "支出", 
-            "day": 20, 
-            "category": "⚡ 水電瓦斯", 
-            "item": "每月固定房租/水電費用", 
-            "amount": 2000.0, 
-            "payer": "鼠", 
-            "note": "系統每月20號自動扣款預設"
-        }
-    ]
-
 if "cal_selected_date" not in st.session_state:
     st.session_state.cal_selected_date = date.today()
 
+if "filter_to_single_day" not in st.session_state:
+    st.session_state.filter_to_single_day = False
+
 if "memos" not in st.session_state:
-    st.session_state.memos = [
-        {"id": 1, "text": "確認下個月水電費轉帳帳號"},
-        {"id": 2, "text": "討論本月採買共同用品預算"}
-    ]
+    st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 
 if "shopping_list" not in st.session_state:
-    st.session_state.shopping_list = [
-        {"id": 101, "item": "鮮奶 🥛"},
-        {"id": 102, "item": "抽取式衛生紙 🧻"}
-    ]
+    st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
 
 # ==========================================
-# 3. 連接 Google Sheets 資料庫與自動產生固定收支
+# 3. 連接 Google Sheets 資料庫
 # ==========================================
 conn = st.connection("gsheets", type=GSheetsConnection)
 
@@ -230,80 +211,30 @@ def load_data():
 if "expenses_df" not in st.session_state:
     st.session_state.expenses_df = load_data()
 
-# 🔄 自動檢查並產生本月「固定收支」紀錄
-def auto_generate_recurring():
-    today = date.today()
-    curr_y = today.year
-    curr_m = today.month
+# ==========================================
+# 4. 主選單 Header & 分頁
+# ==========================================
+st.markdown("<h2 style='color:#7A573C; font-weight:800; margin-bottom:12px;'>🏠 小窩記帳</h2>", unsafe_allow_html=True)
+
+tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
+    "🏠 主頁記帳", "📊 統計圖表", "💬 備忘錄", "🛒 購物清單", "⚙️ 設定"
+])
+
+# ==========================================
+# TAB 1: 🏠 主頁記帳 (摩卡奶茶風：月曆 + 下方流水帳)
+# ==========================================
+with tab_home:
+    # 頂部操作按鈕 (支出 / 收入 / 結帳)
+    top_col1, top_col2, top_col3 = st.columns(3)
     
-    updated = False
-    for rule in st.session_state.recurring_rules:
-        # 如果今天已經到了或過了當月的固定扣款日
-        if today.day >= rule["day"]:
-            target_date_str = f"{curr_y}-{curr_m:02d}-{rule['day']:02d}"
-            rec_id = f"REC-{rule['id']}-{curr_y}-{curr_m:02d}"
-            
-            # 檢查是否已經產生過該筆自動紀錄
-            if rec_id not in st.session_state.expenses_df["ID"].values:
-                new_rec_row = pd.DataFrame([{
-                    "ID": rec_id,
-                    "日期": target_date_str,
-                    "類型": rule["type"],
-                    "類別": rule["category"],
-                    "項目": f"🔄 [固定{rule['type']}] {rule['item']}",
-                    "金額": float(rule["amount"]),
-                    "記帳人": rule["payer"],
-                    "備註": rule["note"],
-                    "結帳狀態": "未結帳",
-                    "結帳單號": "",
-                    "已同意人": ""
-                }])
-                st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_rec_row], ignore_index=True)
-                updated = True
-                
-    if updated:
-        try:
-            conn.update(data=st.session_state.expenses_df)
-        except Exception:
-            pass
-
-auto_generate_recurring()
-
-# ==========================================
-# 4. 主選單 Header
-# ==========================================
-head_col1, head_col2 = st.columns([1.5, 2])
-with head_col1:
-    st.markdown("### 🏠 小窩記帳 <span style='font-size:13px; background:#FEF3C7; color:#B45309; padding:4px 14px; border-radius:20px; font-weight:bold;'>🏡 Our Cozy Home</span>", unsafe_allow_html=True)
-
-tab_dash, tab_memo, tab_shopping, tab_settings = st.tabs(["🏠 記帳儀表板", "💬 備忘錄", "🛒 購買清單", "⚙️ 設定"])
-
-# ==========================================
-# TAB 1: 🏠 記帳儀表板 (含結帳總表與帳戶餘額)
-# ==========================================
-with tab_dash:
-    st.markdown("""
-    <div class="cozy-banner">
-        <div class="banner-title">Happiness is keeping track together! 🏠</div>
-        <div style="font-size: 38px;">🏡</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # 工具列：搜尋列 + 🔴 登記支出 + 🟢 登記收入 + 🤝 進行結帳
-    btn_col1, btn_col2, btn_col3, btn_col4 = st.columns([2.5, 1.2, 1.2, 1.3])
-    
-    with btn_col1:
-        search_kw = st.text_input("搜尋", placeholder="🔍 搜尋描述、分類或付款人...", label_visibility="collapsed")
-        
-    # 🔴 登記支出
-    with btn_col2:
+    with top_col1:
         with st.popover("🔴 登記支出", use_container_width=True):
             st.markdown("### 🔴 新增支出筆數")
-            with st.form("add_expense_form", clear_on_submit=True):
+            with st.form("add_exp_form", clear_on_submit=True):
                 e_date = st.date_input("支出日期", datetime.now())
                 e_payer = st.selectbox("付款人", st.session_state.members)
                 e_cat = st.selectbox("支出分類", st.session_state.expense_categories)
-                e_item = st.text_input("消費項目 (非必填)", placeholder="例如：全聯採買食材")
+                e_item = st.text_input("消費項目 (非必填)", placeholder="例如：加油、麵包")
                 e_amount = st.number_input("金額 ($)", min_value=1, step=10, value=100)
                 e_note = st.text_input("備註 (非必填)", placeholder="選填")
                 
@@ -327,18 +258,17 @@ with tab_dash:
                         conn.update(data=st.session_state.expenses_df)
                     except Exception:
                         pass
-                    st.success("🎉 支出新增成功！")
+                    st.toast("🎉 支出新增成功！")
                     st.rerun()
 
-    # 🟢 登記收入
-    with btn_col3:
+    with top_col2:
         with st.popover("🟢 登記收入", use_container_width=True):
             st.markdown("### 🟢 新增收入筆數")
-            with st.form("add_income_form", clear_on_submit=True):
+            with st.form("add_inc_form", clear_on_submit=True):
                 i_date = st.date_input("收入日期", datetime.now())
                 i_receiver = st.selectbox("收款人", st.session_state.members)
                 i_cat = st.selectbox("收入分類", st.session_state.income_categories)
-                i_item = st.text_input("收入項目 (非必填)", placeholder="例如：7月薪資發放")
+                i_item = st.text_input("收入項目 (非必填)", placeholder="例如：薪資發放")
                 i_amount = st.number_input("金額 ($)", min_value=1, step=100, value=1000)
                 i_note = st.text_input("備註 (非必填)", placeholder="選填")
                 
@@ -362,252 +292,218 @@ with tab_dash:
                         conn.update(data=st.session_state.expenses_df)
                     except Exception:
                         pass
-                    st.success("🎉 收入新增成功！")
+                    st.toast("🎉 收入新增成功！")
                     st.rerun()
 
-    # 🤝 進行結帳 (含表格與帳戶餘額)
-    with btn_col4:
+    with top_col3:
         with st.popover("🤝 進行結帳", use_container_width=True):
-            st.markdown("### 🤝 進行結帳審核專區")
-            current_unsettled = st.session_state.expenses_df[st.session_state.expenses_df["結帳狀態"] != "已結帳"].copy()
-            
-            if current_unsettled.empty:
-                st.info("目前沒有待結帳的筆數。")
+            st.markdown("### 🤝 結帳專區")
+            unsettled_df = st.session_state.expenses_df[st.session_state.expenses_df["結帳狀態"] != "已結帳"].copy()
+            if unsettled_df.empty:
+                st.info("目前沒有待結帳筆數。")
             else:
-                settle_mode = st.radio("選擇結帳範圍", ["全部未結帳", "以月為單位", "日期到日期"], horizontal=True)
-                current_unsettled["日期_dt"] = pd.to_datetime(current_unsettled["日期"])
-                
-                if settle_mode == "以月為單位":
-                    col_y, col_m = st.columns(2)
-                    cur_y = col_y.number_input("年份", min_value=2020, max_value=2030, value=datetime.now().year)
-                    cur_m = col_m.selectbox("月份", list(range(1, 13)), index=datetime.now().month - 1)
-                    to_settle_df = current_unsettled[
-                        (current_unsettled["日期_dt"].dt.year == cur_y) & 
-                        (current_unsettled["日期_dt"].dt.month == cur_m)
-                    ]
-                elif settle_mode == "日期到日期":
-                    col_d1, col_d2 = st.columns(2)
-                    s_date = col_d1.date_input("開始日期", datetime.now())
-                    e_date = col_d2.date_input("結束日期", datetime.now())
-                    to_settle_df = current_unsettled[
-                        (current_unsettled["日期_dt"].dt.date >= s_date) & 
-                        (current_unsettled["日期_dt"].dt.date <= e_date)
-                    ]
-                else:
-                    to_settle_df = current_unsettled.copy()
-                    
-                st.write(f"📌 選定區間包含 **{len(to_settle_df)}** 筆待結帳項目")
-                
-                # AA 拆帳計算
-                if len(st.session_state.members) >= 2 and not to_settle_df.empty:
-                    m1, m2 = st.session_state.members[0], st.session_state.members[1]
-                    p1_exp = to_settle_df[(to_settle_df["記帳人"] == m1) & (to_settle_df["類型"] == "支出")]["金額"].sum()
-                    p2_exp = to_settle_df[(to_settle_df["記帳人"] == m2) & (to_settle_df["類型"] == "支出")]["金額"].sum()
-                    diff = (p1_exp - p2_exp) / 2
-                    
-                    if diff > 0:
-                        transfer_text = f"<b>{m2}</b> ➔ <b>{m1}</b>"
-                        transfer_amt = abs(diff)
-                    else:
-                        transfer_text = f"<b>{m1}</b> ➔ <b>{m2}</b>"
-                        transfer_amt = abs(diff)
-
-                    st.markdown(f"<div style='font-size:16px; margin:8px 0;'>拆帳補貼：{transfer_text} <b style='color:#D97706; font-size:18px;'>$ {transfer_amt:,.2f}</b></div>", unsafe_allow_html=True)
-
-                # 全員同意核對
-                st.markdown("<div style='font-size:14px; font-weight:700; color:#B45309; margin-top:8px;'>請全員勾選確認同意：</div>", unsafe_allow_html=True)
+                st.write(f"待結帳總筆數：**{len(unsettled_df)}** 筆")
+                st.markdown("請全員勾選確認同意：")
                 chk_cols = st.columns(len(st.session_state.members))
-                agreed_flags = []
-                for idx, member in enumerate(st.session_state.members):
-                    is_chk = chk_cols[idx].checkbox(f"👤 {member}", key=f"settle_pop_agree_{member}")
-                    agreed_flags.append(is_chk)
+                agreed_flags = [chk_cols[i].checkbox(f"👤 {m}", key=f"settle_chk_{m}") for i, m in enumerate(st.session_state.members)]
                 
-                all_agreed = all(agreed_flags) and len(agreed_flags) > 0
-
-                # ------------------------------------------
-                # 📊 需求 1：結帳最下方表格 (帳戶餘額、個別總支出、總收入)
-                # ------------------------------------------
-                st.divider()
-                st.markdown("#### 📋 本期結帳收支彙整總表")
-                
-                summary_rows = []
-                s_tot_inc = 0.0
-                s_tot_exp = 0.0
-                
-                for m in st.session_state.members:
-                    m_inc = to_settle_df[(to_settle_df["記帳人"] == m) & (to_settle_df["類型"] == "收入")]["金額"].sum()
-                    m_exp = to_settle_df[(to_settle_df["記帳人"] == m) & (to_settle_df["類型"] == "支出")]["金額"].sum()
-                    m_net = m_inc - m_exp
-                    summary_rows.append({
-                        "成員": f"👤 {m}",
-                        "總收入": f"+${m_inc:,.2f}",
-                        "總支出": f"-${m_exp:,.2f}",
-                        "個人淨結餘": f"${m_net:,.2f}"
-                    })
-                    s_tot_inc += m_inc
-                    s_tot_exp += m_exp
-
-                s_balance = s_tot_inc - s_tot_exp
-
-                # 繪製表格
-                st.table(pd.DataFrame(summary_rows))
-                
-                st.markdown(f"""
-                <div style="background:#FFFDF0; border:1.5px solid #FDE68A; padding:12px 18px; border-radius:12px; text-align:center; margin-bottom:12px;">
-                    <span style="font-size:15px; color:#78350F; font-weight:700;">🏦 選定區間帳戶總餘額：</span>
-                    <span style="font-size:22px; color:{'#059669' if s_balance >= 0 else '#DC2626'}; font-weight:900;">$ {s_balance:,.2f}</span>
-                </div>
-                """, unsafe_allow_html=True)
-
-                if st.button("🤝 完成結帳", use_container_width=True, disabled=(not all_agreed or len(to_settle_df) == 0)):
+                if st.button("🤝 完成結帳", use_container_width=True, disabled=(not all(agreed_flags))):
                     settle_id = f"SETTLE-{datetime.now().strftime('%Y%m%d%H%M')}"
-                    indices = to_settle_df.index
-                    st.session_state.expenses_df.loc[indices, "結帳狀態"] = "已結帳"
-                    st.session_state.expenses_df.loc[indices, "結帳單號"] = settle_id
-                    st.session_state.expenses_df.loc[indices, "已同意人"] = ",".join(st.session_state.members)
+                    st.session_state.expenses_df.loc[unsettled_df.index, "結帳狀態"] = "已結帳"
+                    st.session_state.expenses_df.loc[unsettled_df.index, "結帳單號"] = settle_id
                     try:
                         conn.update(data=st.session_state.expenses_df)
                     except Exception:
                         pass
-                    st.success("🎉 全員同意！已完成結帳作業！")
+                    st.success("🎉 已完成結帳！")
                     st.rerun()
 
-    # 數據過濾
-    current_df = st.session_state.expenses_df.copy()
-    if search_kw:
-        current_df = current_df[
-            current_df["項目"].str.contains(search_kw, na=False) |
-            current_df["類別"].str.contains(search_kw, na=False) |
-            current_df["記帳人"].str.contains(search_kw, na=False)
-        ]
+    st.divider()
 
-    # 頂部關鍵數據列
-    total_income = current_df[current_df["類型"] == "收入"]["金額"].sum()
-    total_expense = current_df[current_df["類型"] == "支出"]["金額"].sum()
-    net_balance = total_income - total_expense
-
-    card_col1, card_col2, card_col3 = st.columns(3)
-
-    with card_col1:
-        st.markdown(f"""
-        <div class="white-card">
-            <div style="color:#059669; font-weight:700; font-size:16px;">🟢 累積總收入</div>
-            <div style="color:#059669; font-size:32px; font-weight:900; margin:6px 0;">+ $ {total_income:,.2f}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with card_col2:
-        st.markdown(f"""
-        <div class="white-card">
-            <div style="color:#EA580C; font-weight:700; font-size:16px;">🔴 累積總支出</div>
-            <div style="color:#EA580C; font-size:32px; font-weight:900; margin:6px 0;">- $ {total_expense:,.2f}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with card_col3:
-        balance_color = "#059669" if net_balance >= 0 else "#DC2626"
-        st.markdown(f"""
-        <div class="white-card">
-            <div style="color:#4A3B32; font-weight:700; font-size:16px;">💵 帳戶總餘額</div>
-            <div style="color:{balance_color}; font-size:32px; font-weight:900; margin:6px 0;">$ {net_balance:,.2f}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # 📅 日曆檢視區塊
-    st.markdown("""
-    <div style="font-weight:800; font-size:20px; color:#4A3B32; margin:16px 0 10px 0;">
-        📅 日曆檢視 (點擊選擇日期看當日收支)
-    </div>
-    """, unsafe_allow_html=True)
-
-    cal_year_col, cal_month_col, cal_pick_col = st.columns([1.5, 1.5, 3])
-    with cal_year_col:
-        sel_year = st.number_input("年份 ", min_value=2020, max_value=2030, value=st.session_state.cal_selected_date.year, label_visibility="collapsed")
-    with cal_month_col:
-        sel_month = st.selectbox("月份 ", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
-    with cal_pick_col:
-        picked_date = st.date_input("直接選擇日期", value=st.session_state.cal_selected_date, label_visibility="collapsed")
-        st.session_state.cal_selected_date = picked_date
+    # 月份選單
+    cal_m_col1, cal_m_col2 = st.columns([1, 1])
+    sel_year = cal_m_col1.number_input("年份", min_value=2020, max_value=2030, value=st.session_state.cal_selected_date.year, label_visibility="collapsed")
+    sel_month = cal_m_col2.selectbox("月份", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
 
     # 繪製月曆
+    week_names = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"]
+    w_cols = st.columns(7)
+    for idx, w_name in enumerate(week_names):
+        w_cols[idx].markdown(f"<div style='text-align:center; font-size:12px; color:#8C7A6B; font-weight:700;'>{w_name}</div>", unsafe_allow_html=True)
+
     cal = calendar.Calendar(firstweekday=0)
     month_days = cal.monthdayscalendar(int(sel_year), int(sel_month))
 
-    week_cols = st.columns(7)
-    week_names = ["一", "二", "三", "四", "五", "六", "日"]
-    for idx, name in enumerate(week_names):
-        week_cols[idx].markdown(f"<div style='text-align:center; font-weight:bold; color:#B45309;'>{name}</div>", unsafe_allow_html=True)
-
-    df_month = current_df.copy()
-    if not df_month.empty:
-        df_month["日期_dt"] = pd.to_datetime(df_month["日期"]).dt.date
+    df_current = st.session_state.expenses_df.copy()
+    if not df_current.empty:
+        df_current["日期_dt"] = pd.to_datetime(df_current["日期"]).dt.date
     else:
-        df_month["日期_dt"] = None
+        df_current["日期_dt"] = None
 
     for week in month_days:
-        w_cols = st.columns(7)
+        cols = st.columns(7)
         for day_idx, day_num in enumerate(week):
             if day_num == 0:
-                w_cols[day_idx].write("")
+                cols[day_idx].write("")
             else:
                 curr_d = date(int(sel_year), int(sel_month), day_num)
-                d_records = df_month[df_month["日期_dt"] == curr_d]
+                d_records = df_current[df_current["日期_dt"] == curr_d]
                 
-                day_inc = d_records[d_records["類型"] == "收入"]["金額"].sum()
                 day_exp = d_records[d_records["類型"] == "支出"]["金額"].sum()
-                
-                label_text = f"{day_num}日"
-                if day_inc > 0 or day_exp > 0:
-                    label_text += " •"
+                day_inc = d_records[d_records["類型"] == "收入"]["金額"].sum()
+                net_day = day_inc - day_exp
 
-                if w_cols[day_idx].button(label_text, key=f"cal_btn_{curr_d}"):
+                btn_label = f"{day_num}\n"
+                if net_day < 0:
+                    btn_label += f"-{int(abs(net_day))}元"
+                elif net_day > 0:
+                    btn_label += f"+{int(net_day)}元"
+
+                if cols[day_idx].button(btn_label, key=f"cal_btn_{curr_d}"):
                     st.session_state.cal_selected_date = curr_d
+                    st.session_state.filter_to_single_day = True
                     st.rerun()
 
-    # 顯示選定日期的詳細收支
-    selected_d_str = str(st.session_state.cal_selected_date)
-    st.markdown(f"#### 📌 當日收支明細：`{selected_d_str}`")
-
-    daily_df = current_df[current_df["日期"] == selected_d_str]
-
-    if daily_df.empty:
-        st.info(f"該日期 ({selected_d_str}) 尚無任何收支紀錄。")
-    else:
-        d_col1, d_col2 = st.columns(2)
-        d_col1.metric("當日總收入", f"+ ${daily_df[daily_df['類型'] == '收入']['金額'].sum():,.2f}")
-        d_col2.metric("當日總支出", f"- ${daily_df[daily_df['類型'] == '支出']['金額'].sum():,.2f}")
-
-        st.dataframe(
-            daily_df[["類型", "類別", "項目", "金額", "記帳人", "結帳狀態", "備註"]],
-            use_container_width=True,
-            hide_index=True
-        )
-
-    # 圖表
+    # 顯示目前檢視區間控制與重置
     st.divider()
-    chart_col1, chart_col2 = st.columns([1, 1.5])
+    list_header_col1, list_header_col2 = st.columns([3, 1])
     
-    with chart_col1:
-        st.markdown("##### 🍕 支出類別比例")
-        exp_df = current_df[current_df["類型"] == "支出"]
-        if not exp_df.empty:
-            fig_pie = px.pie(
-                exp_df, names="類別", values="金額", hole=0.45,
-                color_discrete_sequence=["#EA580C", "#D97706", "#10B981", "#F59E0B", "#8B5CF6"]
-            )
-            fig_pie.update_traces(textfont=dict(size=16), textinfo='percent+label')
-            fig_pie.update_layout(font=dict(size=15), showlegend=True, margin=dict(t=20, b=20, l=10, r=10))
-            st.plotly_chart(fig_pie, use_container_width=True)
+    if st.session_state.filter_to_single_day:
+        list_header_col1.markdown(f"#### 📅 正在檢視單日：`{st.session_state.cal_selected_date}`")
+        if list_header_col2.button("↺ 看全月紀錄"):
+            st.session_state.filter_to_single_day = False
+            st.rerun()
+    else:
+        list_header_col1.markdown(f"#### 📅 本月全月收支紀錄 ({sel_year}年{sel_month}月)")
 
-    with chart_col2:
-        st.markdown("##### 📊 時間支出趨勢圖")
+    # 數據篩選
+    if not df_current.empty:
+        df_current["日期_dt"] = pd.to_datetime(df_current["日期"]).dt.date
+        if st.session_state.filter_to_single_day:
+            filtered_df = df_current[df_current["日期_dt"] == st.session_state.cal_selected_date]
+        else:
+            filtered_df = df_current[
+                (df_current["日期_dt"].apply(lambda d: d.year if d else 0) == int(sel_year)) &
+                (df_current["日期_dt"].apply(lambda d: d.month if d else 0) == int(sel_month))
+            ]
+    else:
+        filtered_df = pd.DataFrame()
+
+    if not filtered_df.empty:
+        filtered_df = filtered_df.sort_values(by="日期", ascending=False)
+
+    # 逐條收支卡片 (摩卡奶茶色系)
+    if filtered_df.empty:
+        st.info("此區間內尚無任何收支紀錄。")
+    else:
+        for idx, row in filtered_df.iterrows():
+            r_date = datetime.strptime(row["日期"], "%Y-%m-%d")
+            week_days_tw = ["一", "二", "三", "四", "五", "六", "日"]
+            day_week_str = week_days_tw[r_date.weekday()]
+            
+            c_card1, c_card2, c_edit, c_del = st.columns([3, 2, 0.8, 0.8])
+            
+            with c_card1:
+                st.markdown(f"<div class='item-title'>{row['項目']}</div>", unsafe_allow_html=True)
+                st.markdown(f"""
+                <div class='sub-info'>
+                    <span class='badge-tag'>{row['記帳人']}</span> 
+                    {r_date.month}/{r_date.day} ({day_week_str}) · {row['類別']}
+                </div>
+                """, unsafe_allow_html=True)
+                
+            with c_card2:
+                amt_prefix = "+" if row["類型"] == "收入" else ""
+                amt_color = "#558B6E" if row["類型"] == "收入" else "#8C6239" # 綠色/摩卡棕
+                st.markdown(f"<div class='item-amount' style='color:{amt_color};'>{amt_prefix}{row['金額']:,.0f} 元</div>", unsafe_allow_html=True)
+            
+            # 可編輯與可刪除功能
+            with c_edit:
+                with st.popover("✏️"):
+                    st.markdown("### ✏️ 編輯這筆紀錄")
+                    with st.form(f"edit_form_{row['ID']}"):
+                        e_date_val = st.date_input("日期", r_date)
+                        e_type_val = st.radio("類型", ["支出", "收入"], index=0 if row["類型"] == "支出" else 1)
+                        cats = st.session_state.expense_categories if e_type_val == "支出" else st.session_state.income_categories
+                        cat_idx = cats.index(row["類別"]) if row["類別"] in cats else 0
+                        e_cat_val = st.selectbox("分類", cats, index=cat_idx)
+                        e_item_val = st.text_input("項目", value=row["項目"])
+                        e_amt_val = st.number_input("金額", value=float(row["金額"]))
+                        e_payer_val = st.selectbox("成員", st.session_state.members, index=st.session_state.members.index(row["記帳人"]) if row["記帳人"] in st.session_state.members else 0)
+                        e_note_val = st.text_input("備註", value=row["備註"])
+
+                        if st.form_submit_button("儲存修改"):
+                            match_idx = st.session_state.expenses_df[st.session_state.expenses_df["ID"] == row["ID"]].index
+                            st.session_state.expenses_df.loc[match_idx, ["日期", "類型", "類別", "項目", "金額", "記帳人", "備註"]] = [
+                                str(e_date_val), e_type_val, e_cat_val, e_item_val, float(e_amt_val), e_payer_val, e_note_val
+                            ]
+                            try:
+                                conn.update(data=st.session_state.expenses_df)
+                            except Exception:
+                                pass
+                            st.toast("✅ 修改成功！")
+                            st.rerun()
+
+            with c_del:
+                if st.button("🗑️", key=f"del_btn_{row['ID']}"):
+                    st.session_state.expenses_df = st.session_state.expenses_df[st.session_state.expenses_df["ID"] != row["ID"]]
+                    try:
+                        conn.update(data=st.session_state.expenses_df)
+                    except Exception:
+                        pass
+                    st.toast("🗑️ 已成功刪除紀錄！")
+                    st.rerun()
+            st.divider()
+
+# ==========================================
+# TAB 2: 📊 統計圖表 (莫蘭迪色系)
+# ==========================================
+with tab_charts:
+    st.subheader("📊 統計圖表視覺化分析")
+    st.divider()
+
+    current_df = st.session_state.expenses_df.copy()
+    
+    if current_df.empty:
+        st.info("尚無數據可繪製圖表。")
+    else:
+        chart_col1, chart_col2 = st.columns(2)
+
+        with chart_col1:
+            st.markdown("#### 🍕 支出類別比例 (圓餅圖)")
+            exp_df = current_df[current_df["類型"] == "支出"]
+            if not exp_df.empty:
+                fig_pie = px.pie(
+                    exp_df, names="類別", values="金額", hole=0.45,
+                    color_discrete_sequence=["#A07855", "#C5A880", "#8C6239", "#7A573C", "#B08968"]
+                )
+                fig_pie.update_traces(textfont=dict(size=16), textinfo='percent+label')
+                fig_pie.update_layout(font=dict(size=15), showlegend=True, margin=dict(t=20, b=20, l=10, r=10), paper_bgcolor="rgba(0,0,0,0)")
+                st.plotly_chart(fig_pie, use_container_width=True)
+
+        with chart_col2:
+            st.markdown("#### 👥 各成員支出貢獻 (長條圖)")
+            exp_df = current_df[current_df["類型"] == "支出"]
+            if not exp_df.empty:
+                fig_bar_person = px.bar(
+                    exp_df.groupby("記帳人")["金額"].sum().reset_index(),
+                    x="記帳人", y="金額", color="記帳人",
+                    color_discrete_sequence=["#A07855", "#C5A880"],
+                    text_auto=',.0f'
+                )
+                fig_bar_person.update_traces(textfont=dict(size=16))
+                fig_bar_person.update_layout(font=dict(size=15), margin=dict(t=20, b=20, l=10, r=10), paper_bgcolor="rgba(0,0,0,0)")
+                st.plotly_chart(fig_bar_person, use_container_width=True)
+
+        st.divider()
+        st.markdown("#### 📊 時間支出趨勢圖 (長條圖)")
         exp_df = current_df[current_df["類型"] == "支出"]
         if not exp_df.empty:
             exp_df["日期_dt"] = pd.to_datetime(exp_df["日期"])
             daily_sum = exp_df.groupby(exp_df["日期_dt"].dt.day)["金額"].sum().reset_index()
             
             fig_bar = px.bar(
-                daily_sum, x="日期_dt", y="金額", color_discrete_sequence=["#D97706"], text_auto=',.0f'
+                daily_sum, x="日期_dt", y="金額", color_discrete_sequence=["#A07855"], text_auto=',.0f'
             )
             fig_bar.update_traces(textfont=dict(size=16), textposition='outside')
             fig_bar.update_layout(
@@ -615,12 +511,13 @@ with tab_dash:
                 xaxis=dict(title=dict(text="日期 (日)", font=dict(size=15))),
                 yaxis=dict(title=dict(text="金額 ($)", font=dict(size=15))),
                 margin=dict(t=30, b=10, l=10, r=10),
-                plot_bgcolor="rgba(0,0,0,0)"
+                plot_bgcolor="rgba(0,0,0,0)",
+                paper_bgcolor="rgba(0,0,0,0)"
             )
             st.plotly_chart(fig_bar, use_container_width=True)
 
 # ==========================================
-# TAB 2: 💬 備忘錄
+# TAB 3: 💬 備忘錄
 # ==========================================
 with tab_memo:
     st.subheader("💬 家族備忘錄")
@@ -637,28 +534,23 @@ with tab_memo:
             st.rerun()
 
     st.markdown("#### 📌 待處理備忘事項：")
-    if not st.session_state.memos:
-        st.info("目前沒有待處理的備忘事項。")
-    else:
-        for memo in list(st.session_state.memos):
-            col_chk, col_txt, col_edit = st.columns([0.6, 4, 1])
-            checked = col_chk.checkbox("", key=f"memo_chk_{memo['id']}")
-            if checked:
-                st.session_state.memos.remove(memo)
-                st.toast("✅ 備忘事項已完成並刪除！")
+    for memo in list(st.session_state.memos):
+        col_chk, col_txt, col_edit = st.columns([0.6, 4, 1])
+        checked = col_chk.checkbox("", key=f"memo_chk_{memo['id']}")
+        if checked:
+            st.session_state.memos.remove(memo)
+            st.toast("✅ 已完成並刪除！")
+            st.rerun()
+        col_txt.markdown(f"<div style='font-size:18px; padding-top:4px;'>• {memo['text']}</div>", unsafe_allow_html=True)
+        with col_edit.popover("✏️"):
+            edited_text = st.text_input("修改備忘內容", value=memo["text"], key=f"edit_memo_input_{memo['id']}")
+            if st.button("儲存修改", key=f"save_memo_{memo['id']}"):
+                memo["text"] = edited_text
+                st.toast("修改成功！")
                 st.rerun()
-            
-            col_txt.markdown(f"<div style='font-size:18px; padding-top:4px;'>• {memo['text']}</div>", unsafe_allow_html=True)
-            
-            with col_edit.popover("✏️ 編輯"):
-                edited_text = st.text_input("修改備忘內容", value=memo["text"], key=f"edit_memo_input_{memo['id']}")
-                if st.button("儲存修改", key=f"save_memo_{memo['id']}"):
-                    memo["text"] = edited_text
-                    st.toast("修改成功！")
-                    st.rerun()
 
 # ==========================================
-# TAB 3: 🛒 購買清單
+# TAB 4: 🛒 購物清單
 # ==========================================
 with tab_shopping:
     st.subheader("🛒 待買清單")
@@ -675,157 +567,77 @@ with tab_shopping:
             st.rerun()
 
     st.markdown("#### 🛒 待採買項目：")
-    if not st.session_state.shopping_list:
-        st.info("目前清單是空的，沒有待買物品。")
-    else:
-        for shop_item in list(st.session_state.shopping_list):
-            col_chk, col_txt, col_edit = st.columns([0.6, 4, 1])
-            checked = col_chk.checkbox("", key=f"shop_chk_{shop_item['id']}")
-            if checked:
-                st.session_state.shopping_list.remove(shop_item)
-                st.toast("🎉 已採買完成並自清單移除！")
+    for shop_item in list(st.session_state.shopping_list):
+        col_chk, col_txt, col_edit = st.columns([0.6, 4, 1])
+        checked = col_chk.checkbox("", key=f"shop_chk_{shop_item['id']}")
+        if checked:
+            st.session_state.shopping_list.remove(shop_item)
+            st.toast("🎉 已採買完成並移除！")
+            st.rerun()
+        col_txt.markdown(f"<div style='font-size:18px; padding-top:4px;'>🛒 {shop_item['item']}</div>", unsafe_allow_html=True)
+        with col_edit.popover("✏️"):
+            edited_item = st.text_input("修改商品名稱", value=shop_item["item"], key=f"edit_shop_input_{shop_item['id']}")
+            if st.button("儲存修改", key=f"save_shop_{shop_item['id']}"):
+                shop_item["item"] = edited_item
+                st.toast("修改成功！")
                 st.rerun()
-            
-            col_txt.markdown(f"<div style='font-size:18px; padding-top:4px;'>🛒 {shop_item['item']}</div>", unsafe_allow_html=True)
-            
-            with col_edit.popover("✏️ 編輯"):
-                edited_item = st.text_input("修改商品名稱", value=shop_item["item"], key=f"edit_shop_input_{shop_item['id']}")
-                if st.button("儲存修改", key=f"save_shop_{shop_item['id']}"):
-                    shop_item["item"] = edited_item
-                    st.toast("修改成功！")
-                    st.rerun()
 
 # ==========================================
-# TAB 4: ⚙️ 設定 (新增：🔄 固定收支設定)
+# TAB 5: ⚙️ 設定
 # ==========================================
 with tab_settings:
-    st.subheader("⚙️ 系統設定與固定收支管理")
+    st.subheader("⚙️ 成員與類別設定")
     st.divider()
 
-    # ------------------------------------------
-    # 🔄 需求 3：固定支出/收入設定專區
-    # ------------------------------------------
-    st.markdown("### 🔄 固定收支管理 (每月自動扣款/入帳)")
-    st.caption("設定後，系統每月到達指定扣款日，會自動在背景產生對應的記帳紀錄。")
-
-    with st.form("add_recurring_form", clear_on_submit=True):
-        r_type = st.radio("收支類型", ["支出", "收入"], horizontal=True)
-        r_col1, r_col2, r_col3 = st.columns(3)
-        
-        r_day = r_col1.number_input("每月固定幾號 (1~31 日)", min_value=1, max_value=31, value=20)
-        r_payer = r_col2.selectbox("責任/付款人", st.session_state.members, key="rec_payer_select")
-        
-        cats = st.session_state.expense_categories if r_type == "支出" else st.session_state.income_categories
-        r_cat = r_col3.selectbox("分類", cats, key="rec_cat_select")
-        
-        r_item = st.text_input("固定項目名稱", placeholder="例如：每月房租、水電費、薪資")
-        r_amount = st.number_input("固定金額 ($)", min_value=1.0, value=2000.0, step=100.0)
-        r_note = st.text_input("備註說明", placeholder="選填")
-        
-        if st.form_submit_button("➕ 新增固定收支規則"):
-            if r_item:
-                new_rule_id = int(datetime.now().timestamp())
-                st.session_state.recurring_rules.append({
-                    "id": new_rule_id,
-                    "type": r_type,
-                    "day": r_day,
-                    "category": r_cat,
-                    "item": r_item,
-                    "amount": r_amount,
-                    "payer": r_payer,
-                    "note": r_note
-                })
-                auto_generate_recurring()
-                st.success("🎉 成功新增固定收支設定！")
-                st.rerun()
-
-    st.markdown("#### 📋 現有固定收支規則：")
-    if not st.session_state.recurring_rules:
-        st.info("目前無任何固定收支設定。")
-    else:
-        for rule in list(st.session_state.recurring_rules):
-            r_c1, r_c2 = st.columns([4, 1])
-            type_color = "#EA580C" if rule["type"] == "支出" else "#059669"
-            r_c1.markdown(f"""
-            <div style="background:#FFFDF0; border:1px solid #FDE68A; padding:10px 14px; border-radius:12px; margin-bottom:8px;">
-                <b>每月 {rule['day']} 號</b> | <span style="color:{type_color}; font-weight:700;">[{rule['type']}]</span> {rule['item']} - <b>${rule['amount']:,.0f}</b> ({rule['payer']})
-            </div>
-            """, unsafe_allow_html=True)
-            
-            if r_c2.button("刪除", key=f"del_rec_{rule['id']}"):
-                st.session_state.recurring_rules.remove(rule)
-                st.rerun()
-
-    st.divider()
-
-    # 基礎成員與類別設定
     set_col1, set_col2, set_col3 = st.columns(3)
 
-    # 成員管理
     with set_col1:
         st.markdown(f"### 👥 成員管理 (`{len(st.session_state.members)}` / 30 人)")
         with st.form("add_member_form", clear_on_submit=True):
-            new_mem = st.text_input("新增成員名稱", placeholder="例如：阿嬤、小明")
-            if st.form_submit_button("➕ 新增成員"):
-                if len(st.session_state.members) >= 30:
-                    st.error("已達上限 30 人！")
-                elif new_mem and new_mem not in st.session_state.members:
+            new_mem = st.text_input("新增成員名稱", placeholder="例如：阿嬤")
+            if st.form_submit_button("➕ 新增"):
+                if len(st.session_state.members) < 30 and new_mem:
                     st.session_state.members.append(new_mem)
-                    st.success(f"已新增成員：{new_mem}")
                     st.rerun()
 
-        for idx, m in enumerate(st.session_state.members):
+        for m in st.session_state.members:
             m_col1, m_col2 = st.columns([3, 1])
-            m_col1.write(f"{idx+1}. **{m}**")
+            m_col1.write(f"• **{m}**")
             if m_col2.button("刪除", key=f"del_mem_{m}"):
-                if len(st.session_state.members) <= 1:
-                    st.error("至少需保留 1 位成員！")
-                else:
+                if len(st.session_state.members) > 1:
                     st.session_state.members.remove(m)
                     st.rerun()
 
-    # 支出類別管理
     with set_col2:
         st.markdown(f"### 🏷️ 支出類別 (`{len(st.session_state.expense_categories)}` / 30 項)")
         with st.form("add_exp_cat_form", clear_on_submit=True):
-            new_e_cat = st.text_input("新增支出類別", placeholder="例如：🐶 寵物費用")
-            if st.form_submit_button("➕ 新增支出類別"):
-                if len(st.session_state.expense_categories) >= 30:
-                    st.error("已達上限 30 項！")
-                elif new_e_cat and new_e_cat not in st.session_state.expense_categories:
+            new_e_cat = st.text_input("新增支出類別", placeholder="例如：寵物費用")
+            if st.form_submit_button("➕ 新增"):
+                if len(st.session_state.expense_categories) < 30 and new_e_cat:
                     st.session_state.expense_categories.append(new_e_cat)
-                    st.success(f"已新增支出類別：{new_e_cat}")
                     st.rerun()
 
-        for idx, c in enumerate(st.session_state.expense_categories):
+        for c in st.session_state.expense_categories:
             c_col1, c_col2 = st.columns([3, 1])
-            c_col1.write(f"{idx+1}. **{c}**")
+            c_col1.write(f"• **{c}**")
             if c_col2.button("刪除", key=f"del_exp_cat_{c}"):
-                if len(st.session_state.expense_categories) <= 1:
-                    st.error("至少需保留 1 個類別！")
-                else:
+                if len(st.session_state.expense_categories) > 1:
                     st.session_state.expense_categories.remove(c)
                     st.rerun()
 
-    # 收入類別管理
     with set_col3:
         st.markdown(f"### 💰 收入類別 (`{len(st.session_state.income_categories)}` / 10 項)")
         with st.form("add_inc_cat_form", clear_on_submit=True):
-            new_i_cat = st.text_input("新增收入類別", placeholder="例如：🧧 壓歲紅包")
-            if st.form_submit_button("➕ 新增收入類別"):
-                if len(st.session_state.income_categories) >= 10:
-                    st.error("已達上限 10 項！")
-                elif new_i_cat and new_i_cat not in st.session_state.income_categories:
+            new_i_cat = st.text_input("新增收入類別", placeholder="例如：壓歲紅包")
+            if st.form_submit_button("➕ 新增"):
+                if len(st.session_state.income_categories) < 10 and new_i_cat:
                     st.session_state.income_categories.append(new_i_cat)
-                    st.success(f"已新增收入類別：{new_i_cat}")
                     st.rerun()
 
-        for idx, ic in enumerate(st.session_state.income_categories):
+        for ic in st.session_state.income_categories:
             ic_col1, ic_col2 = st.columns([3, 1])
-            ic_col1.write(f"{idx+1}. **{ic}**")
+            ic_col1.write(f"• **{ic}**")
             if ic_col2.button("刪除", key=f"del_inc_cat_{ic}"):
-                if len(st.session_state.income_categories) <= 1:
-                    st.error("至少需保留 1 個類別！")
-                else:
+                if len(st.session_state.income_categories) > 1:
                     st.session_state.income_categories.remove(ic)
                     st.rerun()
