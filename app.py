@@ -6,7 +6,7 @@ from datetime import datetime, date
 import calendar
 
 # ==========================================
-# 1. 頁面設定與莫蘭迪奶茶色系 CSS (手機強制並排版)
+# 1. 頁面設定與莫蘭迪奶茶色系 CSS (手機直式最佳化)
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
@@ -38,38 +38,66 @@ st.markdown("""
     header[data-testid="stHeader"] { visibility: hidden; }
     footer { visibility: hidden; }
 
-    /* 📌 關鍵修復：強迫所有欄位在手機直向螢幕上「絕對水平並排」，防止上下折行 */
-    div[data-testid="stHorizontalBlock"] {
+    /* 📌 永遠置頂的日曆與按鈕容器 (Sticky Top) */
+    .sticky-calendar-bar {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 0px !important;
+        z-index: 9999 !important;
+        background: rgba(250, 245, 240, 0.98) !important;
+        backdrop-filter: blur(12px) !important;
+        padding: 10px 10px 16px 10px !important;
+        border-bottom: 2px solid #E2D5C5 !important;
+        margin: -1rem -1rem 16px -1rem !important; /* 向外擴展貼合邊緣 */
+        border-radius: 0 0 20px 20px !important;
+        box-shadow: 0 4px 16px rgba(160, 120, 85, 0.12) !important;
+    }
+
+    /* 📌 局部強制並排：日曆 7 欄、三大功能按鈕、編輯與刪除 ICON */
+    .cal-compact-grid div[data-testid="stHorizontalBlock"],
+    .action-block div[data-testid="stHorizontalBlock"],
+    .edit-del-actions div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
         align-items: center !important;
-        gap: 6px !important;
     }
-    div[data-testid="column"] {
+    
+    .cal-compact-grid div[data-testid="stHorizontalBlock"] { gap: 2px !important; }
+    .action-block div[data-testid="stHorizontalBlock"] { gap: 6px !important; }
+    .edit-del-actions div[data-testid="stHorizontalBlock"] { gap: 4px !important; justify-content: flex-end !important; }
+
+    .cal-compact-grid div[data-testid="column"],
+    .action-block div[data-testid="column"],
+    .edit-del-actions div[data-testid="column"] {
         min-width: 0 !important;
+        flex: 1 1 0px !important;
     }
 
-    /* 📌 日期選擇區塊標題放大 */
-    div[data-testid="stDateInput"] label {
-        font-size: 22px !important;
-        font-weight: 800 !important;
-        color: #7A573C !important;
+    /* 緊湊型日曆按鈕樣式 */
+    .cal-compact-grid div[data-testid="column"] .stButton>button {
+        width: 100% !important;
+        border-radius: 50% !important;
+        padding: 0px !important;
+        background-color: transparent !important;
+        color: #3D322C !important;
+        border: none !important;
+        font-size: 14px !important;
+        font-weight: 700 !important;
+        height: 38px !important;
+        width: 38px !important;
+        margin: 0 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
-
-    /* 📱 手機直式專用頂欄 */
-    .vertical-header-box {
-        background: rgba(255, 255, 255, 0.92) !important;
-        border: 1.5px solid #E2D5C5 !important;
-        border-radius: 18px !important;
-        padding: 14px 18px !important;
-        margin-bottom: 12px !important;
-        box-shadow: 0 4px 14px rgba(160, 120, 85, 0.08) !important;
+    .cal-compact-grid div[data-testid="column"] .stButton>button:hover {
+        background-color: #E2D5C5 !important;
+        color: #3D322C !important;
     }
 
     /* 🍵 三大淺奶茶色功能按鈕 */
-    .action-block div[data-testid="column"] .stPopover>button, 
-    .action-block div[data-testid="column"] .stButton>button {
+    .action-block div[data-testid="column"] .stPopover>button {
         width: 100% !important;
         background-color: #EEDFD2 !important;
         color: #5C4A3E !important;
@@ -90,8 +118,8 @@ st.markdown("""
     }
     .sub-info { font-size: 15px !important; color: #8C7A6B; margin-top: 4px; }
 
-    /* 🗑️ 刪除與 ✏️ 編輯白底按鈕 (手機上保持並排置中) */
-    .stButton>button, div[data-testid="stPopover"]>button {
+    /* 🗑️ 刪除與 ✏️ 編輯白底按鈕 */
+    .edit-del-actions .stButton>button, .edit-del-actions div[data-testid="stPopover"]>button {
         border-radius: 14px !important;
         background-color: #FFFFFF !important;
         color: #3D322C !important;
@@ -104,10 +132,6 @@ st.markdown("""
         display: inline-flex !important;
         justify-content: center !important;
         align-items: center !important;
-    }
-    .stButton>button:hover, div[data-testid="stPopover"]>button:hover {
-        background-color: #FAF5F0 !important;
-        border-color: #A07855 !important;
     }
 
     /* 分頁 Tabs 導覽列 */
@@ -129,16 +153,27 @@ st.markdown("""
         background-color: #A07855 !important;
         color: #FFFFFF !important;
     }
-
-    /* 輸入框字體放大 */
-    .stTextInput input, .stSelectbox select, .stNumberInput input, .stDateInput input {
-        font-size: 17px !important;
+    
+    /* 底部區間查詢框 */
+    .bottom-query-box {
+        background: rgba(255, 255, 255, 0.92) !important;
+        border: 1.5px solid #E2D5C5 !important;
+        border-radius: 18px !important;
+        padding: 18px !important;
+        margin-top: 20px !important;
+        margin-bottom: 30px !important;
+        box-shadow: 0 4px 14px rgba(160, 120, 85, 0.08) !important;
+    }
+    div[data-testid="stDateInput"] label {
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        color: #7A573C !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. Session State 初始化 (預設當月起訖日)
+# 2. Session State 初始化 (加入區間日期)
 # ==========================================
 today_date = date.today()
 
@@ -157,6 +192,12 @@ if "expense_categories" not in st.session_state:
 
 if "income_categories" not in st.session_state:
     st.session_state.income_categories = ["💰 薪資收入", "🎁 獎金紅包", "📈 投資理財", "🤝 副業兼職", "💵 其他收入"]
+
+if "cal_selected_date" not in st.session_state:
+    st.session_state.cal_selected_date = date.today()
+
+if "filter_to_single_day" not in st.session_state:
+    st.session_state.filter_to_single_day = False
 
 if "memos" not in st.session_state:
     st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
@@ -198,45 +239,60 @@ tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
 # TAB 1: 🏠 主頁記帳
 # ==========================================
 with tab_home:
-    # 📌 需求：自訂日期區間查詢器 (選定好後列出該區間的所有收支)
-    st.markdown("<div class='vertical-header-box'>", unsafe_allow_html=True)
-    v_col1, v_col2 = st.columns([2.5, 1])
+    # 📌 永遠置頂的日曆與按鈕容器 (Sticky Top)
+    st.markdown("<div class='sticky-calendar-bar'>", unsafe_allow_html=True)
     
-    with v_col1:
-        picked_range = st.date_input(
-            "📅 選擇查詢區間", 
-            value=(st.session_state.start_date, st.session_state.end_date),
-            key="v_date_picker"
-        )
-        if isinstance(picked_range, tuple):
-            if len(picked_range) == 2:
-                st.session_state.start_date = picked_range[0]
-                st.session_state.end_date = picked_range[1]
-            elif len(picked_range) == 1:
-                st.session_state.start_date = picked_range[0]
-                st.session_state.end_date = picked_range[0]
+    # 頂部年月選擇
+    cal_head_1, cal_head_2 = st.columns([1.5, 1])
+    with cal_head_1:
+        st.markdown(f"<div style='font-weight:900; font-size:20px; color:#3D322C; padding-top:4px;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
+    with cal_head_2:
+        sel_month = st.selectbox("切換月份", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
+        
+    sel_year = st.session_state.cal_selected_date.year
 
-    with v_col2:
-        st.write("")
-        st.write("")
-        if st.button("↺ 本月", use_container_width=True):
-            today = date.today()
-            st.session_state.start_date = date(today.year, today.month, 1)
-            _, last_day = calendar.monthrange(today.year, today.month)
-            st.session_state.end_date = date(today.year, today.month, last_day)
-            st.rerun()
+    # 若選單切換了月份，自動更新日期
+    if sel_month != st.session_state.cal_selected_date.month:
+        st.session_state.cal_selected_date = date(sel_year, sel_month, 1)
+        st.rerun()
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    # 7 欄表頭日曆
+    st.markdown("<div class='cal-compact-grid'>", unsafe_allow_html=True)
+    week_names = ["日", "一", "二", "三", "四", "五", "六"]
+    w_cols = st.columns(7)
+    for idx, w_name in enumerate(week_names):
+        w_cols[idx].markdown(f"<div style='text-align:center; font-size:13px; color:#8C7A6B; font-weight:800;'>{w_name}</div>", unsafe_allow_html=True)
+
+    cal = calendar.Calendar(firstweekday=6)
+    month_days = cal.monthdayscalendar(int(sel_year), int(sel_month))
+
+    for week in month_days:
+        cols = st.columns(7)
+        for day_idx, day_num in enumerate(week):
+            if day_num == 0:
+                cols[day_idx].write("")
+            else:
+                curr_d = date(int(sel_year), int(sel_month), day_num)
+                is_selected = (curr_d == st.session_state.cal_selected_date)
+                
+                # 選中樣式
+                btn_str = f"**{day_num}**" if is_selected else f"{day_num}"
+                
+                if cols[day_idx].button(btn_str, key=f"c_day_{curr_d}"):
+                    st.session_state.cal_selected_date = curr_d
+                    st.session_state.filter_to_single_day = True
+                    st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True) # cal-compact-grid 結束
 
     # 🍵 三大可愛功能按鈕區塊
-    st.markdown("<div class='action-block'>", unsafe_allow_html=True)
+    st.markdown("<div class='action-block' style='margin-top:10px;'>", unsafe_allow_html=True)
     top_col1, top_col2, top_col3 = st.columns(3)
     
     with top_col1:
         with st.popover("💸 記一筆支出", use_container_width=True):
             st.markdown("### 💸 新增支出筆數")
             with st.form("add_exp_form", clear_on_submit=True):
-                e_date = st.date_input("支出日期", datetime.now().date())
+                e_date = st.date_input("支出日期", st.session_state.cal_selected_date)
                 e_payer = st.selectbox("付款人", st.session_state.members)
                 e_cat = st.selectbox("支出分類", st.session_state.expense_categories)
                 e_item = st.text_input("消費項目 (非必填)", placeholder="例如：加油、麵包")
@@ -270,7 +326,7 @@ with tab_home:
         with st.popover("✨ 記一筆收入", use_container_width=True):
             st.markdown("### ✨ 新增收入筆數")
             with st.form("add_inc_form", clear_on_submit=True):
-                i_date = st.date_input("收入日期", datetime.now().date())
+                i_date = st.date_input("收入日期", st.session_state.cal_selected_date)
                 i_receiver = st.selectbox("收款人", st.session_state.members)
                 i_cat = st.selectbox("收入分類", st.session_state.income_categories)
                 i_item = st.text_input("收入項目 (非必填)", placeholder="例如：薪資發放")
@@ -322,30 +378,33 @@ with tab_home:
                         pass
                     st.success("🎉 已完成結帳！")
                     st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True) # action-block 結束
+    st.markdown("</div>", unsafe_allow_html=True) # sticky-calendar-bar 結束
 
-    st.divider()
-
-    # 📌 大字體置中顯示當前查詢的自訂區間
-    start_str = st.session_state.start_date.strftime('%Y-%m-%d')
-    end_str = st.session_state.end_date.strftime('%Y-%m-%d')
-    display_title = f"📅 {start_str}" if start_str == end_str else f"📅 {start_str} ~ {end_str}"
+    # 📌 大字體置中顯示當前查詢的自訂區間 (或單日)
+    if st.session_state.filter_to_single_day:
+        display_title = f"📅 {st.session_state.cal_selected_date}"
+    else:
+        start_str = st.session_state.start_date.strftime('%Y-%m-%d')
+        end_str = st.session_state.end_date.strftime('%Y-%m-%d')
+        display_title = f"📅 {start_str}" if start_str == end_str else f"📅 {start_str} ~ {end_str}"
     
     st.markdown(
         f"<h2 style='text-align: center; color: #7A573C; font-weight: 900; font-size: 24px; margin: 10px 0;'>{display_title}</h2>", 
         unsafe_allow_html=True
     )
 
-    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
-
-    # 📊 根據自訂區間過濾資料
+    # 📊 根據區間或單日過濾資料
     df_current = st.session_state.expenses_df.copy()
     if not df_current.empty:
         df_current["日期_dt"] = pd.to_datetime(df_current["日期"]).dt.date
-        filtered_df = df_current[
-            (df_current["日期_dt"] >= st.session_state.start_date) &
-            (df_current["日期_dt"] <= st.session_state.end_date)
-        ]
+        if st.session_state.filter_to_single_day:
+            filtered_df = df_current[df_current["日期_dt"] == st.session_state.cal_selected_date]
+        else:
+            filtered_df = df_current[
+                (df_current["日期_dt"] >= st.session_state.start_date) &
+                (df_current["日期_dt"] <= st.session_state.end_date)
+            ]
     else:
         filtered_df = pd.DataFrame()
 
@@ -354,7 +413,7 @@ with tab_home:
 
     week_days_tw = ["一", "二", "三", "四", "五", "六", "日"]
 
-    # 📌 逐條收支卡片 (編輯與刪除在手機直向畫面上絕對水平並排)
+    # 📌 逐條收支卡片
     if filtered_df.empty:
         st.info("此區間內尚無任何收支紀錄。")
     else:
@@ -378,8 +437,9 @@ with tab_home:
                 amt_color = "#558B6E" if row["類型"] == "收入" else "#8C6239"
                 st.markdown(f"<div class='item-amount' style='color:{amt_color};'>{amt_prefix}{row['金額']:,.0f}</div>", unsafe_allow_html=True)
             
-            # ✏️ 與 🗑️ ICON 絕對並排區塊
+            # ✏️ 與 🗑️ ICON 手機絕對並排區塊
             with c_actions:
+                st.markdown("<div class='edit-del-actions'>", unsafe_allow_html=True)
                 act_col1, act_col2 = st.columns([1, 1])
                 
                 with act_col1:
@@ -417,7 +477,41 @@ with tab_home:
                             pass
                         st.toast("🗑️ 已刪除紀錄！")
                         st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True) # edit-del-actions 結束
             st.divider()
+
+    # 📌 底部自訂區間查詢功能
+    st.markdown("<div class='bottom-query-box'>", unsafe_allow_html=True)
+    st.markdown("<h3 style='color:#7A573C; margin-bottom:10px;'>🔍 自訂區間查詢</h3>", unsafe_allow_html=True)
+    
+    picked_range = st.date_input(
+        "選擇起始與結束日期", 
+        value=(st.session_state.start_date, st.session_state.end_date),
+        key="bottom_date_picker"
+    )
+    
+    q_col1, q_col2 = st.columns(2)
+    if q_col1.button("✅ 查詢此區間", use_container_width=True):
+        if isinstance(picked_range, tuple) and len(picked_range) == 2:
+            st.session_state.start_date = picked_range[0]
+            st.session_state.end_date = picked_range[1]
+            st.session_state.filter_to_single_day = False
+            st.rerun()
+        elif isinstance(picked_range, tuple) and len(picked_range) == 1:
+            st.session_state.start_date = picked_range[0]
+            st.session_state.end_date = picked_range[0]
+            st.session_state.filter_to_single_day = False
+            st.rerun()
+            
+    if q_col2.button("↺ 看本月全部", use_container_width=True):
+        today = date.today()
+        st.session_state.start_date = date(today.year, today.month, 1)
+        _, last_day = calendar.monthrange(today.year, today.month)
+        st.session_state.end_date = date(today.year, today.month, last_day)
+        st.session_state.filter_to_single_day = False
+        st.rerun()
+        
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ==========================================
 # TAB 2: 📊 統計圖表
@@ -457,7 +551,7 @@ with tab_charts:
             fig_bar = px.bar(
                 daily_sum, x="日期_dt", y="金額", color_discrete_sequence=["#A07855"], text_auto=',.0f'
             )
-            fig_bar.update_traces(textfont=dict(size=15), textposition='outside')
+            fig_bar.update_traces(textfont=dict(size=16), textposition='outside')
             fig_bar.update_layout(
                 font=dict(size=15),
                 xaxis=dict(title=dict(text="日期 (日)", font=dict(size=15))),
@@ -571,6 +665,7 @@ with tab_settings:
             m_col1.write(f"• **{m}**")
             
             with m_actions:
+                st.markdown("<div class='edit-del-actions'>", unsafe_allow_html=True)
                 act1, act2 = st.columns([1, 1])
                 with act1:
                     with st.popover("✏️"):
@@ -589,6 +684,7 @@ with tab_settings:
                         if len(st.session_state.members) > 1:
                             st.session_state.members.pop(idx)
                             st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
 
     # 🏷️ 2. 支出類別管理
     with set_col2:
@@ -610,6 +706,7 @@ with tab_settings:
             c_col1.write(f"• **{c}**")
             
             with c_actions:
+                st.markdown("<div class='edit-del-actions'>", unsafe_allow_html=True)
                 act1, act2 = st.columns([1, 1])
                 with act1:
                     with st.popover("✏️"):
@@ -628,6 +725,7 @@ with tab_settings:
                         if len(st.session_state.expense_categories) > 1:
                             st.session_state.expense_categories.pop(idx)
                             st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
 
     # 💰 3. 收入類別管理
     with set_col3:
@@ -649,6 +747,7 @@ with tab_settings:
             ic_col1.write(f"• **{ic}**")
             
             with ic_actions:
+                st.markdown("<div class='edit-del-actions'>", unsafe_allow_html=True)
                 act1, act2 = st.columns([1, 1])
                 with act1:
                     with st.popover("✏️"):
@@ -667,3 +766,4 @@ with tab_settings:
                         if len(st.session_state.income_categories) > 1:
                             st.session_state.income_categories.pop(idx)
                             st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
