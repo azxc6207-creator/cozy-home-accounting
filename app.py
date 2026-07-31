@@ -6,7 +6,7 @@ from datetime import datetime, date
 import calendar
 
 # ==========================================
-# 1. 頁面設定與「莫蘭迪摩卡奶茶色系」CSS
+# 1. 頁面設定與「莫蘭迪摩卡奶茶色系」修復 CSS
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
@@ -15,12 +15,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 注入莫蘭迪大地奶茶色系 CSS (比照附圖色彩)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap');
 
-    /* 全局奶茶大地色漸層背景 */
+    /* 全局背景 */
     html, body, [class*="css"], .stApp {
         font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background: linear-gradient(135deg, #FAF5F0 0%, #F2E8DF 50%, #E8DDD0 100%) !important;
@@ -31,37 +30,22 @@ st.markdown("""
     header[data-testid="stHeader"] { visibility: hidden; }
     footer { visibility: hidden; }
 
-    /* 頂部極簡 Banner */
-    .cozy-banner {
-        background-color: #FFFFFF;
-        border: 1.5px solid #E2D5C5;
-        border-radius: 20px;
-        padding: 18px 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 15px rgba(160, 120, 85, 0.06);
-    }
-    .banner-title {
-        font-size: 24px !important;
-        font-weight: 800;
-        color: #8C6239;
-        margin: 0;
-        letter-spacing: -0.5px;
-    }
-
-    /* 📱 關鍵修復：強制 7 欄日曆在手機版不跑版 */
-    [data-testid="column"] {
-        min-width: 0 !important;
-        padding: 0 1px !important;
-    }
+    /* 📱 關鍵修復 1：強迫所有 st.columns 水平並排，絕不垂直換行擠壓 */
     div[data-testid="stHorizontalBlock"] {
-        gap: 2px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+    
+    div[data-testid="column"] {
+        min-width: 0 !important;
+        flex: 1 1 0px !important;
     }
 
-    /* 日曆按鈕奶茶色風格 */
-    div[data-testid="column"] .stButton>button {
+    /* 📅 7 欄日曆按鈕樣式 */
+    .cal-grid div[data-testid="column"] .stButton>button {
         width: 100% !important;
         border-radius: 10px !important;
         padding: 4px 0px !important;
@@ -71,93 +55,72 @@ st.markdown("""
         font-size: 11px !important;
         min-height: 48px !important;
         line-height: 1.2 !important;
-        transition: all 0.2s ease;
     }
-    div[data-testid="column"] .stButton>button:hover {
+    .cal-grid div[data-testid="column"] .stButton>button:hover {
         background-color: #A07855 !important;
         color: #FFFFFF !important;
-        border-color: #A07855 !important;
     }
 
-    /* 比照附圖的奶茶色流水帳卡片樣式 */
-    .transaction-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E2D5C5;
-        padding: 16px 18px;
-        border-radius: 16px;
-        margin-bottom: 10px;
-        box-shadow: 0 4px 12px rgba(160, 120, 85, 0.05);
+    /* 🍵 淺奶茶色三大功能按鈕區塊 */
+    .action-block div[data-testid="column"] .stPopover>button {
+        width: 100% !important;
+        background-color: #EEDFD2 !important;
+        color: #5C4A3E !important;
+        border: 1.5px solid #D4C3B3 !important;
+        border-radius: 14px !important;
+        padding: 10px 4px !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        box-shadow: 0 2px 8px rgba(160, 120, 85, 0.08) !important;
     }
-    .item-title {
-        font-size: 18px;
-        font-weight: 800;
-        color: #3D322C;
-    }
-    .item-amount {
-        font-size: 20px;
-        font-weight: 900;
-        color: #8C6239;
-        text-align: right;
-    }
+
+    /* 流水帳卡片樣式 */
+    .item-title { font-size: 17px; font-weight: 800; color: #3D322C; }
+    .item-amount { font-size: 19px; font-weight: 900; color: #8C6239; text-align: right; }
     .badge-tag {
-        background-color: #EEDFD2;
-        color: #7A573C;
-        font-size: 11px;
-        padding: 2px 8px;
-        border-radius: 10px;
-        font-weight: 700;
-        margin-right: 6px;
+        background-color: #EEDFD2; color: #7A573C;
+        font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 700;
     }
-    .sub-info {
-        font-size: 13px;
-        color: #8C7A6B;
-        margin-top: 4px;
-    }
+    .sub-info { font-size: 13px; color: #8C7A6B; margin-top: 2px; }
 
-    /* 分頁 Tabs 圓角導覽列 (摩卡奶茶風) */
+    /* 分頁 Tabs 導覽列 */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
+        gap: 6px;
         background-color: #E8DDD0;
-        padding: 6px;
-        border-radius: 30px;
-        margin-bottom: 16px;
+        padding: 4px;
+        border-radius: 25px;
+        margin-bottom: 12px;
     }
     .stTabs [data-baseweb="tab"] {
-        border-radius: 20px;
-        padding: 8px 18px;
+        border-radius: 18px;
+        padding: 6px 14px;
         color: #6E5A4C;
         font-weight: 700;
-        font-size: 15px !important;
-        border: none;
+        font-size: 14px !important;
     }
     .stTabs [aria-selected="true"] {
         background-color: #A07855 !important;
         color: #FFFFFF !important;
-        box-shadow: 0 4px 12px rgba(160, 120, 85, 0.3);
     }
 
-    /* 按鈕樣式美化 (深摩卡棕色) */
+    /* 普通按鈕樣式 */
     .stButton>button {
-        border-radius: 20px;
+        border-radius: 16px;
         background-color: #A07855;
-        color: white;
-        border: none;
-        font-weight: 700;
-        font-size: 15px !important;
-        padding: 6px 18px;
-        transition: all 0.2s;
-    }
-    .stButton>button:hover {
-        background-color: #8A6443;
-        box-shadow: 0 4px 12px rgba(138, 100, 67, 0.3);
+        color: white; border: none;
+        font-weight: 700; font-size: 14px !important;
     }
 
-    /* 輸入框美化 */
-    .stTextInput input, .stSelectbox select, .stNumberInput input, .stDateInput input {
-        border-radius: 12px !important;
-        background-color: #FFFFFF !important;
-        border: 1px solid #E2D5C5 !important;
-        color: #3D322C !important;
+    /* 💬 備忘錄與待買清單防止重疊列 */
+    .list-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #FFFFFF;
+        border: 1px solid #E2D5C5;
+        border-radius: 12px;
+        padding: 8px 12px;
+        margin-bottom: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -169,14 +132,10 @@ if "members" not in st.session_state:
     st.session_state.members = ["鼠", "熊"]
 
 if "expense_categories" not in st.session_state:
-    st.session_state.expense_categories = [
-        "🍽️ 餐費", "🛋️ 居家日用", "🚗 交通費", "🏠 水電瓦斯網路費", "🎬 休閒娛樂", "🏥 醫療健康", "📦 其他"
-    ]
+    st.session_state.expense_categories = ["🍽️ 餐費", "🛋️ 居家日用", "🚗 交通費", "🏠 水電瓦斯網路費", "🎬 休閒娛樂", "🏥 醫療健康", "📦 其他"]
 
 if "income_categories" not in st.session_state:
-    st.session_state.income_categories = [
-        "💰 薪資收入", "🎁 獎金紅包", "📈 投資理財", "🤝 副業兼職", "💵 其他收入"
-    ]
+    st.session_state.income_categories = ["💰 薪資收入", "🎁 獎金紅包", "📈 投資理財", "🤝 副業兼職", "💵 其他收入"]
 
 if "cal_selected_date" not in st.session_state:
     st.session_state.cal_selected_date = date.today()
@@ -214,17 +173,66 @@ if "expenses_df" not in st.session_state:
 # ==========================================
 # 4. 主選單 Header & 分頁
 # ==========================================
-st.markdown("<h2 style='color:#7A573C; font-weight:800; margin-bottom:12px;'>🏠 小窩記帳</h2>", unsafe_allow_html=True)
+st.markdown("<h3 style='color:#7A573C; font-weight:800; margin-bottom:8px;'>🏠 小窩記帳</h3>", unsafe_allow_html=True)
 
 tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
     "🏠 主頁記帳", "📊 統計圖表", "💬 備忘錄", "🛒 購物清單", "⚙️ 設定"
 ])
 
 # ==========================================
-# TAB 1: 🏠 主頁記帳 (摩卡奶茶風：月曆 + 下方流水帳)
+# TAB 1: 🏠 主頁記帳 (日曆置頂 + 正下方三大淺奶茶色按鈕)
 # ==========================================
 with tab_home:
-    # 頂部操作按鈕 (支出 / 收入 / 結帳)
+    # 📌 需求 1：日曆置頂 (選單 + 7欄網格)
+    cal_m_col1, cal_m_col2 = st.columns([1, 1])
+    sel_year = cal_m_col1.number_input("年份", min_value=2020, max_value=2030, value=st.session_state.cal_selected_date.year, label_visibility="collapsed")
+    sel_month = cal_m_col2.selectbox("月份", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
+
+    # 繪製月曆 (7 欄強迫並排)
+    st.markdown("<div class='cal-grid'>", unsafe_allow_html=True)
+    week_names = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"]
+    w_cols = st.columns(7)
+    for idx, w_name in enumerate(week_names):
+        w_cols[idx].markdown(f"<div style='text-align:center; font-size:11px; color:#8C7A6B; font-weight:700;'>{w_name}</div>", unsafe_allow_html=True)
+
+    cal = calendar.Calendar(firstweekday=0)
+    month_days = cal.monthdayscalendar(int(sel_year), int(sel_month))
+
+    df_current = st.session_state.expenses_df.copy()
+    if not df_current.empty:
+        df_current["日期_dt"] = pd.to_datetime(df_current["日期"]).dt.date
+    else:
+        df_current["日期_dt"] = None
+
+    for week in month_days:
+        cols = st.columns(7)
+        for day_idx, day_num in enumerate(week):
+            if day_num == 0:
+                cols[day_idx].write("")
+            else:
+                curr_d = date(int(sel_year), int(sel_month), day_num)
+                d_records = df_current[df_current["日期_dt"] == curr_d]
+                
+                day_exp = d_records[d_records["類型"] == "支出"]["金額"].sum()
+                day_inc = d_records[d_records["類型"] == "收入"]["金額"].sum()
+                net_day = day_inc - day_exp
+
+                btn_label = f"{day_num}\n"
+                if net_day < 0:
+                    btn_label += f"-{int(abs(net_day))}"
+                elif net_day > 0:
+                    btn_label += f"+{int(net_day)}"
+
+                if cols[day_idx].button(btn_label, key=f"cal_btn_{curr_d}"):
+                    st.session_state.cal_selected_date = curr_d
+                    st.session_state.filter_to_single_day = True
+                    st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+
+    # 📌 需求 2：三大淺奶茶色按鈕並排在日曆正下方
+    st.markdown("<div class='action-block'>", unsafe_allow_html=True)
     top_col1, top_col2, top_col3 = st.columns(3)
     
     with top_col1:
@@ -317,57 +325,12 @@ with tab_home:
                         pass
                     st.success("🎉 已完成結帳！")
                     st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
     st.divider()
 
-    # 月份選單
-    cal_m_col1, cal_m_col2 = st.columns([1, 1])
-    sel_year = cal_m_col1.number_input("年份", min_value=2020, max_value=2030, value=st.session_state.cal_selected_date.year, label_visibility="collapsed")
-    sel_month = cal_m_col2.selectbox("月份", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
-
-    # 繪製月曆
-    week_names = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"]
-    w_cols = st.columns(7)
-    for idx, w_name in enumerate(week_names):
-        w_cols[idx].markdown(f"<div style='text-align:center; font-size:12px; color:#8C7A6B; font-weight:700;'>{w_name}</div>", unsafe_allow_html=True)
-
-    cal = calendar.Calendar(firstweekday=0)
-    month_days = cal.monthdayscalendar(int(sel_year), int(sel_month))
-
-    df_current = st.session_state.expenses_df.copy()
-    if not df_current.empty:
-        df_current["日期_dt"] = pd.to_datetime(df_current["日期"]).dt.date
-    else:
-        df_current["日期_dt"] = None
-
-    for week in month_days:
-        cols = st.columns(7)
-        for day_idx, day_num in enumerate(week):
-            if day_num == 0:
-                cols[day_idx].write("")
-            else:
-                curr_d = date(int(sel_year), int(sel_month), day_num)
-                d_records = df_current[df_current["日期_dt"] == curr_d]
-                
-                day_exp = d_records[d_records["類型"] == "支出"]["金額"].sum()
-                day_inc = d_records[d_records["類型"] == "收入"]["金額"].sum()
-                net_day = day_inc - day_exp
-
-                btn_label = f"{day_num}\n"
-                if net_day < 0:
-                    btn_label += f"-{int(abs(net_day))}元"
-                elif net_day > 0:
-                    btn_label += f"+{int(net_day)}元"
-
-                if cols[day_idx].button(btn_label, key=f"cal_btn_{curr_d}"):
-                    st.session_state.cal_selected_date = curr_d
-                    st.session_state.filter_to_single_day = True
-                    st.rerun()
-
-    # 顯示目前檢視區間控制與重置
-    st.divider()
+    # 顯示檢視狀態
     list_header_col1, list_header_col2 = st.columns([3, 1])
-    
     if st.session_state.filter_to_single_day:
         list_header_col1.markdown(f"#### 📅 正在檢視單日：`{st.session_state.cal_selected_date}`")
         if list_header_col2.button("↺ 看全月紀錄"):
@@ -392,7 +355,7 @@ with tab_home:
     if not filtered_df.empty:
         filtered_df = filtered_df.sort_values(by="日期", ascending=False)
 
-    # 逐條收支卡片 (摩卡奶茶色系)
+    # 逐條收支卡片
     if filtered_df.empty:
         st.info("此區間內尚無任何收支紀錄。")
     else:
@@ -414,10 +377,9 @@ with tab_home:
                 
             with c_card2:
                 amt_prefix = "+" if row["類型"] == "收入" else ""
-                amt_color = "#558B6E" if row["類型"] == "收入" else "#8C6239" # 綠色/摩卡棕
+                amt_color = "#558B6E" if row["類型"] == "收入" else "#8C6239"
                 st.markdown(f"<div class='item-amount' style='color:{amt_color};'>{amt_prefix}{row['金額']:,.0f} 元</div>", unsafe_allow_html=True)
             
-            # 可編輯與可刪除功能
             with c_edit:
                 with st.popover("✏️"):
                     st.markdown("### ✏️ 編輯這筆紀錄")
@@ -456,7 +418,7 @@ with tab_home:
             st.divider()
 
 # ==========================================
-# TAB 2: 📊 統計圖表 (莫蘭迪色系)
+# TAB 2: 📊 統計圖表 (📌 需求 3：圖表置中 + 移除右上角工具列)
 # ==========================================
 with tab_charts:
     st.subheader("📊 統計圖表視覺化分析")
@@ -467,37 +429,26 @@ with tab_charts:
     if current_df.empty:
         st.info("尚無數據可繪製圖表。")
     else:
-        chart_col1, chart_col2 = st.columns(2)
-
-        with chart_col1:
-            st.markdown("#### 🍕 支出類別比例 (圓餅圖)")
-            exp_df = current_df[current_df["類型"] == "支出"]
-            if not exp_df.empty:
-                fig_pie = px.pie(
-                    exp_df, names="類別", values="金額", hole=0.45,
-                    color_discrete_sequence=["#A07855", "#C5A880", "#8C6239", "#7A573C", "#B08968"]
-                )
-                fig_pie.update_traces(textfont=dict(size=16), textinfo='percent+label')
-                fig_pie.update_layout(font=dict(size=15), showlegend=True, margin=dict(t=20, b=20, l=10, r=10), paper_bgcolor="rgba(0,0,0,0)")
-                st.plotly_chart(fig_pie, use_container_width=True)
-
-        with chart_col2:
-            st.markdown("#### 👥 各成員支出貢獻 (長條圖)")
-            exp_df = current_df[current_df["類型"] == "支出"]
-            if not exp_df.empty:
-                fig_bar_person = px.bar(
-                    exp_df.groupby("記帳人")["金額"].sum().reset_index(),
-                    x="記帳人", y="金額", color="記帳人",
-                    color_discrete_sequence=["#A07855", "#C5A880"],
-                    text_auto=',.0f'
-                )
-                fig_bar_person.update_traces(textfont=dict(size=16))
-                fig_bar_person.update_layout(font=dict(size=15), margin=dict(t=20, b=20, l=10, r=10), paper_bgcolor="rgba(0,0,0,0)")
-                st.plotly_chart(fig_bar_person, use_container_width=True)
+        st.markdown("<h4 style='text-align: center; color: #8C6239;'>🍕 支出類別比例 (圓餅圖)</h4>", unsafe_allow_html=True)
+        exp_df = current_df[current_df["類型"] == "支出"]
+        if not exp_df.empty:
+            fig_pie = px.pie(
+                exp_df, names="類別", values="金額", hole=0.45,
+                color_discrete_sequence=["#A07855", "#C5A880", "#8C6239", "#7A573C", "#B08968"]
+            )
+            fig_pie.update_traces(textfont=dict(size=15), textinfo='percent+label')
+            fig_pie.update_layout(
+                font=dict(size=14), 
+                showlegend=True, 
+                legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"),
+                margin=dict(t=10, b=10, l=10, r=10), 
+                paper_bgcolor="rgba(0,0,0,0)"
+            )
+            # config={'displayModeBar': False} 移除 Plotly 右上角浮動按鈕列
+            st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
 
         st.divider()
-        st.markdown("#### 📊 時間支出趨勢圖 (長條圖)")
-        exp_df = current_df[current_df["類型"] == "支出"]
+        st.markdown("<h4 style='text-align: center; color: #8C6239;'>📊 時間支出趨勢圖 (長條圖)</h4>", unsafe_allow_html=True)
         if not exp_df.empty:
             exp_df["日期_dt"] = pd.to_datetime(exp_df["日期"])
             daily_sum = exp_df.groupby(exp_df["日期_dt"].dt.day)["金額"].sum().reset_index()
@@ -505,26 +456,26 @@ with tab_charts:
             fig_bar = px.bar(
                 daily_sum, x="日期_dt", y="金額", color_discrete_sequence=["#A07855"], text_auto=',.0f'
             )
-            fig_bar.update_traces(textfont=dict(size=16), textposition='outside')
+            fig_bar.update_traces(textfont=dict(size=15), textposition='outside')
             fig_bar.update_layout(
-                font=dict(size=15),
-                xaxis=dict(title=dict(text="日期 (日)", font=dict(size=15))),
-                yaxis=dict(title=dict(text="金額 ($)", font=dict(size=15))),
+                font=dict(size=14),
+                xaxis=dict(title=dict(text="日期 (日)", font=dict(size=14))),
+                yaxis=dict(title=dict(text="金額 ($)", font=dict(size=14))),
                 margin=dict(t=30, b=10, l=10, r=10),
                 plot_bgcolor="rgba(0,0,0,0)",
                 paper_bgcolor="rgba(0,0,0,0)"
             )
-            st.plotly_chart(fig_bar, use_container_width=True)
+            st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
 
 # ==========================================
-# TAB 3: 💬 備忘錄
+# TAB 3: 💬 備忘錄 (📌 需求 4：防止字與編輯按鈕重疊)
 # ==========================================
 with tab_memo:
     st.subheader("💬 家族備忘錄")
     st.divider()
 
     with st.form("add_memo_form", clear_on_submit=True):
-        col_m1, col_m2 = st.columns([4, 1])
+        col_m1, col_m2 = st.columns([3, 1])
         new_memo_text = col_m1.text_input("輸入備忘事項", placeholder="輸入需要討論的事項...", label_visibility="collapsed")
         submit_memo = col_m2.form_submit_button("➕ 新增事項")
         if submit_memo and new_memo_text:
@@ -535,29 +486,33 @@ with tab_memo:
 
     st.markdown("#### 📌 待處理備忘事項：")
     for memo in list(st.session_state.memos):
-        col_chk, col_txt, col_edit = st.columns([0.6, 4, 1])
-        checked = col_chk.checkbox("", key=f"memo_chk_{memo['id']}")
-        if checked:
-            st.session_state.memos.remove(memo)
-            st.toast("✅ 已完成並刪除！")
-            st.rerun()
-        col_txt.markdown(f"<div style='font-size:18px; padding-top:4px;'>• {memo['text']}</div>", unsafe_allow_html=True)
-        with col_edit.popover("✏️"):
-            edited_text = st.text_input("修改備忘內容", value=memo["text"], key=f"edit_memo_input_{memo['id']}")
-            if st.button("儲存修改", key=f"save_memo_{memo['id']}"):
-                memo["text"] = edited_text
-                st.toast("修改成功！")
+        col_chk, col_txt, col_edit = st.columns([0.8, 5, 1])
+        with col_chk:
+            checked = st.checkbox("", key=f"memo_chk_{memo['id']}")
+            if checked:
+                st.session_state.memos.remove(memo)
+                st.toast("✅ 已完成並刪除！")
                 st.rerun()
+        with col_txt:
+            st.markdown(f"<div style='font-size:16px; padding-top:4px;'>• {memo['text']}</div>", unsafe_allow_html=True)
+        with col_edit:
+            with st.popover("✏️"):
+                edited_text = st.text_input("修改備忘內容", value=memo["text"], key=f"edit_memo_input_{memo['id']}")
+                if st.button("儲存修改", key=f"save_memo_{memo['id']}"):
+                    memo["text"] = edited_text
+                    st.toast("修改成功！")
+                    st.rerun()
+        st.divider()
 
 # ==========================================
-# TAB 4: 🛒 購物清單
+# TAB 4: 🛒 購物清單 (📌 需求 4：防止字與編輯按鈕重疊)
 # ==========================================
 with tab_shopping:
     st.subheader("🛒 待買清單")
     st.divider()
 
     with st.form("add_shop_form", clear_on_submit=True):
-        col_s1, col_s2 = st.columns([4, 1])
+        col_s1, col_s2 = st.columns([3, 1])
         new_shop_item = col_s1.text_input("輸入待買商品", placeholder="輸入要購買的物品...", label_visibility="collapsed")
         submit_shop = col_s2.form_submit_button("➕ 新增商品")
         if submit_shop and new_shop_item:
@@ -568,19 +523,23 @@ with tab_shopping:
 
     st.markdown("#### 🛒 待採買項目：")
     for shop_item in list(st.session_state.shopping_list):
-        col_chk, col_txt, col_edit = st.columns([0.6, 4, 1])
-        checked = col_chk.checkbox("", key=f"shop_chk_{shop_item['id']}")
-        if checked:
-            st.session_state.shopping_list.remove(shop_item)
-            st.toast("🎉 已採買完成並移除！")
-            st.rerun()
-        col_txt.markdown(f"<div style='font-size:18px; padding-top:4px;'>🛒 {shop_item['item']}</div>", unsafe_allow_html=True)
-        with col_edit.popover("✏️"):
-            edited_item = st.text_input("修改商品名稱", value=shop_item["item"], key=f"edit_shop_input_{shop_item['id']}")
-            if st.button("儲存修改", key=f"save_shop_{shop_item['id']}"):
-                shop_item["item"] = edited_item
-                st.toast("修改成功！")
+        col_chk, col_txt, col_edit = st.columns([0.8, 5, 1])
+        with col_chk:
+            checked = st.checkbox("", key=f"shop_chk_{shop_item['id']}")
+            if checked:
+                st.session_state.shopping_list.remove(shop_item)
+                st.toast("🎉 已採買完成並移除！")
                 st.rerun()
+        with col_txt:
+            st.markdown(f"<div style='font-size:16px; padding-top:4px;'>🛒 {shop_item['item']}</div>", unsafe_allow_html=True)
+        with col_edit:
+            with st.popover("✏️"):
+                edited_item = st.text_input("修改商品名稱", value=shop_item["item"], key=f"edit_shop_input_{shop_item['id']}")
+                if st.button("儲存修改", key=f"save_shop_{shop_item['id']}"):
+                    shop_item["item"] = edited_item
+                    st.toast("修改成功！")
+                    st.rerun()
+        st.divider()
 
 # ==========================================
 # TAB 5: ⚙️ 設定
