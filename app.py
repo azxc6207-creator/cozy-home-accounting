@@ -7,12 +7,12 @@ import calendar
 import streamlit.components.v1 as components
 
 # ==========================================
-# 1. 頁面設定與莫蘭迪奶茶色系 CSS (強制防跑版)
+# 1. 頁面設定與莫蘭迪奶茶色系 CSS (強制手機直式版面)
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
     page_icon="🏡",
-    layout="wide",
+    layout="centered", # 關鍵：改回 centered，啟動手機直式排版
     initial_sidebar_state="collapsed"
 )
 
@@ -35,7 +35,14 @@ st.markdown("""
         color: #3D322C !important;
     }
     
-    header[data-testid="stHeader"], footer { visibility: hidden; }
+    header[data-testid="stHeader"], footer { display: none !important; }
+
+    /* 📱 強制約束為手機直式寬度 (模擬原生 App) */
+    .block-container {
+        max-width: 480px !important;
+        margin: 0 auto !important;
+        padding: 1rem 1rem 3rem 1rem !important;
+    }
 
     /* 📌 永遠置頂的日曆容器 (Sticky Top) */
     div[data-testid="stVerticalBlock"]:has(.cal-marker) {
@@ -47,15 +54,16 @@ st.markdown("""
         backdrop-filter: blur(12px) !important;
         padding: 10px 10px 14px 10px !important;
         border-bottom: 2px solid #E2D5C5 !important;
-        margin: -1rem -1rem 12px -1rem !important;
+        margin: -1rem -1rem 12px -1rem !important; /* 擴展貼合螢幕邊緣 */
         border-radius: 0 0 20px 20px !important;
         box-shadow: 0 4px 16px rgba(160, 120, 85, 0.1) !important;
     }
 
-    /* 🛑 終極修復：強制所有特定容器內的手機排版絕對「水平並排」，絕不自動折行 */
+    /* 🛑 強制局部容器內「絕對水平並排」，防止折行 */
     div[data-testid="stVerticalBlock"]:has(.cal-marker) div[data-testid="stHorizontalBlock"],
     div[data-testid="stVerticalBlock"]:has(.action-marker) div[data-testid="stHorizontalBlock"],
-    div[data-testid="stVerticalBlock"]:has(.tx-marker) div[data-testid="stHorizontalBlock"] {
+    div[data-testid="stVerticalBlock"]:has(.tx-marker) div[data-testid="stHorizontalBlock"],
+    div[data-testid="stVerticalBlock"]:has(.setting-row) div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
@@ -65,8 +73,9 @@ st.markdown("""
     div[data-testid="stVerticalBlock"]:has(.cal-marker) div[data-testid="stHorizontalBlock"] { gap: 2px !important; }
     div[data-testid="stVerticalBlock"]:has(.action-marker) div[data-testid="stHorizontalBlock"] { gap: 6px !important; }
     div[data-testid="stVerticalBlock"]:has(.tx-marker) div[data-testid="stHorizontalBlock"] { gap: 4px !important; }
+    div[data-testid="stVerticalBlock"]:has(.setting-row) div[data-testid="stHorizontalBlock"] { gap: 4px !important; }
 
-    /* 緊湊型日曆選中樣式 */
+    /* 緊湊型日曆按鈕樣式 */
     div[data-testid="stVerticalBlock"]:has(.cal-marker) .stButton>button {
         width: 100% !important; border-radius: 50% !important; padding: 0px !important;
         background-color: transparent !important; color: #3D322C !important; border: none !important;
@@ -74,9 +83,7 @@ st.markdown("""
         margin: 0 auto !important; display: flex !important; align-items: center !important; justify-content: center !important;
     }
     div[data-testid="stVerticalBlock"]:has(.cal-marker) .stButton>button:hover { background-color: #E2D5C5 !important; }
-    div[data-testid="stVerticalBlock"]:has(.cal-marker) .stButton>button strong {
-        background-color: #A07855; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; font-weight: 900;
-    }
+    div[data-testid="stVerticalBlock"]:has(.cal-marker) .stButton>button p { margin-bottom: 0 !important; }
 
     /* 🍵 三大淺奶茶色功能按鈕 */
     div[data-testid="stVerticalBlock"]:has(.action-marker) div[data-testid="stPopover"]>button {
@@ -85,28 +92,16 @@ st.markdown("""
         font-weight: 800 !important; font-size: 14px !important; box-shadow: 0 2px 6px rgba(160, 120, 85, 0.08) !important;
     }
 
-    /* 📋 紀錄高度極致壓縮 (簡單淺底色橫列) */
+    /* 📋 明細淺底色橫列卡片 */
     div[data-testid="stVerticalBlock"]:has(.tx-marker) {
-        background-color: #FDF9F5 !important;
-        border-radius: 12px !important;
-        padding: 8px 12px !important;
-        margin-bottom: 8px !important;
-        border: 1px solid #EAE0D5 !important;
-        box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important;
-        gap: 0 !important;
+        background-color: #FDF9F5 !important; border-radius: 12px !important; padding: 8px 12px !important;
+        margin-bottom: 8px !important; border: 1px solid #EAE0D5 !important;
+        box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; gap: 0 !important;
     }
     div[data-testid="stVerticalBlock"]:has(.tx-marker) p { margin-bottom: 0 !important; }
     
-    /* 強制分配流水帳三欄比例，並鎖定 ✏️ 與 🗑️ 並排不折行 */
-    @media (max-width: 64rem) {
-        div[data-testid="stVerticalBlock"]:has(.tx-marker) div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(1) { flex: 1 1 0% !important; min-width: 110px !important; }
-        div[data-testid="stVerticalBlock"]:has(.tx-marker) div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(2) { flex: 0 1 auto !important; min-width: 65px !important; }
-        div[data-testid="stVerticalBlock"]:has(.tx-marker) div[data-testid="stHorizontalBlock"] > div[data-testid="column"]:nth-child(3) { flex: 0 0 76px !important; min-width: 76px !important; }
-    }
-
-    /* 🗑️ 刪除與 ✏️ 編輯白底按鈕 (壓縮高度) */
-    div[data-testid="stVerticalBlock"]:has(.tx-marker) .stButton>button, 
-    div[data-testid="stVerticalBlock"]:has(.tx-marker) div[data-testid="stPopover"]>button {
+    /* 🗑️ 刪除與 ✏️ 編輯白底按鈕 (保證並排) */
+    .edit-del-btn .stButton>button, .edit-del-btn div[data-testid="stPopover"]>button {
         border-radius: 10px !important; background-color: #FFFFFF !important; color: #3D322C !important;
         border: 1px solid #E2D5C5 !important; font-weight: 700 !important; font-size: 14px !important;
         padding: 0 !important; height: 32px !important; width: 34px !important;
@@ -120,7 +115,7 @@ st.markdown("""
         border-radius: 18px !important; padding: 18px !important; margin-top: 30px !important; margin-bottom: 30px !important;
         box-shadow: 0 4px 14px rgba(160, 120, 85, 0.08) !important;
     }
-    div[data-testid="stDateInput"] label { font-size: 18px !important; font-weight: 800 !important; color: #7A573C !important; }
+    div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
     
     /* 分頁 Tabs 導覽列 */
     .stTabs [data-baseweb="tab-list"] { gap: 6px; background-color: #E8DDD0; padding: 6px; border-radius: 25px; margin-bottom: 14px; }
@@ -203,7 +198,7 @@ if "expenses_df" not in st.session_state:
 st.markdown("<h2 style='color:#7A573C; font-weight:900; margin-bottom:10px;'>🏠 小窩記帳 🐾</h2>", unsafe_allow_html=True)
 
 tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
-    "🏠 主頁記帳", "📊 統計圖表", "💬 備忘錄", "🛒 購物清單", "⚙️ 小窩設定"
+    "🏠 主頁", "📊 圖表", "💬 備忘", "🛒 購物", "⚙️ 設定"
 ])
 
 # ==========================================
@@ -244,18 +239,18 @@ with tab_home:
                         st.session_state.filter_to_single_day = True
                         st.rerun()
 
-    # 🍵 三大可愛按鈕區塊
+    # 🍵 三大功能按鈕區塊
     with st.container():
         st.markdown("<div class='action-marker'></div>", unsafe_allow_html=True)
         top_col1, top_col2, top_col3 = st.columns(3)
         with top_col1:
-            with st.popover("💸 記一筆支出", use_container_width=True):
+            with st.popover("💸 記支出", use_container_width=True):
                 st.markdown("### 💸 新增支出")
                 with st.form("add_exp_form", clear_on_submit=True):
                     e_date = st.date_input("支出日期", st.session_state.cal_selected_date)
                     e_payer = st.selectbox("付款人", st.session_state.members)
                     e_cat = st.selectbox("支出分類", st.session_state.expense_categories)
-                    e_item = st.text_input("消費項目 (非必填)", placeholder="例如：麵包")
+                    e_item = st.text_input("消費項目", placeholder="例如：麵包")
                     e_amount = st.number_input("金額 ($)", min_value=1, step=10, value=100)
                     e_note = st.text_input("備註 (非必填)")
                     if st.form_submit_button("確認新增"):
@@ -266,13 +261,13 @@ with tab_home:
                         st.toast("🎉 新增成功！")
                         st.rerun()
         with top_col2:
-            with st.popover("✨ 記一筆收入", use_container_width=True):
+            with st.popover("✨ 記收入", use_container_width=True):
                 st.markdown("### ✨ 新增收入")
                 with st.form("add_inc_form", clear_on_submit=True):
                     i_date = st.date_input("收入日期", st.session_state.cal_selected_date)
                     i_receiver = st.selectbox("收款人", st.session_state.members)
                     i_cat = st.selectbox("收入分類", st.session_state.income_categories)
-                    i_item = st.text_input("收入項目 (非必填)", placeholder="例如：薪資")
+                    i_item = st.text_input("收入項目", placeholder="例如：薪資")
                     i_amount = st.number_input("金額 ($)", min_value=1, step=100, value=1000)
                     i_note = st.text_input("備註 (非必填)")
                     if st.form_submit_button("確認新增"):
@@ -283,7 +278,7 @@ with tab_home:
                         st.toast("🎉 新增成功！")
                         st.rerun()
         with top_col3:
-            with st.popover("🐾 歡樂算帳", use_container_width=True):
+            with st.popover("🐾 算算帳", use_container_width=True):
                 st.markdown("### 🐾 結帳專區")
                 unsettled_df = st.session_state.expenses_df[st.session_state.expenses_df["結帳狀態"] != "已結帳"].copy()
                 if unsettled_df.empty:
@@ -325,7 +320,7 @@ with tab_home:
 
     # 📌 極致窄版淺色橫列收支卡片
     if filtered_df.empty:
-        st.info("此區間內尚無任何收支紀錄。")
+        st.info("此區間內無紀錄。")
     else:
         for idx, row in filtered_df.iterrows():
             r_date = datetime.strptime(row["日期"], "%Y-%m-%d")
@@ -336,14 +331,15 @@ with tab_home:
                 c_card1, c_card2, c_actions = st.columns([3.5, 2, 1.8])
                 
                 with c_card1:
-                    st.markdown(f"<div style='font-size:16px; font-weight:800; color:#3D322C; line-height:1.2;'>{row['項目']}</div>", unsafe_allow_html=True)
-                    st.markdown(f"<div style='font-size:12px; color:#8C7A6B; margin-top:3px;'>{row['記帳人']} · {r_date.month}/{r_date.day}({day_week_str}) · {row['類別']}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-size:16px; font-weight:800; color:#3D322C; line-height:1.1;'>{row['項目']}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-size:12px; color:#8C7A6B; margin-top:2px;'>{row['記帳人']} · {r_date.month}/{r_date.day}({day_week_str}) · {row['類別']}</div>", unsafe_allow_html=True)
                     
                 with c_card2:
                     amt_color = "#558B6E" if row["類型"] == "收入" else "#8C6239"
                     st.markdown(f"<div style='font-size:18px; font-weight:900; color:{amt_color}; text-align:right;'>{'+' if row['類型'] == '收入' else ''}{row['金額']:,.0f}</div>", unsafe_allow_html=True)
                 
                 with c_actions:
+                    st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
                     act_col1, act_col2 = st.columns(2)
                     with act_col1:
                         with st.popover("✏️"):
@@ -366,13 +362,14 @@ with tab_home:
                             try: conn.update(data=st.session_state.expenses_df)
                             except: pass
                             st.rerun()
+                    st.markdown("</div>", unsafe_allow_html=True)
 
-    # 📌 底部自訂區間查詢框 (移至最下方)
+    # 📌 底部自訂區間查詢框
     with st.container():
         st.markdown("<div class='query-marker'></div>", unsafe_allow_html=True)
-        st.markdown("<h3 style='color:#7A573C; margin-bottom:10px; font-size:18px;'>🔍 底部自訂區間查詢</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color:#7A573C; margin-bottom:10px; font-size:18px;'>🔍 底部區間查詢</h3>", unsafe_allow_html=True)
         
-        picked_range = st.date_input("選擇起始與結束日期", value=(st.session_state.start_date, st.session_state.end_date), key="bottom_date_picker")
+        picked_range = st.date_input("選擇起始與結束", value=(st.session_state.start_date, st.session_state.end_date), key="bottom_date_picker")
         
         q_col1, q_col2 = st.columns(2)
         if q_col1.button("✅ 查詢此區間", use_container_width=True):
@@ -391,22 +388,21 @@ with tab_home:
             st.rerun()
 
 # ==========================================
-# TAB 2~5: 統計、備忘錄、購物、設定保持不變
+# TAB 2~5: 統計、備忘錄、購物、設定 (手機直式版)
 # ==========================================
 with tab_charts:
     st.subheader("📊 統計圖表視覺化分析")
-    st.divider()
     current_df = st.session_state.expenses_df.copy()
-    if current_df.empty: st.info("尚無數據可繪製圖表。")
+    if current_df.empty: st.info("尚無數據。")
     else:
         exp_df = current_df[current_df["類型"] == "支出"]
         if not exp_df.empty:
-            st.markdown("<h4 style='text-align:center; color:#8C6239;'>🍕 支出類別比例 (圓餅圖)</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='text-align:center; color:#8C6239;'>🍕 支出類別</h4>", unsafe_allow_html=True)
             fig_pie = px.pie(exp_df, names="類別", values="金額", hole=0.45, color_discrete_sequence=["#A07855", "#C5A880", "#8C6239", "#7A573C", "#B08968"])
             fig_pie.update_layout(font=dict(size=14), legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"), paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
             st.divider()
-            st.markdown("<h4 style='text-align:center; color:#8C6239;'>📊 時間支出趨勢圖 (長條圖)</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='text-align:center; color:#8C6239;'>📊 時間趨勢</h4>", unsafe_allow_html=True)
             exp_df["日期_dt"] = pd.to_datetime(exp_df["日期"])
             daily_sum = exp_df.groupby(exp_df["日期_dt"].dt.day)["金額"].sum().reset_index()
             fig_bar = px.bar(daily_sum, x="日期_dt", y="金額", color_discrete_sequence=["#A07855"], text_auto=',.0f')
@@ -414,87 +410,146 @@ with tab_charts:
             st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
 
 with tab_memo:
-    st.subheader("💬 家族備忘錄")
+    st.subheader("💬 備忘錄")
     with st.form("add_memo_form", clear_on_submit=True):
         col_m1, col_m2 = st.columns([3, 1])
-        new_memo_text = col_m1.text_input("輸入備忘事項", label_visibility="collapsed")
+        new_memo_text = col_m1.text_input("輸入備忘", label_visibility="collapsed")
         if col_m2.form_submit_button("➕ 新增") and new_memo_text:
             st.session_state.memos.append({"id": int(datetime.now().timestamp()*1000), "text": new_memo_text})
             st.rerun()
     for memo in list(st.session_state.memos):
-        c1, c2, c3 = st.columns([0.8, 4.5, 1])
-        if c1.checkbox("", key=f"mc_{memo['id']}"):
-            st.session_state.memos.remove(memo)
-            st.rerun()
-        c2.markdown(f"• {memo['text']}")
-        with c3.popover("✏️"):
-            new_text = st.text_input("修改", value=memo["text"], key=f"mi_{memo['id']}")
-            if st.button("儲存", key=f"ms_{memo['id']}"):
-                memo["text"] = new_text
+        with st.container():
+            st.markdown("<div class='setting-row'></div>", unsafe_allow_html=True)
+            c1, c2, c3 = st.columns([0.8, 4.5, 1])
+            if c1.checkbox("", key=f"mc_{memo['id']}"):
+                st.session_state.memos.remove(memo)
                 st.rerun()
+            c2.markdown(f"• {memo['text']}")
+            with c3:
+                st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
+                with st.popover("✏️"):
+                    new_text = st.text_input("修改", value=memo["text"], key=f"mi_{memo['id']}")
+                    if st.button("儲存", key=f"ms_{memo['id']}"):
+                        memo["text"] = new_text
+                        st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
 
 with tab_shopping:
-    st.subheader("🛒 待買清單")
+    st.subheader("🛒 購物清單")
     with st.form("add_shop_form", clear_on_submit=True):
         col_s1, col_s2 = st.columns([3, 1])
-        new_shop_item = col_s1.text_input("輸入待買商品", label_visibility="collapsed")
+        new_shop_item = col_s1.text_input("輸入商品", label_visibility="collapsed")
         if col_s2.form_submit_button("➕ 新增") and new_shop_item:
             st.session_state.shopping_list.append({"id": int(datetime.now().timestamp()*1000), "item": new_shop_item})
             st.rerun()
     for item in list(st.session_state.shopping_list):
-        c1, c2, c3 = st.columns([0.8, 4.5, 1])
-        if c1.checkbox("", key=f"sc_{item['id']}"):
-            st.session_state.shopping_list.remove(item)
-            st.rerun()
-        c2.markdown(f"🛒 {item['item']}")
-        with c3.popover("✏️"):
-            new_item = st.text_input("修改", value=item["item"], key=f"si_{item['id']}")
-            if st.button("儲存", key=f"ss_{item['id']}"):
-                item["item"] = new_item
+        with st.container():
+            st.markdown("<div class='setting-row'></div>", unsafe_allow_html=True)
+            c1, c2, c3 = st.columns([0.8, 4.5, 1])
+            if c1.checkbox("", key=f"sc_{item['id']}"):
+                st.session_state.shopping_list.remove(item)
                 st.rerun()
+            c2.markdown(f"🛒 {item['item']}")
+            with c3:
+                st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
+                with st.popover("✏️"):
+                    new_item = st.text_input("修改", value=item["item"], key=f"si_{item['id']}")
+                    if st.button("儲存", key=f"ss_{item['id']}"):
+                        item["item"] = new_item
+                        st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
 
 with tab_settings:
     st.subheader("⚙️ 小窩設定")
-    set_col1, set_col2, set_col3 = st.columns(3)
-    with set_col1:
-        st.markdown(f"### 🐱 成員管理")
-        with st.form("add_member_form", clear_on_submit=True):
-            col_icon, col_name = st.columns([1, 2])
-            new_m_icon = col_icon.text_input("Icon", value="🐱")
-            new_m_name = col_name.text_input("名稱")
-            if st.form_submit_button("➕ 新增") and new_m_name:
-                st.session_state.members.append(f"{new_m_icon.strip()} {new_m_name.strip()}")
-                st.rerun()
-        for idx, m in enumerate(st.session_state.members):
-            st.write(f"• **{m}**")
-            if st.button("🗑️ 刪除", key=f"dm_{idx}") and len(st.session_state.members) > 1:
-                st.session_state.members.pop(idx)
-                st.rerun()
-    with set_col2:
-        st.markdown(f"### 🏷️ 支出類別")
-        with st.form("add_exp_cat_form", clear_on_submit=True):
-            col_icon, col_name = st.columns([1, 2])
-            new_e_icon = col_icon.text_input("Icon", value="📦")
-            new_e_name = col_name.text_input("類別名稱")
-            if st.form_submit_button("➕ 新增") and new_e_name:
-                st.session_state.expense_categories.append(f"{new_e_icon.strip()} {new_e_name.strip()}")
-                st.rerun()
-        for idx, c in enumerate(st.session_state.expense_categories):
-            st.write(f"• **{c}**")
-            if st.button("🗑️ 刪除", key=f"de_{idx}") and len(st.session_state.expense_categories) > 1:
-                st.session_state.expense_categories.pop(idx)
-                st.rerun()
-    with set_col3:
-        st.markdown(f"### 💰 收入類別")
-        with st.form("add_inc_cat_form", clear_on_submit=True):
-            col_icon, col_name = st.columns([1, 2])
-            new_i_icon = col_icon.text_input("Icon", value="💵")
-            new_i_name = col_name.text_input("類別名稱")
-            if st.form_submit_button("➕ 新增") and new_i_name:
-                st.session_state.income_categories.append(f"{new_i_icon.strip()} {new_i_name.strip()}")
-                st.rerun()
-        for idx, ic in enumerate(st.session_state.income_categories):
-            st.write(f"• **{ic}**")
-            if st.button("🗑️ 刪除", key=f"di_{idx}") and len(st.session_state.income_categories) > 1:
-                st.session_state.income_categories.pop(idx)
-                st.rerun()
+    
+    st.markdown(f"### 🐱 成員管理")
+    with st.form("add_member_form", clear_on_submit=True):
+        col_icon, col_name = st.columns([1, 2])
+        new_m_icon = col_icon.text_input("Icon", value="🐱")
+        new_m_name = col_name.text_input("名稱")
+        if st.form_submit_button("➕ 新增") and new_m_name:
+            st.session_state.members.append(f"{new_m_icon.strip()} {new_m_name.strip()}")
+            st.rerun()
+    for idx, m in enumerate(st.session_state.members):
+        with st.container():
+            st.markdown("<div class='setting-row'></div>", unsafe_allow_html=True)
+            m_col1, m_actions = st.columns([3, 1.8])
+            m_col1.write(f"• **{m}**")
+            with m_actions:
+                st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
+                act1, act2 = st.columns(2)
+                with act1:
+                    with st.popover("✏️"):
+                        parts = m.split(" ", 1)
+                        edit_icon = st.text_input("Icon", value=parts[0] if len(parts)>1 else "🐱", key=f"m_i_{idx}")
+                        edit_name = st.text_input("名稱", value=parts[1] if len(parts)>1 else parts[0], key=f"m_n_{idx}")
+                        if st.button("儲存", key=f"s_m_{idx}"):
+                            st.session_state.members[idx] = f"{edit_icon.strip()} {edit_name.strip()}"
+                            st.rerun()
+                with act2:
+                    if st.button("🗑️", key=f"d_m_{idx}") and len(st.session_state.members) > 1:
+                        st.session_state.members.pop(idx)
+                        st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
+    st.divider()
+
+    st.markdown(f"### 🏷️ 支出類別")
+    with st.form("add_exp_cat_form", clear_on_submit=True):
+        col_icon, col_name = st.columns([1, 2])
+        new_e_icon = col_icon.text_input("Icon", value="📦")
+        new_e_name = col_name.text_input("名稱")
+        if st.form_submit_button("➕ 新增") and new_e_name:
+            st.session_state.expense_categories.append(f"{new_e_icon.strip()} {new_e_name.strip()}")
+            st.rerun()
+    for idx, c in enumerate(st.session_state.expense_categories):
+        with st.container():
+            st.markdown("<div class='setting-row'></div>", unsafe_allow_html=True)
+            c_col1, c_actions = st.columns([3, 1.8])
+            c_col1.write(f"• **{c}**")
+            with c_actions:
+                st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
+                act1, act2 = st.columns(2)
+                with act1:
+                    with st.popover("✏️"):
+                        parts = c.split(" ", 1)
+                        edit_icon = st.text_input("Icon", value=parts[0] if len(parts)>1 else "📦", key=f"e_i_{idx}")
+                        edit_name = st.text_input("名稱", value=parts[1] if len(parts)>1 else parts[0], key=f"e_n_{idx}")
+                        if st.button("儲存", key=f"s_e_{idx}"):
+                            st.session_state.expense_categories[idx] = f"{edit_icon.strip()} {edit_name.strip()}"
+                            st.rerun()
+                with act2:
+                    if st.button("🗑️", key=f"d_e_{idx}") and len(st.session_state.expense_categories) > 1:
+                        st.session_state.expense_categories.pop(idx)
+                        st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
+    st.divider()
+
+    st.markdown(f"### 💰 收入類別")
+    with st.form("add_inc_cat_form", clear_on_submit=True):
+        col_icon, col_name = st.columns([1, 2])
+        new_i_icon = col_icon.text_input("Icon", value="💵")
+        new_i_name = col_name.text_input("名稱")
+        if st.form_submit_button("➕ 新增") and new_i_name:
+            st.session_state.income_categories.append(f"{new_i_icon.strip()} {new_i_name.strip()}")
+            st.rerun()
+    for idx, ic in enumerate(st.session_state.income_categories):
+        with st.container():
+            st.markdown("<div class='setting-row'></div>", unsafe_allow_html=True)
+            ic_col1, ic_actions = st.columns([3, 1.8])
+            ic_col1.write(f"• **{ic}**")
+            with ic_actions:
+                st.markdown("<div class='edit-del-btn'>", unsafe_allow_html=True)
+                act1, act2 = st.columns(2)
+                with act1:
+                    with st.popover("✏️"):
+                        parts = ic.split(" ", 1)
+                        edit_icon = st.text_input("Icon", value=parts[0] if len(parts)>1 else "💵", key=f"i_i_{idx}")
+                        edit_name = st.text_input("名稱", value=parts[1] if len(parts)>1 else parts[0], key=f"i_n_{idx}")
+                        if st.button("儲存", key=f"s_i_{idx}"):
+                            st.session_state.income_categories[idx] = f"{edit_icon.strip()} {edit_name.strip()}"
+                            st.rerun()
+                with act2:
+                    if st.button("🗑️", key=f"d_i_{idx}") and len(st.session_state.income_categories) > 1:
+                        st.session_state.income_categories.pop(idx)
+                        st.rerun()
+                st.markdown("</div>", unsafe_allow_html=True)
