@@ -7,7 +7,7 @@ import calendar
 import streamlit.components.v1 as components
 
 # ==========================================
-# 1. 頁面設定 (使用 centered 限制最大寬度，呈現手機版型)
+# 1. 頁面設定 (使用 centered 限制最大寬度)
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 莫蘭迪奶茶背景
+# 2. 終極防跑版 CSS + Popover 滾動最佳化
 # ==========================================
 st.markdown("""
 <style>
@@ -70,13 +70,17 @@ st.markdown("""
         }
     }
 
-    /* 🛑 2. 修復：彈出選單 (Popover) 最佳化，解決底部「確認新增」按鈕被吃掉的問題 */
+    /* ========================================================
+       📲 解決 Popover 彈窗底部「確認新增」被吃掉、無法下滑的問題
+       ======================================================== */
     div[data-testid="stPopoverBody"] {
-        max-height: 80vh !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important; /* iOS 順暢滾動 */
-        padding-bottom: 30px !important; /* 預留底部邊界，防止按鈕被遮擋 */
+        max-height: 75vh !important; /* 限制最高為螢幕 75% */
+        overflow-y: auto !important; /* 強制開啟垂直滾動條 */
+        -webkit-overflow-scrolling: touch !important; /* iOS 順暢原滑動 */
+        padding: 12px 14px 40px 14px !important; /* 底部加大留白至 40px，防止按鈕被遮住 */
     }
+
+    /* 彈出視窗(Popover)內部的表單恢復正常上下排列 */
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] {
         flex-wrap: wrap !important;
         flex-direction: column !important;
@@ -86,8 +90,10 @@ st.markdown("""
         width: 100% !important;
         flex: none !important;
     }
-    div[data-testid="stPopoverBody"] form {
-        padding-bottom: 20px !important;
+    
+    /* 確保表單送出按鈕置底並且明顯 */
+    div[data-testid="stPopoverBody"] div[data-testid="stForm"] {
+        margin-bottom: 20px !important;
     }
 
     /* 📌 容器卡片統一樣式 */
@@ -164,24 +170,26 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 1. 完全封鎖所有 DateInput 鍵盤彈出
+# ⚡ 隱藏 JavaScript: 阻擋 iPhone 日期鍵盤
 # ==========================================
 components.html(
     """
     <script>
-    function disableKeyboardForDatePickers() {
-        // 全面抓取所有 date input 內部的輸入框（包含單選日期與區間選擇）
-        const dateInputs = window.parent.document.querySelectorAll('[data-testid="stDateInput"] input');
-        dateInputs.forEach(input => {
-            if (input.getAttribute('inputmode') !== 'none') {
-                input.setAttribute('inputmode', 'none');
-                input.setAttribute('readonly', 'true');
-                input.style.caretColor = 'transparent';
-                input.style.cursor = 'pointer';
+    function disableKeyboard() {
+        const inputs = window.parent.document.querySelectorAll('input[type="text"]');
+        inputs.forEach(input => {
+            const label = input.getAttribute('aria-label') || '';
+            if (label.includes('日期') || label.includes('起始') || label.includes('結束')) {
+                if (input.getAttribute('inputmode') !== 'none') {
+                    input.setAttribute('inputmode', 'none');
+                    input.setAttribute('readonly', 'true');
+                    input.style.caretColor = 'transparent';
+                    input.style.cursor = 'pointer';
+                }
             }
         });
     }
-    setInterval(disableKeyboardForDatePickers, 300); // 隨時監聽以覆蓋動態彈出的選單
+    setInterval(disableKeyboard, 400); 
     </script>
     """,
     height=0, width=0
@@ -233,7 +241,7 @@ tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
 # TAB 1: 🏠 主頁記帳
 # ==========================================
 with tab_home:
-    # 📌 置頂區塊：緊湊日曆 (因為是第一個 st.container(border=True)，會被 CSS 鎖定置頂)
+    # 📌 置頂區塊：緊湊日曆 (第一個 st.container(border=True)，會被 CSS 鎖定置頂)
     with st.container(border=True):
         # 年月切換
         cal_head_1, cal_head_2 = st.columns([1.5, 1])
@@ -280,7 +288,7 @@ with tab_home:
                     e_item = st.text_input("消費項目", placeholder="例如：麵包")
                     e_amount = st.number_input("金額 ($)", min_value=1, step=10, value=100)
                     e_note = st.text_input("備註 (非必填)")
-                    if st.form_submit_button("確認新增", type="primary"):
+                    if st.form_submit_button("確認新增", type="primary", use_container_width=True):
                         new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp())}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": ""}])
                         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
                         try: conn.update(data=st.session_state.expenses_df)
@@ -297,7 +305,7 @@ with tab_home:
                     i_item = st.text_input("收入項目", placeholder="例如：薪資")
                     i_amount = st.number_input("金額 ($)", min_value=1, step=100, value=1000)
                     i_note = st.text_input("備註 (非必填)")
-                    if st.form_submit_button("確認新增", type="primary"):
+                    if st.form_submit_button("確認新增", type="primary", use_container_width=True):
                         new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": ""}])
                         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
                         try: conn.update(data=st.session_state.expenses_df)
@@ -375,7 +383,7 @@ with tab_home:
                             e_amt_val = st.number_input("金額", value=float(row["金額"]))
                             e_payer_val = st.selectbox("成員", st.session_state.members, index=0)
                             e_note_val = st.text_input("備註", value=row["備註"])
-                            if st.form_submit_button("儲存"):
+                            if st.form_submit_button("儲存", type="primary", use_container_width=True):
                                 st.session_state.expenses_df.loc[st.session_state.expenses_df["ID"] == row["ID"], ["日期", "類型", "類別", "項目", "金額", "記帳人", "備註"]] = [str(e_date_val), e_type_val, e_cat_val, e_item_val, float(e_amt_val), e_payer_val, e_note_val]
                                 try: conn.update(data=st.session_state.expenses_df)
                                 except: pass
