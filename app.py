@@ -7,7 +7,7 @@ import calendar
 import streamlit.components.v1 as components
 
 # ==========================================
-# 1. 頁面設定 (使用 centered 約束最大寬度)
+# 1. 頁面設定 (使用 centered 限制最大寬度，呈現手機版型)
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 最高權限 CSS 覆寫 (壓制 Streamlit 手機原生折行)
+# 2. 終極防跑版 CSS + 莫蘭迪奶茶背景
 # ==========================================
 st.markdown("""
 <style>
@@ -63,14 +63,20 @@ st.markdown("""
         
         html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"],
         html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-            width: 0 !important; /* 蓋掉 width: 100% */
+            width: 0 !important;
             min-width: 0 !important;
-            flex: 1 1 0% !important; /* 由 flex 重新配比 */
+            flex: 1 1 0% !important;
             padding: 0 1px !important;
         }
     }
 
-    /* 🛑 彈出選單內部 Form 保持正常單欄上下排列 */
+    /* 🛑 2. 修復：彈出選單 (Popover) 最佳化，解決底部「確認新增」按鈕被吃掉的問題 */
+    div[data-testid="stPopoverBody"] {
+        max-height: 80vh !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important; /* iOS 順暢滾動 */
+        padding-bottom: 30px !important; /* 預留底部邊界，防止按鈕被遮擋 */
+    }
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] {
         flex-wrap: wrap !important;
         flex-direction: column !important;
@@ -79,6 +85,9 @@ st.markdown("""
     div[data-testid="stPopoverBody"] div[data-testid="column"] {
         width: 100% !important;
         flex: none !important;
+    }
+    div[data-testid="stPopoverBody"] form {
+        padding-bottom: 20px !important;
     }
 
     /* 📌 容器卡片統一樣式 */
@@ -155,26 +164,24 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 阻擋 iPhone 日期鍵盤
+# ⚡ 隱藏 JavaScript: 1. 完全封鎖所有 DateInput 鍵盤彈出
 # ==========================================
 components.html(
     """
     <script>
-    function disableKeyboard() {
-        const inputs = window.parent.document.querySelectorAll('input[type="text"]');
-        inputs.forEach(input => {
-            const label = input.getAttribute('aria-label') || '';
-            if (label.includes('日期') || label.includes('起始') || label.includes('結束')) {
-                if (input.getAttribute('inputmode') !== 'none') {
-                    input.setAttribute('inputmode', 'none');
-                    input.setAttribute('readonly', 'true');
-                    input.style.caretColor = 'transparent';
-                    input.style.cursor = 'pointer';
-                }
+    function disableKeyboardForDatePickers() {
+        // 全面抓取所有 date input 內部的輸入框（包含單選日期與區間選擇）
+        const dateInputs = window.parent.document.querySelectorAll('[data-testid="stDateInput"] input');
+        dateInputs.forEach(input => {
+            if (input.getAttribute('inputmode') !== 'none') {
+                input.setAttribute('inputmode', 'none');
+                input.setAttribute('readonly', 'true');
+                input.style.caretColor = 'transparent';
+                input.style.cursor = 'pointer';
             }
         });
     }
-    setInterval(disableKeyboard, 400); 
+    setInterval(disableKeyboardForDatePickers, 300); // 隨時監聽以覆蓋動態彈出的選單
     </script>
     """,
     height=0, width=0
@@ -273,7 +280,7 @@ with tab_home:
                     e_item = st.text_input("消費項目", placeholder="例如：麵包")
                     e_amount = st.number_input("金額 ($)", min_value=1, step=10, value=100)
                     e_note = st.text_input("備註 (非必填)")
-                    if st.form_submit_button("確認新增"):
+                    if st.form_submit_button("確認新增", type="primary"):
                         new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp())}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": ""}])
                         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
                         try: conn.update(data=st.session_state.expenses_df)
@@ -290,7 +297,7 @@ with tab_home:
                     i_item = st.text_input("收入項目", placeholder="例如：薪資")
                     i_amount = st.number_input("金額 ($)", min_value=1, step=100, value=1000)
                     i_note = st.text_input("備註 (非必填)")
-                    if st.form_submit_button("確認新增"):
+                    if st.form_submit_button("確認新增", type="primary"):
                         new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": ""}])
                         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
                         try: conn.update(data=st.session_state.expenses_df)
@@ -307,7 +314,7 @@ with tab_home:
                     st.write(f"待結帳：**{len(unsettled_df)}** 筆")
                     chk_cols = st.columns(len(st.session_state.members))
                     agreed_flags = [chk_cols[i].checkbox(f"{m}", key=f"settle_chk_{m}") for i, m in enumerate(st.session_state.members)]
-                    if st.button("🤝 完成結帳", use_container_width=True, disabled=(not all(agreed_flags))):
+                    if st.button("🤝 完成結帳", type="primary", use_container_width=True, disabled=(not all(agreed_flags))):
                         st.session_state.expenses_df.loc[unsettled_df.index, "結帳狀態"] = "已結帳"
                         st.session_state.expenses_df.loc[unsettled_df.index, "結帳單號"] = f"SETTLE-{datetime.now().strftime('%Y%m%d%H%M')}"
                         try: conn.update(data=st.session_state.expenses_df)
@@ -339,7 +346,7 @@ with tab_home:
     if not filtered_df.empty: filtered_df = filtered_df.sort_values(by="日期", ascending=False)
     week_days_tw = ["一", "二", "三", "四", "五", "六", "日"]
 
-    # 📌 淺色橫列收支卡片 (扁平化 4 欄並排)
+    # 📌 淺色橫列收支卡片 (4 欄並排)
     if filtered_df.empty:
         st.info("此區間內無紀錄。")
     else:
