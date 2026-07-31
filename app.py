@@ -6,7 +6,7 @@ from datetime import datetime, date
 import calendar
 
 # ==========================================
-# 1. 頁面設定與「莫蘭迪摩卡奶茶色系」修復 CSS
+# 1. 頁面設定與「莫蘭迪多色塊 + 狗狗腳印」CSS
 # ==========================================
 st.set_page_config(
     page_title="小窩記帳 🏠",
@@ -15,14 +15,25 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# 注入多樣化不規則色塊 + 半透明狗狗腳印 CSS
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap');
 
-    /* 全局背景 */
+    /* 🎨 多樣化色塊背景 (結合附圖色調) + 🐾 半透明狗狗腳印 SVG 紋理 */
     html, body, [class*="css"], .stApp {
         font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        background: linear-gradient(135deg, #FAF5F0 0%, #F2E8DF 50%, #E8DDD0 100%) !important;
+        background-color: #FAF5F0 !important;
+        background-image: 
+            /* 1. 半透明狗狗腳印花紋 */
+            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 24 24" fill="%23A07855" opacity="0.06"><path d="M12,11.5 C10.6,11.5 9.5,12.6 9.5,14 C9.5,15.4 10.6,17.5 12,17.5 C13.4,17.5 14.5,15.4 14.5,14 C14.5,12.6 13.4,11.5 12,11.5 Z M7.5,12 C8.3,12 9,11.3 9,10.5 C9,9.7 8.3,9 7.5,9 C6.7,9 6,9.7 6,10.5 C6,11.3 6.7,12 7.5,12 Z M16.5,12 C17.3,12 18,11.3 18,10.5 C18,9.7 17.3,9 16.5,9 C15.7,9 15,9.7 15,10.5 C15,11.3 15.7,12 16.5,12 Z M9.5,8 C10.3,8 11,7.3 11,6.5 C11,5.7 10.3,5 9.5,5 C8.7,5 8,5.7 8,6.5 C8,7.3 8.7,8 9.5,8 Z M14.5,8 C15.3,8 16,7.3 16,6.5 C16,5.7 15.3,5 14.5,5 C13.7,5 13,5.7 13,6.5 C13,7.3 13.7,8 14.5,8 Z"/></svg>'),
+            /* 2. 模仿附圖的不規則多色斑塊 */
+            radial-gradient(circle at 10% 15%, rgba(232, 221, 208, 0.85) 0%, transparent 45%),
+            radial-gradient(circle at 85% 10%, rgba(212, 195, 179, 0.75) 0%, transparent 40%),
+            radial-gradient(circle at 25% 65%, rgba(242, 232, 223, 0.9) 0%, transparent 50%),
+            radial-gradient(circle at 80% 85%, rgba(180, 145, 115, 0.3) 0%, transparent 50%),
+            radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.6) 0%, transparent 60%) !important;
+        background-attachment: fixed !important;
         color: #3D322C !important;
         font-size: 16px !important;
     }
@@ -30,38 +41,28 @@ st.markdown("""
     header[data-testid="stHeader"] { visibility: hidden; }
     footer { visibility: hidden; }
 
-    /* 📱 關鍵修復 1：強迫所有 st.columns 水平並排，絕不垂直換行擠壓 */
-    div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        align-items: center !important;
-        gap: 4px !important;
-    }
-    
-    div[data-testid="column"] {
-        min-width: 0 !important;
-        flex: 1 1 0px !important;
-    }
-
-    /* 📅 7 欄日曆按鈕樣式 */
-    .cal-grid div[data-testid="column"] .stButton>button {
+    /* 📱 需求 1：直式日期按鈕列表樣式 */
+    .vertical-date-btn button {
         width: 100% !important;
-        border-radius: 10px !important;
-        padding: 4px 0px !important;
         background-color: #FFFFFF !important;
         color: #5C4A3E !important;
         border: 1px solid #E2D5C5 !important;
-        font-size: 11px !important;
-        min-height: 48px !important;
-        line-height: 1.2 !important;
+        border-radius: 12px !important;
+        padding: 10px 14px !important;
+        font-weight: 700 !important;
+        font-size: 15px !important;
+        margin-bottom: 4px !important;
+        box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important;
+        display: flex !important;
+        justify-content: space-between !important;
     }
-    .cal-grid div[data-testid="column"] .stButton>button:hover {
+    .vertical-date-btn button:hover {
         background-color: #A07855 !important;
         color: #FFFFFF !important;
+        border-color: #A07855 !important;
     }
 
-    /* 🍵 淺奶茶色三大功能按鈕區塊 */
+    /* 🍵 淺奶茶色三大功能區塊 */
     .action-block div[data-testid="column"] .stPopover>button {
         width: 100% !important;
         background-color: #EEDFD2 !important;
@@ -109,18 +110,6 @@ st.markdown("""
         background-color: #A07855;
         color: white; border: none;
         font-weight: 700; font-size: 14px !important;
-    }
-
-    /* 💬 備忘錄與待買清單防止重疊列 */
-    .list-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #FFFFFF;
-        border: 1px solid #E2D5C5;
-        border-radius: 12px;
-        padding: 8px 12px;
-        margin-bottom: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -173,65 +162,51 @@ if "expenses_df" not in st.session_state:
 # ==========================================
 # 4. 主選單 Header & 分頁
 # ==========================================
-st.markdown("<h3 style='color:#7A573C; font-weight:800; margin-bottom:8px;'>🏠 小窩記帳</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='color:#7A573C; font-weight:800; margin-bottom:8px;'>🏠 小窩記帳 🐾</h3>", unsafe_allow_html=True)
 
 tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
     "🏠 主頁記帳", "📊 統計圖表", "💬 備忘錄", "🛒 購物清單", "⚙️ 設定"
 ])
 
 # ==========================================
-# TAB 1: 🏠 主頁記帳 (日曆置頂 + 正下方三大淺奶茶色按鈕)
+# TAB 1: 🏠 主頁記帳 (直式日期選擇 + 無金額 + 腳印斑塊背景)
 # ==========================================
 with tab_home:
-    # 📌 需求 1：日曆置頂 (選單 + 7欄網格)
+    # 📌 月份與年份選擇
     cal_m_col1, cal_m_col2 = st.columns([1, 1])
     sel_year = cal_m_col1.number_input("年份", min_value=2020, max_value=2030, value=st.session_state.cal_selected_date.year, label_visibility="collapsed")
     sel_month = cal_m_col2.selectbox("月份", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
 
-    # 繪製月曆 (7 欄強迫並排)
-    st.markdown("<div class='cal-grid'>", unsafe_allow_html=True)
-    week_names = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"]
-    w_cols = st.columns(7)
-    for idx, w_name in enumerate(week_names):
-        w_cols[idx].markdown(f"<div style='text-align:center; font-size:11px; color:#8C7A6B; font-weight:700;'>{w_name}</div>", unsafe_allow_html=True)
-
+    # 📌 需求 1 & 2：手機直式日期編排，且隱藏金額
+    st.markdown("##### 📅 請選擇日期 (直式滑動視窗)：")
+    
     cal = calendar.Calendar(firstweekday=0)
-    month_days = cal.monthdayscalendar(int(sel_year), int(sel_month))
+    month_days_flat = [d for week in cal.monthdayscalendar(int(sel_year), int(sel_month)) for d in week if d != 0]
+    week_days_tw = ["週一", "週二", "週三", "週四", "週五", "週六", "週日"]
 
-    df_current = st.session_state.expenses_df.copy()
-    if not df_current.empty:
-        df_current["日期_dt"] = pd.to_datetime(df_current["日期"]).dt.date
-    else:
-        df_current["日期_dt"] = None
-
-    for week in month_days:
-        cols = st.columns(7)
-        for day_idx, day_num in enumerate(week):
-            if day_num == 0:
-                cols[day_idx].write("")
-            else:
-                curr_d = date(int(sel_year), int(sel_month), day_num)
-                d_records = df_current[df_current["日期_dt"] == curr_d]
-                
-                day_exp = d_records[d_records["類型"] == "支出"]["金額"].sum()
-                day_inc = d_records[d_records["類型"] == "收入"]["金額"].sum()
-                net_day = day_inc - day_exp
-
-                btn_label = f"{day_num}\n"
-                if net_day < 0:
-                    btn_label += f"-{int(abs(net_day))}"
-                elif net_day > 0:
-                    btn_label += f"+{int(net_day)}"
-
-                if cols[day_idx].button(btn_label, key=f"cal_btn_{curr_d}"):
+    # 採用手風琴 (Expander) 收納直式日期列表，保持主頁乾淨
+    with st.expander(f"📅 展開 {sel_year}年{sel_month}月 直式日期選單", expanded=False):
+        # 以每行 2 列的直式卡片堆疊呈現，適合手機垂直閱讀
+        d_cols = st.columns(2)
+        for idx, day_num in enumerate(month_days_flat):
+            curr_d = date(int(sel_year), int(sel_month), day_num)
+            w_str = week_days_tw[curr_d.weekday()]
+            
+            # 純日期標示，不含金額
+            date_label = f"📅 {sel_month}月{day_num}日 ({w_str})"
+            
+            col_target = d_cols[idx % 2]
+            with col_target:
+                st.markdown("<div class='vertical-date-btn'>", unsafe_allow_html=True)
+                if st.button(date_label, key=f"v_date_btn_{curr_d}", use_container_width=True):
                     st.session_state.cal_selected_date = curr_d
                     st.session_state.filter_to_single_day = True
                     st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
 
-    # 📌 需求 2：三大淺奶茶色按鈕並排在日曆正下方
+    # 🍵 三大淺奶茶色功能按鈕並排
     st.markdown("<div class='action-block'>", unsafe_allow_html=True)
     top_col1, top_col2, top_col3 = st.columns(3)
     
@@ -329,7 +304,7 @@ with tab_home:
 
     st.divider()
 
-    # 顯示檢視狀態
+    # 檢視狀態說明
     list_header_col1, list_header_col2 = st.columns([3, 1])
     if st.session_state.filter_to_single_day:
         list_header_col1.markdown(f"#### 📅 正在檢視單日：`{st.session_state.cal_selected_date}`")
@@ -340,6 +315,7 @@ with tab_home:
         list_header_col1.markdown(f"#### 📅 本月全月收支紀錄 ({sel_year}年{sel_month}月)")
 
     # 數據篩選
+    df_current = st.session_state.expenses_df.copy()
     if not df_current.empty:
         df_current["日期_dt"] = pd.to_datetime(df_current["日期"]).dt.date
         if st.session_state.filter_to_single_day:
@@ -361,7 +337,6 @@ with tab_home:
     else:
         for idx, row in filtered_df.iterrows():
             r_date = datetime.strptime(row["日期"], "%Y-%m-%d")
-            week_days_tw = ["一", "二", "三", "四", "五", "六", "日"]
             day_week_str = week_days_tw[r_date.weekday()]
             
             c_card1, c_card2, c_edit, c_del = st.columns([3, 2, 0.8, 0.8])
@@ -418,7 +393,7 @@ with tab_home:
             st.divider()
 
 # ==========================================
-# TAB 2: 📊 統計圖表 (📌 需求 3：圖表置中 + 移除右上角工具列)
+# TAB 2: 📊 統計圖表 (置中 + 移除工具列)
 # ==========================================
 with tab_charts:
     st.subheader("📊 統計圖表視覺化分析")
@@ -444,7 +419,6 @@ with tab_charts:
                 margin=dict(t=10, b=10, l=10, r=10), 
                 paper_bgcolor="rgba(0,0,0,0)"
             )
-            # config={'displayModeBar': False} 移除 Plotly 右上角浮動按鈕列
             st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
 
         st.divider()
@@ -468,7 +442,7 @@ with tab_charts:
             st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
 
 # ==========================================
-# TAB 3: 💬 備忘錄 (📌 需求 4：防止字與編輯按鈕重疊)
+# TAB 3: 💬 備忘錄
 # ==========================================
 with tab_memo:
     st.subheader("💬 家族備忘錄")
@@ -505,7 +479,7 @@ with tab_memo:
         st.divider()
 
 # ==========================================
-# TAB 4: 🛒 購物清單 (📌 需求 4：防止字與編輯按鈕重疊)
+# TAB 4: 🛒 購物清單
 # ==========================================
 with tab_shopping:
     st.subheader("🛒 待買清單")
