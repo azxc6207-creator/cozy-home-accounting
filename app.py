@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 日曆絕對置頂 + 徹底隱藏 Streamlit 官方 Logo/頁尾
+# 2. 終極防跑版 CSS + 日曆絕對置頂 + 徹底隱藏 Streamlit 平台浮標
 # ==========================================
 st.markdown("""
 <style>
@@ -38,11 +38,20 @@ st.markdown("""
         background-attachment: fixed !important;
     }
     
-    /* 🚫 徹底移除 Streamlit 官方 Logo、頂端選單與頁尾 */
-    #MainMenu { visibility: hidden !important; display: none !important; }
-    footer { visibility: hidden !important; display: none !important; }
-    header, [data-testid="stHeader"] { visibility: hidden !important; display: none !important; }
-    div[data-testid="stStatusWidget"] { visibility: hidden !important; display: none !important; }
+    /* 🚫 徹底移除 Streamlit 官方 Logo、頂端選單、頁尾與右下角雲端平台浮標 */
+    #MainMenu, footer, header, [data-testid="stHeader"] { visibility: hidden !important; display: none !important; }
+    div[data-testid="stStatusWidget"],
+    a[href*="streamlit.app"],
+    .stAppToolbar,
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"],
+    div[class*="viewerBadge"],
+    div[class*="styles_viewerBadge"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
     [data-testid="stAppViewContainer"] { background: transparent !important; }
 
     /* 📱 限制最大寬度為手機尺寸 */
@@ -197,13 +206,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 日期防鍵盤 + 金額啟用數字鍵盤
+# ⚡ 隱藏 JavaScript: 封鎖日期鍵盤 + 拔除平台右下角浮標
 # ==========================================
 components.html(
     """
     <script>
     function optimizeMobileInputs() {
         const doc = window.parent.document;
+        
         // 1. 日期選擇器：徹底封鎖鍵盤彈出
         const dateContainers = doc.querySelectorAll('[data-testid="stDateInput"]');
         dateContainers.forEach(container => {
@@ -218,7 +228,7 @@ components.html(
             });
         });
         
-        // 2. 金額輸入框：啟用簡易數字鍵盤 (包含加減乘除符號)
+        // 2. 金額輸入框：啟用簡易數字鍵盤
         const allInputs = doc.querySelectorAll('input[type="text"]');
         allInputs.forEach(input => {
             const label = input.getAttribute('aria-label') || '';
@@ -228,11 +238,15 @@ components.html(
                 }
             }
         });
+
+        // 3. 強制拔除右下角 Streamlit 平台託管浮標與社群圖示
+        const badges = doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"]');
+        badges.forEach(el => el.remove());
     }
 
     const observer = new MutationObserver(optimizeMobileInputs);
     observer.observe(window.parent.document.body, { childList: true, subtree: true });
-    setInterval(optimizeMobileInputs, 800); 
+    setInterval(optimizeMobileInputs, 500); 
     </script>
     """,
     height=0, width=0
