@@ -17,7 +17,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 莫蘭迪奶茶背景與介面 CSS
+# 2. 終極防跑版 CSS + 日曆絕對置頂最佳化
 # ==========================================
 st.markdown("""
 <style>
@@ -49,7 +49,28 @@ st.markdown("""
     }
 
     /* ========================================================
-       🚀 手機橫向不拆行霸道 CSS 覆寫
+       🚀 解鎖 Streamlit 原生阻擋，讓日曆可以突破框架置頂
+       ======================================================== */
+    .main, .block-container, div[data-testid="stTabs"], div[role="tabpanel"] {
+        overflow: visible !important;
+    }
+
+    /* 📌 日曆永遠置頂 (第一個 Container) */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 0px !important;
+        z-index: 99999 !important;
+        backdrop-filter: blur(14px) !important;
+        background: rgba(253, 249, 245, 0.97) !important;
+        margin-top: -10px !important;
+        border-radius: 0 0 16px 16px !important;
+        box-shadow: 0 6px 16px rgba(160, 120, 85, 0.12) !important;
+        border-bottom: 2px solid #EAE0D5 !important;
+    }
+
+    /* ========================================================
+       🚀 手機橫向不折行霸道 CSS 覆寫
        ======================================================== */
     @media screen and (max-width: 1024px) {
         html body .stApp div[data-testid="stHorizontalBlock"] {
@@ -103,17 +124,6 @@ st.markdown("""
         box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important;
     }
     div[data-testid="stVerticalBlockBorderWrapper"] p { margin-bottom: 0 !important; }
-
-    /* 📌 日曆永遠置頂 (第一個 Container) */
-    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type {
-        position: -webkit-sticky !important;
-        position: sticky !important;
-        top: 0px !important;
-        z-index: 9999 !important;
-        backdrop-filter: blur(12px) !important;
-        background: rgba(253, 249, 245, 0.96) !important;
-        margin-top: -10px !important;
-    }
 
     /* 🔘 按鈕視覺優化 */
     .stButton > button, div[data-testid="stPopover"] > button {
@@ -190,14 +200,27 @@ components.html(
 
     const observer = new MutationObserver(disableKeyboardForDatePickers);
     observer.observe(window.parent.document.body, { childList: true, subtree: true });
-    setInterval(disableKeyboardForDatePickers, 800); // 調整間隔以提升硬體運算順暢度
+    setInterval(disableKeyboardForDatePickers, 800); 
     </script>
     """,
     height=0, width=0
 )
 
 # ==========================================
-# 3. Session State 初始化
+# 🧠 金額算式解析輔助工具 (將 80+50 轉為 130)
+# ==========================================
+def parse_math_expr(expr_str):
+    try:
+        # 基本防護：只允許數字與基本運算符號
+        allowed = "0123456789+-*/. "
+        cleaned = "".join(c for c in str(expr_str) if c in allowed)
+        if not cleaned: return 0.0
+        return float(eval(cleaned))
+    except:
+        return 0.0
+
+# ==========================================
+# 3. Session State 預設值初始化
 # ==========================================
 today_date = date.today()
 if "start_date" not in st.session_state: st.session_state.start_date = date(today_date.year, today_date.month, 1)
@@ -211,29 +234,36 @@ if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": 
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
 
 # ==========================================
-# 4. 連接 Google Sheets 資料庫與效能快取 (Cache)
+# 4. 連接 Google Sheets & 效能與設定記憶優化
 # ==========================================
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-def load_data_from_sheet():
-    """從 Google Sheets 重新載入最新資料"""
+def load_data_and_recover_settings():
+    """從 Google Sheets 載入資料，並自動記憶曾經出現過的成員與類別"""
     try:
-        df = conn.read(ttl="0s")
+        # 使用 ttl 快取機制大幅加速開啟速度
+        df = conn.read(ttl="10m")
         cols = ["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人"]
         for c in cols:
             if c not in df.columns: df[c] = ""
         df["類型"] = df["類型"].replace("", "支出")
         df["金額"] = pd.to_numeric(df["金額"], errors="coerce").fillna(0)
         st.session_state.expenses_df = df
-        return df
+        
+        # 💡 自動復原機制：掃描歷史資料，把消失的成員與類別補回來
+        if not df.empty:
+            for m in df["記帳人"].dropna().unique():
+                if m and m not in st.session_state.members: st.session_state.members.append(m)
+            for c in df[df["類型"] == "支出"]["類別"].dropna().unique():
+                if c and c not in st.session_state.expense_categories: st.session_state.expense_categories.append(c)
+            for c in df[df["類型"] == "收入"]["類別"].dropna().unique():
+                if c and c not in st.session_state.income_categories: st.session_state.income_categories.append(c)
     except Exception:
         df = pd.DataFrame(columns=["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人"])
         st.session_state.expenses_df = df
-        return df
 
-# 首次載入時讀取，之後除非操作寫入，否則皆直接使用 Session 快取（極速響應）
 if "expenses_df" not in st.session_state:
-    load_data_from_sheet()
+    load_data_and_recover_settings()
 
 # ==========================================
 # 5. 主選單 Header & 分頁
@@ -248,7 +278,7 @@ tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
 # TAB 1: 🏠 主頁記帳
 # ==========================================
 with tab_home:
-    # 📌 置頂區塊：緊湊日曆 (第一個 st.container(border=True)，會被 CSS 鎖定置頂)
+    # 📌 置頂區塊：緊湊日曆 
     with st.container(border=True):
         # 年月切換
         cal_head_1, cal_head_2 = st.columns([1.5, 1])
@@ -277,7 +307,7 @@ with tab_home:
                 else:
                     curr_d = date(int(sel_year), int(sel_month), day_num)
                     btn_type = "primary" if curr_d == st.session_state.cal_selected_date else "secondary"
-                    # 點擊日期按鈕：僅更新本地 Session 狀態並 Rerun，無網路卡頓
+                    # 點擊日期按鈕：無須重打 API，極速切換
                     if cols[day_idx].button(str(day_num), key=f"c_day_{curr_d}", type=btn_type):
                         st.session_state.cal_selected_date = curr_d
                         st.session_state.filter_to_single_day = True
@@ -294,14 +324,16 @@ with tab_home:
                     e_payer = st.selectbox("付款人", st.session_state.members)
                     e_cat = st.selectbox("支出分類", st.session_state.expense_categories)
                     e_item = st.text_input("消費項目", placeholder="例如：麵包")
-                    e_amount = st.number_input("金額 ($)", min_value=1, step=10, value=100)
+                    # 🧮 支援算式輸入
+                    e_amount_str = st.text_input("金額 ($) - 支援算式如 80+50", value="100")
                     e_note = st.text_input("備註 (非必填)")
                     if st.form_submit_button("確認新增", type="primary", use_container_width=True):
+                        e_amount = parse_math_expr(e_amount_str)
                         new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp())}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": ""}])
                         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
                         try: conn.update(data=st.session_state.expenses_df)
                         except: pass
-                        st.toast("🎉 新增成功！")
+                        st.toast("🎉 支出新增成功！")
                         st.rerun()
         with top_col2:
             with st.popover("✨ 記收入", use_container_width=True):
@@ -311,14 +343,16 @@ with tab_home:
                     i_receiver = st.selectbox("收款人", st.session_state.members)
                     i_cat = st.selectbox("收入分類", st.session_state.income_categories)
                     i_item = st.text_input("收入項目", placeholder="例如：薪資")
-                    i_amount = st.number_input("金額 ($)", min_value=1, step=100, value=1000)
+                    # 🧮 支援算式輸入
+                    i_amount_str = st.text_input("金額 ($) - 支援算式", value="1000")
                     i_note = st.text_input("備註 (非必填)")
                     if st.form_submit_button("確認新增", type="primary", use_container_width=True):
+                        i_amount = parse_math_expr(i_amount_str)
                         new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": ""}])
                         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
                         try: conn.update(data=st.session_state.expenses_df)
                         except: pass
-                        st.toast("🎉 新增成功！")
+                        st.toast("🎉 收入新增成功！")
                         st.rerun()
         with top_col3:
             with st.popover("🐾 算算帳", use_container_width=True):
@@ -348,7 +382,7 @@ with tab_home:
     
     st.markdown(f"<h2 style='text-align:center; color:#7A573C; font-weight:900; font-size:20px; margin:14px 0 8px 0;'>{display_title}</h2>", unsafe_allow_html=True)
 
-    # 📊 快速過濾快取資料（不打網絡請求，達到極速響應）
+    # 📊 快速過濾快取資料（不打網路請求，達到極速響應）
     df_current = st.session_state.expenses_df.copy()
     if not df_current.empty:
         df_current["日期_dt"] = pd.to_datetime(df_current["日期"]).dt.date
@@ -379,19 +413,32 @@ with tab_home:
                     
                 with c_amt:
                     amt_color = "#558B6E" if row["類型"] == "收入" else "#8C6239"
-                    st.markdown(f"<div style='font-size:17px; font-weight:900; color:{amt_color}; margin-top:4px; text-align:right;'>{'+' if row['類型'] == '收入' else ''}{row['金額']:,.0f}</div>", unsafe_allow_html=True)
+                    # 整數顯示，若為小數則自動進位顯示
+                    display_amt = int(row['金額']) if row['金額'] % 1 == 0 else row['金額']
+                    st.markdown(f"<div style='font-size:17px; font-weight:900; color:{amt_color}; margin-top:4px; text-align:right;'>{'+' if row['類型'] == '收入' else ''}{display_amt:,}</div>", unsafe_allow_html=True)
                 
                 with c_edit:
                     with st.popover("✏️"):
                         with st.form(f"edit_form_{row['ID']}"):
                             e_date_val = st.date_input("日期", r_date)
                             e_type_val = st.radio("類型", ["支出", "收入"], index=0 if row["類型"] == "支出" else 1)
-                            e_cat_val = st.selectbox("分類", st.session_state.expense_categories if e_type_val == "支出" else st.session_state.income_categories, index=0)
+                            
+                            # 防止分類被刪除後報錯，使用 fallback
+                            cats = st.session_state.expense_categories if e_type_val == "支出" else st.session_state.income_categories
+                            cat_idx = cats.index(row["類別"]) if row["類別"] in cats else 0
+                            e_cat_val = st.selectbox("分類", cats, index=cat_idx)
+                            
                             e_item_val = st.text_input("項目", value=row["項目"])
-                            e_amt_val = st.number_input("金額", value=float(row["金額"]))
-                            e_payer_val = st.selectbox("成員", st.session_state.members, index=0)
+                            # 🧮 編輯時同樣支援算式輸入
+                            e_amt_val_str = st.text_input("金額 (支援算式)", value=str(display_amt))
+                            
+                            mem_idx = st.session_state.members.index(row["記帳人"]) if row["記帳人"] in st.session_state.members else 0
+                            e_payer_val = st.selectbox("成員", st.session_state.members, index=mem_idx)
+                            
                             e_note_val = st.text_input("備註", value=row["備註"])
-                            if st.form_submit_button("儲存", type="primary", use_container_width=True):
+                            
+                            if st.form_submit_button("儲存修改", type="primary", use_container_width=True):
+                                e_amt_val = parse_math_expr(e_amt_val_str)
                                 st.session_state.expenses_df.loc[st.session_state.expenses_df["ID"] == row["ID"], ["日期", "類型", "類別", "項目", "金額", "記帳人", "備註"]] = [str(e_date_val), e_type_val, e_cat_val, e_item_val, float(e_amt_val), e_payer_val, e_note_val]
                                 try: conn.update(data=st.session_state.expenses_df)
                                 except: pass
