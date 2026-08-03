@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 日曆絕對置頂 + 徹底隱藏 Streamlit 平台浮標
+# 2. 終極防跑版 CSS + 日曆絕對置頂 + Expander 優化
 # ==========================================
 st.markdown("""
 <style>
@@ -38,21 +38,9 @@ st.markdown("""
         background-attachment: fixed !important;
     }
     
-    /* 🚫 徹底移除 Streamlit 官方 Logo、頂端選單、頁尾與右下角雲端平台浮標 */
-    #MainMenu, footer, header, [data-testid="stHeader"] { visibility: hidden !important; display: none !important; }
-    div[data-testid="stStatusWidget"],
-    a[href*="streamlit.app"],
-    .stAppToolbar,
-    [data-testid="stToolbar"],
-    [data-testid="stDecoration"],
-    div[class*="viewerBadge"],
-    div[class*="styles_viewerBadge"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        pointer-events: none !important;
-    }
+    /* 隱藏頂端預設白框與頁首頁尾 */
     [data-testid="stAppViewContainer"] { background: transparent !important; }
+    header[data-testid="stHeader"], footer { display: none !important; }
 
     /* 📱 限制最大寬度為手機尺寸 */
     .block-container {
@@ -206,14 +194,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 封鎖日期鍵盤 + 拔除平台右下角浮標
+# ⚡ 隱藏 JavaScript: 日期防鍵盤 + 金額啟用數字鍵盤
 # ==========================================
 components.html(
     """
     <script>
     function optimizeMobileInputs() {
         const doc = window.parent.document;
-        
         // 1. 日期選擇器：徹底封鎖鍵盤彈出
         const dateContainers = doc.querySelectorAll('[data-testid="stDateInput"]');
         dateContainers.forEach(container => {
@@ -228,7 +215,7 @@ components.html(
             });
         });
         
-        // 2. 金額輸入框：啟用簡易數字鍵盤
+        // 2. 金額輸入框：啟用簡易數字鍵盤 (包含加減乘除符號)
         const allInputs = doc.querySelectorAll('input[type="text"]');
         allInputs.forEach(input => {
             const label = input.getAttribute('aria-label') || '';
@@ -238,15 +225,11 @@ components.html(
                 }
             }
         });
-
-        // 3. 強制拔除右下角 Streamlit 平台託管浮標與社群圖示
-        const badges = doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"]');
-        badges.forEach(el => el.remove());
     }
 
     const observer = new MutationObserver(optimizeMobileInputs);
     observer.observe(window.parent.document.body, { childList: true, subtree: true });
-    setInterval(optimizeMobileInputs, 500); 
+    setInterval(optimizeMobileInputs, 800); 
     </script>
     """,
     height=0, width=0
@@ -460,26 +443,29 @@ with tab_home:
     week_days_tw = ["一", "二", "三", "四", "五", "六", "日"]
 
     # ==========================================
-    # 📊 各成員收支總計面板
+    # 📊 新增功能：各成員收支總計面板
     # ==========================================
     if not filtered_df.empty:
         total_exp = filtered_df[filtered_df["類型"] == "支出"]["金額"].sum()
         total_inc = filtered_df[filtered_df["類型"] == "收入"]["金額"].sum()
         
+        # 繪製總計 HTML UI，確保不受 CSS 限制影響
         st.markdown("<div style='background-color:#FDF9F5; border-radius:12px; padding:12px 14px; border:1px solid #EAE0D5; margin-bottom:12px; box-shadow: 0 2px 6px rgba(160,120,85,0.05);'>", unsafe_allow_html=True)
         st.markdown("<div style='font-size:15px; font-weight:900; color:#7A573C; margin-bottom:8px; border-bottom:1px solid #EAE0D5; padding-bottom:4px;'>📊 區間收支總計</div>", unsafe_allow_html=True)
         
+        # 個別成員統計
         for member in st.session_state.members:
             mem_df = filtered_df[filtered_df["記帳人"] == member]
             mem_exp = mem_df[mem_df["類型"] == "支出"]["金額"].sum()
             mem_inc = mem_df[mem_df["類型"] == "收入"]["金額"].sum()
             st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px;'><span style='font-weight:800; color:#3D322C;'>{member}</span><span><span style='color:#8C6239;'>支 {mem_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {mem_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
         
+        # 小窩總計
         st.markdown(f"<div style='display:flex; justify-content:space-between; margin-top:8px; padding-top:6px; border-top:1px dashed #E2D5C5; font-size:14px;'><span style='font-weight:900; color:#7A573C;'>🏠 小窩總計</span><span style='font-weight:800;'><span style='color:#8C6239;'>支 {total_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {total_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ==========================================
-    # 📝 可摺疊 (Expander) 收支明細區塊
+    # 📝 新增功能：可摺疊 (Expander) 收支明細區塊
     # ==========================================
     with st.expander("📝 展開 / 收起各項明細", expanded=True):
         if filtered_df.empty:
