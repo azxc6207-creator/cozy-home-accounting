@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 日曆絕對置頂最佳化
+# 2. 終極防跑版 CSS + 日曆絕對置頂 + Expander 優化
 # ==========================================
 st.markdown("""
 <style>
@@ -50,7 +50,7 @@ st.markdown("""
     }
 
     /* ========================================================
-       🚀 核彈級解鎖 Streamlit 原生阻擋，讓日曆可以完美置頂！
+       🚀 解鎖 Streamlit 原生阻擋，讓日曆可以完美置頂！
        ======================================================== */
     html, body { overflow-y: auto !important; }
     .stApp, .main, .block-container, 
@@ -129,6 +129,19 @@ st.markdown("""
     }
     div[data-testid="stVerticalBlockBorderWrapper"] p { margin-bottom: 0 !important; }
 
+    /* 📂 收放功能 (Expander) 樣式美化 */
+    [data-testid="stExpander"] {
+        border: 1px solid #EAE0D5 !important;
+        border-radius: 12px !important;
+        background-color: transparent !important;
+        margin-bottom: 12px !important;
+    }
+    [data-testid="stExpander"] summary p {
+        font-size: 16px !important;
+        font-weight: 800 !important;
+        color: #7A573C !important;
+    }
+
     /* 🔘 按鈕視覺優化 */
     .stButton > button, div[data-testid="stPopover"] > button {
         background-color: #FFFFFF !important;
@@ -181,14 +194,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 完全封鎖 DateInput 鍵盤彈出
+# ⚡ 隱藏 JavaScript: 日期防鍵盤 + 金額啟用數字鍵盤
 # ==========================================
 components.html(
     """
     <script>
-    function disableKeyboardForDatePickers() {
+    function optimizeMobileInputs() {
         const doc = window.parent.document;
-        // 抓取所有 date input 內部的輸入框
+        // 1. 日期選擇器：徹底封鎖鍵盤彈出
         const dateContainers = doc.querySelectorAll('[data-testid="stDateInput"]');
         dateContainers.forEach(container => {
             const inputs = container.querySelectorAll('input');
@@ -201,18 +214,29 @@ components.html(
                 }
             });
         });
+        
+        // 2. 金額輸入框：啟用簡易數字鍵盤 (包含加減乘除符號)
+        const allInputs = doc.querySelectorAll('input[type="text"]');
+        allInputs.forEach(input => {
+            const label = input.getAttribute('aria-label') || '';
+            if (label.includes('金額')) {
+                if (input.getAttribute('inputmode') !== 'tel') {
+                    input.setAttribute('inputmode', 'tel'); 
+                }
+            }
+        });
     }
 
-    const observer = new MutationObserver(disableKeyboardForDatePickers);
+    const observer = new MutationObserver(optimizeMobileInputs);
     observer.observe(window.parent.document.body, { childList: true, subtree: true });
-    setInterval(disableKeyboardForDatePickers, 800); 
+    setInterval(optimizeMobileInputs, 800); 
     </script>
     """,
     height=0, width=0
 )
 
 # ==========================================
-# 🧠 金額算式解析輔助工具 (將 80+50 轉為 130)
+# 🧠 金額算式解析輔助工具
 # ==========================================
 def parse_math_expr(expr_str):
     try:
@@ -229,7 +253,7 @@ def parse_math_expr(expr_str):
 today_date = date.today()
 if "start_date" not in st.session_state: st.session_state.start_date = date(today_date.year, today_date.month, 1)
 if "end_date" not in st.session_state: st.session_state.end_date = date(today_date.year, today_date.month, calendar.monthrange(today_date.year, today_date.month)[1])
-if "members" not in st.session_state: st.session_state.members = ["🐱 鼠", "🐱 熊"]
+if "members" not in st.session_state: st.session_state.members = ["🐱 鼠寶", "🐱 熊寶"]
 if "expense_categories" not in st.session_state: st.session_state.expense_categories = ["🍽️ 餐費", "🛋️ 居家日用", "🚗 交通費", "🏠 水電瓦斯網路費", "🎬 休閒娛樂", "🏥 醫療健康", "📦 其他"]
 if "income_categories" not in st.session_state: st.session_state.income_categories = ["💰 薪資收入", "🎁 獎金紅包", "📈 投資理財", "🤝 副業兼職", "💵 其他收入"]
 if "cal_selected_date" not in st.session_state: st.session_state.cal_selected_date = date.today()
@@ -244,7 +268,6 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 def save_and_sync():
     """保證寫入雲端的同步儲存機制"""
-    # 將所有動態設定與備忘錄打包
     settings_dict = {
         "members": st.session_state.members,
         "expense_categories": st.session_state.expense_categories,
@@ -259,26 +282,21 @@ def save_and_sync():
         "結帳狀態": "", "結帳單號": "", "已同意人": ""
     }])
     
-    # 剔除舊的設定檔，合併最新資料
     df_core = st.session_state.expenses_df[st.session_state.expenses_df["ID"] != "SYS_SETTINGS"]
     final_df = pd.concat([df_core, settings_df], ignore_index=True)
-    
-    try:
-        conn.update(data=final_df)
-    except Exception:
-        pass
+    try: conn.update(data=final_df)
+    except: pass
 
 def load_data_and_recover_settings():
     """從雲端載入資料，並自動還原永久記憶的設定檔"""
     try:
-        df = conn.read(ttl="10m") # 快取10分鐘加速開啟
+        df = conn.read(ttl="10m") 
         cols = ["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人"]
         for c in cols:
             if c not in df.columns: df[c] = ""
         df["類型"] = df["類型"].replace("", "支出")
         df["金額"] = pd.to_numeric(df["金額"], errors="coerce").fillna(0)
         
-        # 讀取隱藏設定檔還原成員與備忘錄
         settings_row = df[df["ID"] == "SYS_SETTINGS"]
         if not settings_row.empty:
             try:
@@ -294,7 +312,6 @@ def load_data_and_recover_settings():
     except Exception:
         st.session_state.expenses_df = pd.DataFrame(columns=["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人"])
 
-# 系統啟動時執行載入
 if "expenses_df" not in st.session_state:
     load_data_and_recover_settings()
 
@@ -311,11 +328,10 @@ tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
 # TAB 1: 🏠 主頁記帳
 # ==========================================
 with tab_home:
-    # 📌 置頂區塊：緊湊日曆 (因為帶有 sticky-marker 會被 CSS 鎖定置頂)
+    # 📌 置頂區塊：緊湊日曆
     with st.container(border=True):
         st.markdown("<span class='sticky-marker'></span>", unsafe_allow_html=True)
         
-        # 年月切換
         cal_head_1, cal_head_2 = st.columns([1.5, 1])
         with cal_head_1:
             st.markdown(f"<div style='font-weight:900; font-size:20px; color:#3D322C; padding-top:4px;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
@@ -327,12 +343,10 @@ with tab_home:
             st.session_state.cal_selected_date = date(sel_year, sel_month, 1)
             st.rerun()
 
-        # 日曆表頭 (7 欄)
         w_cols = st.columns(7)
         for idx, w_name in enumerate(["日", "一", "二", "三", "四", "五", "六"]):
             w_cols[idx].markdown(f"<div style='text-align:center; font-size:12px; color:#8C7A6B; font-weight:800;'>{w_name}</div>", unsafe_allow_html=True)
 
-        # 日曆網格 (7 欄)
         cal = calendar.Calendar(firstweekday=6)
         for week in cal.monthdayscalendar(int(sel_year), int(sel_month)):
             cols = st.columns(7)
@@ -342,7 +356,6 @@ with tab_home:
                 else:
                     curr_d = date(int(sel_year), int(sel_month), day_num)
                     btn_type = "primary" if curr_d == st.session_state.cal_selected_date else "secondary"
-                    # 點擊日期極速切換
                     if cols[day_idx].button(str(day_num), key=f"c_day_{curr_d}", type=btn_type):
                         st.session_state.cal_selected_date = curr_d
                         st.session_state.filter_to_single_day = True
@@ -359,8 +372,7 @@ with tab_home:
                     e_payer = st.selectbox("付款人", st.session_state.members)
                     e_cat = st.selectbox("支出分類", st.session_state.expense_categories)
                     e_item = st.text_input("消費項目", placeholder="例如：麵包")
-                    # 🧮 支援算式輸入 (標準鍵盤可選 +-*/)
-                    e_amount_str = st.text_input("金額 ($) - 支援算式", value="100")
+                    e_amount_str = st.text_input("金額 ($) - 支援算式如 80+50", value="100")
                     e_note = st.text_input("備註 (非必填)")
                     if st.form_submit_button("確認新增", type="primary", use_container_width=True):
                         st.toast("💾 儲存中...", icon="⏳")
@@ -378,7 +390,6 @@ with tab_home:
                     i_receiver = st.selectbox("收款人", st.session_state.members)
                     i_cat = st.selectbox("收入分類", st.session_state.income_categories)
                     i_item = st.text_input("收入項目", placeholder="例如：薪資")
-                    # 🧮 支援算式輸入
                     i_amount_str = st.text_input("金額 ($) - 支援算式", value="1000")
                     i_note = st.text_input("備註 (非必填)")
                     if st.form_submit_button("確認新增", type="primary", use_container_width=True):
@@ -407,7 +418,7 @@ with tab_home:
                         st.success("🎉 已完成結帳！")
                         st.rerun()
 
-    # 📌 顯示當前檢視區間與標題
+    # 📌 顯示當前檢視區間標題
     if st.session_state.filter_to_single_day:
         display_title = f"📅 {st.session_state.cal_selected_date}"
     else:
@@ -415,9 +426,9 @@ with tab_home:
         end_str = st.session_state.end_date.strftime('%Y-%m-%d')
         display_title = f"📅 {start_str}" if start_str == end_str else f"📅 {start_str} ~ {end_str}"
     
-    st.markdown(f"<h2 style='text-align:center; color:#7A573C; font-weight:900; font-size:20px; margin:14px 0 8px 0;'>{display_title}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align:center; color:#7A573C; font-weight:900; font-size:18px; margin:10px 0 6px 0;'>{display_title}</h2>", unsafe_allow_html=True)
 
-    # 📊 快取資料過濾（無需等網路）
+    # 📊 取得過濾資料
     df_current = st.session_state.expenses_df.copy()
     if not df_current.empty:
         df_current["日期_dt"] = pd.to_datetime(df_current["日期"]).dt.date
@@ -431,56 +442,80 @@ with tab_home:
     if not filtered_df.empty: filtered_df = filtered_df.sort_values(by="日期", ascending=False)
     week_days_tw = ["一", "二", "三", "四", "五", "六", "日"]
 
-    # 📌 淺色橫列收支卡片 (4 欄防跑版)
-    if filtered_df.empty:
-        st.info("此區間內無紀錄。")
-    else:
-        for idx, row in filtered_df.iterrows():
-            r_date = datetime.strptime(row["日期"], "%Y-%m-%d")
-            day_week_str = week_days_tw[r_date.weekday()]
-            
-            with st.container(border=True):
-                c_name, c_amt, c_edit, c_del = st.columns([3.5, 2.5, 1, 1])
+    # ==========================================
+    # 📊 新增功能：各成員收支總計面板
+    # ==========================================
+    if not filtered_df.empty:
+        total_exp = filtered_df[filtered_df["類型"] == "支出"]["金額"].sum()
+        total_inc = filtered_df[filtered_df["類型"] == "收入"]["金額"].sum()
+        
+        # 繪製總計 HTML UI，確保不受 CSS 限制影響
+        st.markdown("<div style='background-color:#FDF9F5; border-radius:12px; padding:12px 14px; border:1px solid #EAE0D5; margin-bottom:12px; box-shadow: 0 2px 6px rgba(160,120,85,0.05);'>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:15px; font-weight:900; color:#7A573C; margin-bottom:8px; border-bottom:1px solid #EAE0D5; padding-bottom:4px;'>📊 區間收支總計</div>", unsafe_allow_html=True)
+        
+        # 個別成員統計
+        for member in st.session_state.members:
+            mem_df = filtered_df[filtered_df["記帳人"] == member]
+            mem_exp = mem_df[mem_df["類型"] == "支出"]["金額"].sum()
+            mem_inc = mem_df[mem_df["類型"] == "收入"]["金額"].sum()
+            st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px;'><span style='font-weight:800; color:#3D322C;'>{member}</span><span><span style='color:#8C6239;'>支 {mem_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {mem_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
+        
+        # 小窩總計
+        st.markdown(f"<div style='display:flex; justify-content:space-between; margin-top:8px; padding-top:6px; border-top:1px dashed #E2D5C5; font-size:14px;'><span style='font-weight:900; color:#7A573C;'>🏠 小窩總計</span><span style='font-weight:800;'><span style='color:#8C6239;'>支 {total_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {total_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # ==========================================
+    # 📝 新增功能：可摺疊 (Expander) 收支明細區塊
+    # ==========================================
+    with st.expander("📝 展開 / 收起各項明細", expanded=True):
+        if filtered_df.empty:
+            st.info("此區間內無紀錄。")
+        else:
+            for idx, row in filtered_df.iterrows():
+                r_date = datetime.strptime(row["日期"], "%Y-%m-%d")
+                day_week_str = week_days_tw[r_date.weekday()]
                 
-                with c_name:
-                    st.markdown(f"<div style='font-size:16px; font-weight:800; color:#3D322C; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{row['項目']}</div>", unsafe_allow_html=True)
-                    st.markdown(f"<div style='font-size:11px; color:#8C7A6B; margin-top:2px;'>{row['記帳人']} · {r_date.month}/{r_date.day}</div>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    c_name, c_amt, c_edit, c_del = st.columns([3.5, 2.5, 1, 1])
                     
-                with c_amt:
-                    amt_color = "#558B6E" if row["類型"] == "收入" else "#8C6239"
-                    display_amt = int(row['金額']) if row['金額'] % 1 == 0 else row['金額']
-                    st.markdown(f"<div style='font-size:17px; font-weight:900; color:{amt_color}; margin-top:4px; text-align:right;'>{'+' if row['類型'] == '收入' else ''}{display_amt:,}</div>", unsafe_allow_html=True)
-                
-                with c_edit:
-                    with st.popover("✏️"):
-                        with st.form(f"edit_form_{row['ID']}"):
-                            e_date_val = st.date_input("日期", r_date)
-                            e_type_val = st.radio("類型", ["支出", "收入"], index=0 if row["類型"] == "支出" else 1)
-                            
-                            cats = st.session_state.expense_categories if e_type_val == "支出" else st.session_state.income_categories
-                            cat_idx = cats.index(row["類別"]) if row["類別"] in cats else 0
-                            e_cat_val = st.selectbox("分類", cats, index=cat_idx)
-                            
-                            e_item_val = st.text_input("項目", value=row["項目"])
-                            # 🧮 編輯時同樣支援算式輸入
-                            e_amt_val_str = st.text_input("金額 (支援算式)", value=str(display_amt))
-                            
-                            mem_idx = st.session_state.members.index(row["記帳人"]) if row["記帳人"] in st.session_state.members else 0
-                            e_payer_val = st.selectbox("成員", st.session_state.members, index=mem_idx)
-                            e_note_val = st.text_input("備註", value=row["備註"])
-                            
-                            if st.form_submit_button("儲存修改", type="primary", use_container_width=True):
-                                st.toast("💾 儲存中...", icon="⏳")
-                                e_amt_val = parse_math_expr(e_amt_val_str)
-                                st.session_state.expenses_df.loc[st.session_state.expenses_df["ID"] == row["ID"], ["日期", "類型", "類別", "項目", "金額", "記帳人", "備註"]] = [str(e_date_val), e_type_val, e_cat_val, e_item_val, float(e_amt_val), e_payer_val, e_note_val]
-                                save_and_sync()
-                                st.rerun()
-                with c_del:
-                    if st.button("🗑️", key=f"del_btn_{row['ID']}"):
-                        st.toast("💾 刪除中...", icon="🗑️")
-                        st.session_state.expenses_df = st.session_state.expenses_df[st.session_state.expenses_df["ID"] != row["ID"]]
-                        save_and_sync()
-                        st.rerun()
+                    with c_name:
+                        st.markdown(f"<div style='font-size:16px; font-weight:800; color:#3D322C; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{row['項目']}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-size:11px; color:#8C7A6B; margin-top:2px;'>{row['記帳人']} · {r_date.month}/{r_date.day}</div>", unsafe_allow_html=True)
+                        
+                    with c_amt:
+                        amt_color = "#558B6E" if row["類型"] == "收入" else "#8C6239"
+                        display_amt = int(row['金額']) if row['金額'] % 1 == 0 else row['金額']
+                        st.markdown(f"<div style='font-size:17px; font-weight:900; color:{amt_color}; margin-top:4px; text-align:right;'>{'+' if row['類型'] == '收入' else ''}{display_amt:,}</div>", unsafe_allow_html=True)
+                    
+                    with c_edit:
+                        with st.popover("✏️"):
+                            with st.form(f"edit_form_{row['ID']}"):
+                                e_date_val = st.date_input("日期", r_date)
+                                e_type_val = st.radio("類型", ["支出", "收入"], index=0 if row["類型"] == "支出" else 1)
+                                
+                                cats = st.session_state.expense_categories if e_type_val == "支出" else st.session_state.income_categories
+                                cat_idx = cats.index(row["類別"]) if row["類別"] in cats else 0
+                                e_cat_val = st.selectbox("分類", cats, index=cat_idx)
+                                
+                                e_item_val = st.text_input("項目", value=row["項目"])
+                                e_amt_val_str = st.text_input("金額 (支援算式)", value=str(display_amt))
+                                
+                                mem_idx = st.session_state.members.index(row["記帳人"]) if row["記帳人"] in st.session_state.members else 0
+                                e_payer_val = st.selectbox("成員", st.session_state.members, index=mem_idx)
+                                e_note_val = st.text_input("備註", value=row["備註"])
+                                
+                                if st.form_submit_button("儲存修改", type="primary", use_container_width=True):
+                                    st.toast("💾 儲存中...", icon="⏳")
+                                    e_amt_val = parse_math_expr(e_amt_val_str)
+                                    st.session_state.expenses_df.loc[st.session_state.expenses_df["ID"] == row["ID"], ["日期", "類型", "類別", "項目", "金額", "記帳人", "備註"]] = [str(e_date_val), e_type_val, e_cat_val, e_item_val, float(e_amt_val), e_payer_val, e_note_val]
+                                    save_and_sync()
+                                    st.rerun()
+                    with c_del:
+                        if st.button("🗑️", key=f"del_btn_{row['ID']}"):
+                            st.toast("💾 刪除中...", icon="🗑️")
+                            st.session_state.expenses_df = st.session_state.expenses_df[st.session_state.expenses_df["ID"] != row["ID"]]
+                            save_and_sync()
+                            st.rerun()
 
     # 📌 底部自訂區間查詢框
     with st.container(border=True):
@@ -538,7 +573,7 @@ with tab_memo:
             
     for memo in list(st.session_state.memos):
         with st.container(border=True):
-            c1, c2, c3, c4 = st.columns(4)
+            c1, c2, c3, c4 = st.columns([0.8, 4.5, 1.5, 1.5])
             if c1.checkbox("", key=f"mc_{memo['id']}"):
                 st.session_state.memos.remove(memo)
                 save_and_sync()
@@ -568,7 +603,7 @@ with tab_shopping:
             
     for item in list(st.session_state.shopping_list):
         with st.container(border=True):
-            c1, c2, c3, c4 = st.columns(4)
+            c1, c2, c3, c4 = st.columns([0.8, 4.5, 1.5, 1.5])
             if c1.checkbox("", key=f"sc_{item['id']}"):
                 st.session_state.shopping_list.remove(item)
                 save_and_sync()
@@ -601,7 +636,7 @@ with tab_settings:
             
     for idx, m in enumerate(st.session_state.members):
         with st.container(border=True):
-            m_col1, c_edit, c_del = st.columns([4.5, 1, 1])
+            m_col1, c_edit, c_del = st.columns([4.5, 1.5, 1.5])
             m_col1.write(f"• **{m}**")
             with c_edit:
                 with st.popover("✏️"):
@@ -636,7 +671,7 @@ with tab_settings:
             
     for idx, c in enumerate(st.session_state.expense_categories):
         with st.container(border=True):
-            c_col1, c_edit, c_del = st.columns([4.5, 1, 1])
+            c_col1, c_edit, c_del = st.columns([4.5, 1.5, 1.5])
             c_col1.write(f"• **{c}**")
             with c_edit:
                 with st.popover("✏️"):
@@ -671,7 +706,7 @@ with tab_settings:
             
     for idx, ic in enumerate(st.session_state.income_categories):
         with st.container(border=True):
-            ic_col1, c_edit, c_del = st.columns([4.5, 1, 1])
+            ic_col1, c_edit, c_del = st.columns([4.5, 1.5, 1.5])
             ic_col1.write(f"• **{ic}**")
             with c_edit:
                 with st.popover("✏️"):
