@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 🐾 終極腳印日曆
+# 2. 終極防跑版 CSS + 日曆置頂 + 🐾 實體腳印專屬樣式
 # ==========================================
 st.markdown("""
 <style>
@@ -63,7 +63,7 @@ st.markdown("""
         html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"], html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="column"] { width: 0 !important; min-width: 0 !important; flex: 1 1 0% !important; padding: 0 1px !important; }
     }
 
-    /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 */
+    /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 (大幅增加底部留白防遮擋) */
     div[data-testid="stPopoverBody"] { max-height: 65vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 16px 16px 100px 16px !important; }
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; flex-direction: column !important; }
     div[data-testid="stPopoverBody"] div[data-testid="stColumn"], div[data-testid="stPopoverBody"] div[data-testid="column"] { width: 100% !important; flex: none !important; }
@@ -82,62 +82,42 @@ st.markdown("""
     .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FAF5F0 !important; }
     
     /* ========================================================
-       🐾 終極腳印按鈕樣式 (100% 絕對安全 URL 編碼防破圖 + 徹底鎖死橢圓殘影)
+       🐾 徹底殺死橢圓殘影的專屬指令
        ======================================================== */
-    
-    /* 1. 徹底消滅 Streamlit 內建按鈕的橢圓形背景跟動畫波紋 */
-    button.paw-btn::before, button.paw-btn::after, 
-    button.paw-btn *, button.paw-btn:active * {
-        background-color: transparent !important;
+    /* 讓按鈕本體變成完全透明，由內部植入的 SVG 來顯示圖案 */
+    button.paw-btn {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        display: none !important; /* 隱藏底層波紋 div */
+        height: 48px !important;
+        position: relative !important;
+        overflow: visible !important;
+        transition: transform 0.1s ease !important; /* 保留點擊縮小特效 */
     }
     
-    /* 因為我們隱藏了內部 div，所以要把字體設定拉回最外層按鈕 */
-    button.paw-btn p {
-        display: block !important;
+    button.paw-btn:active {
+        transform: scale(0.85) !important;
     }
 
-    /* 2. 一般日子（未選取）：純白完整腳印 */
-    button.paw-btn { 
-        border-radius: 0 !important; 
-        background-color: transparent !important; 
-        border: none !important; 
-        box-shadow: none !important; 
-        height: 48px !important; 
-        width: 100% !important;
-        font-size: 15px !important; 
-        font-weight: 900 !important;
-        color: #5C4A3E !important; 
-        /* 使用最高相容性的百分比 URL 編碼 */
-        background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M226.5%2092.9c14.3%2073-39.9%20130-77.2%20130c-22.3%200-53-15.3-53-47.9C96.3%20105%20162.2%200%20226.5%2092.9zm35.3-45c-20.4%200-43.9%2014.8-43.9%2045.9c0%2033.2%2041%20114.6%2096%20114.6c24.6%200%2052.2-15.2%2052.2-47.6C366.1%2087.2%20284.5%2047.9%20261.8%2047.9zM111.4%20348.3c44.5%200%2065.2-67%20114.3-67c43.6%200%2061.8%2059.7%20112.5%2059.7c52%200%2073.8-50.9%2073.8-95.2c0-39.6-22.6-82-68.8-82c-41.2%200-82.8%2055.5-122.6%2055.5c-40.2%200-80-52-122.3-52c-31.4%200-66%2022.8-66%2081.9C32.3%20322.2%2077%20348.3%20111.4%20348.3zM67.3%20224.3c-23.4%200-51.5-15.1-51.5-47.5c0-34.5%2039.5-115.3%2095.8-115.3c24.7%200%2052.4%2015.2%2052.4%2047.6C164%20186.2%2088.5%20224.3%2067.3%20224.3z%22%2F%3E%3C%2Fsvg%3E") !important;
-        background-size: 38px 38px !important;
-        background-position: center bottom 2px !important;
-        background-repeat: no-repeat !important;
-        padding-top: 14px !important; 
-        transition: transform 0.1s ease !important; 
-    }
-    
-    /* 3. 已選取的日子：深咖啡色完整腳印 */
-    button.paw-btn[kind="primary"] { 
-        color: #FFFFFF !important; 
+    /* 殺死 Streamlit 按鈕原生的 Hover/Active 變色效果 */
+    button.paw-btn:hover, button.paw-btn:focus, button.paw-btn:active {
         background-color: transparent !important;
         border: none !important;
+    }
+
+    /* 殺死底層波紋與橢圓形 div 背景 */
+    button.paw-btn > div {
+        background: transparent !important;
+        border: none !important;
         box-shadow: none !important;
-        background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22%237A573C%22%20d%3D%22M226.5%2092.9c14.3%2073-39.9%20130-77.2%20130c-22.3%200-53-15.3-53-47.9C96.3%20105%20162.2%200%20226.5%2092.9zm35.3-45c-20.4%200-43.9%2014.8-43.9%2045.9c0%2033.2%2041%20114.6%2096%20114.6c24.6%200%2052.2-15.2%2052.2-47.6C366.1%2087.2%20284.5%2047.9%20261.8%2047.9zM111.4%20348.3c44.5%200%2065.2-67%20114.3-67c43.6%200%2061.8%2059.7%20112.5%2059.7c52%200%2073.8-50.9%2073.8-95.2c0-39.6-22.6-82-68.8-82c-41.2%200-82.8%2055.5-122.6%2055.5c-40.2%200-80-52-122.3-52c-31.4%200-66%2022.8-66%2081.9C32.3%20322.2%2077%20348.3%20111.4%20348.3zM67.3%20224.3c-23.4%200-51.5-15.1-51.5-47.5c0-34.5%2039.5-115.3%2095.8-115.3c24.7%200%2052.4%2015.2%2052.4%2047.6C164%20186.2%2088.5%20224.3%2067.3%20224.3z%22%2F%3E%3C%2Fsvg%3E") !important;
+    }
+    
+    /* 殺死偽元素波紋動畫 */
+    button.paw-btn::before, button.paw-btn::after {
+        display: none !important;
     }
 
-    /* 4. 強制鎖死所有點擊/聚焦狀態，防止彈出橢圓形殘影 */
-    button.paw-btn:hover, button.paw-btn:focus, button.paw-btn:active, button.paw-btn:focus-visible,
-    button.paw-btn[kind="primary"]:hover, button.paw-btn[kind="primary"]:focus, button.paw-btn[kind="primary"]:active, button.paw-btn[kind="primary"]:focus-visible {
-        background-color: transparent !important;
-        border-color: transparent !important;
-        transform: scale(0.85) !important; /* 點擊時可愛地縮小一下 */
-    }
-
-    /* 其他版面美化 */
+    /* 調整日曆文字對齊 */
     div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
     .stTabs [data-baseweb="tab-list"] { gap: 6px; background-color: #E8DDD0; padding: 6px; border-radius: 25px; margin-bottom: 14px; }
     .stTabs [data-baseweb="tab"] { border-radius: 18px; padding: 6px 14px; color: #6E5A4C; font-weight: 700; font-size: 15px !important; }
@@ -146,7 +126,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 植入腳印標籤 + 封鎖日期鍵盤 + 隱藏平台浮標
+# ⚡ 隱藏 JavaScript: 強制植入實體腳印 SVG + 封鎖日期鍵盤
 # ==========================================
 components.html(
     """
@@ -154,13 +134,49 @@ components.html(
     function optimizeMobileInputs() {
         const doc = window.parent.document;
         
-        // 1. 動態植入腳印標籤 (尋找文字是 1-31 的按鈕，加上 paw-btn class)
+        // 1. 動態植入實體 SVG 腳印 (絕對不破圖，因為不依賴 CSS 連結)
         doc.querySelectorAll('.stButton > button').forEach(btn => {
             const txt = btn.innerText.trim();
             if (!isNaN(txt) && txt !== '' && Number(txt) >= 1 && Number(txt) <= 31 && txt.length <= 2) {
                 btn.classList.add('paw-btn');
-                // 額外保險：強制清除按鈕內部的底色
-                btn.style.backgroundColor = 'transparent';
+                
+                // 強制清除原生背景
+                btn.style.background = 'transparent';
+                
+                // 強制把按鈕內的 div 背景設為透明，徹底殺死橢圓形閃爍
+                Array.from(btn.children).forEach(child => {
+                    if (!child.classList.contains('paw-svg')) {
+                        child.style.background = 'transparent';
+                        child.style.border = 'none';
+                        child.style.boxShadow = 'none';
+                    }
+                });
+
+                // 如果還沒有植入腳印，就動態插入 SVG 向量元素
+                if (!btn.querySelector('.paw-svg')) {
+                    const isSelected = btn.getAttribute('kind') === 'primary';
+                    const fillColor = isSelected ? '#7A573C' : '#FFFFFF';
+                    const textColor = isSelected ? '#FFFFFF' : '#5C4A3E';
+                    
+                    // 實體 SVG 標籤，保證 100% 任何手機都能顯示
+                    const svgHTML = `<svg class="paw-svg" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -45%); width:38px; height:38px; z-index:0; pointer-events:none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="${fillColor}" d="M226.5 92.9c14.3 73-39.9 130-77.2 130c-22.3 0-53-15.3-53-47.9C96.3 105 162.2 0 226.5 92.9zm35.3-45c-20.4 0-43.9 14.8-43.9 45.9c0 33.2 41 114.6 96 114.6c24.6 0 52.2-15.2 52.2-47.6C366.1 87.2 284.5 47.9 261.8 47.9zM111.4 348.3c44.5 0 65.2-67 114.3-67c43.6 0 61.8 59.7 112.5 59.7c52 0 73.8-50.9 73.8-95.2c0-39.6-22.6-82-68.8-82c-41.2 0-82.8 55.5-122.6 55.5c-40.2 0-80-52-122.3-52c-31.4 0-66 22.8-66 81.9C32.3 322.2 77 348.3 111.4 348.3zM67.3 224.3c-23.4 0-51.5-15.1-51.5-47.5c0-34.5 39.5-115.3 95.8-115.3c24.7 0 52.4 15.2 52.4 47.6C164 186.2 88.5 224.3 67.3 224.3z"/></svg>`;
+                    
+                    btn.insertAdjacentHTML('afterbegin', svgHTML);
+                    
+                    // 確保數字不會被 SVG 蓋住，並把數字推到大肉球中心
+                    const textContainer = btn.querySelector('div:not(.paw-svg)');
+                    if (textContainer) {
+                        textContainer.style.position = 'relative';
+                        textContainer.style.zIndex = '1';
+                        const pTag = textContainer.querySelector('p');
+                        if (pTag) {
+                            pTag.style.color = textColor;
+                            pTag.style.fontWeight = '900';
+                            pTag.style.fontSize = '15px';
+                            pTag.style.marginTop = '8px'; // 往下推對齊腳印大肉球
+                        }
+                    }
+                }
             }
         });
 
@@ -193,7 +209,8 @@ components.html(
         });
     }
 
-    setInterval(optimizeMobileInputs, 300); 
+    // 提高刷新頻率，確保按鈕瞬間被替換，絕不露餡
+    setInterval(optimizeMobileInputs, 100); 
     </script>
     """,
     height=0, width=0
@@ -259,7 +276,7 @@ def save_and_sync():
     
     try: 
         conn.update(data=final_df)
-        st.cache_data.clear()
+        st.cache_data.clear() # 🚀 儲存後強制清除快取
     except: 
         pass
 
