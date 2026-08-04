@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 日曆置頂 + 🐾 專屬腳印日曆
+# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 🐾 完美 Base64 腳印日曆
 # ==========================================
 st.markdown("""
 <style>
@@ -44,19 +44,13 @@ st.markdown("""
     [data-testid="stAppViewContainer"] { background: transparent !important; }
 
     /* 📱 限制最大寬度為手機尺寸 */
-    .block-container {
-        max-width: 480px !important; margin: 0 auto !important; padding: 1rem 0.5rem 3rem 0.5rem !important;
-    }
+    .block-container { max-width: 480px !important; margin: 0 auto !important; padding: 1rem 0.5rem 3rem 0.5rem !important; }
 
     /* 🚀 解鎖 Streamlit 原生阻擋，讓日曆可以完美置頂！ */
     html, body { overflow-y: auto !important; }
-    .stApp, .main, .block-container, 
-    [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"], 
-    div[data-testid="stVerticalBlock"], div[data-testid="stTabs"], div[role="tabpanel"], div[role="tabpanel"] > div {
-        overflow: visible !important;
-    }
+    .stApp, .main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"], div[data-testid="stVerticalBlock"], div[data-testid="stTabs"], div[role="tabpanel"], div[role="tabpanel"] > div { overflow: visible !important; }
 
-    /* 📌 日曆永遠置頂 (鎖定 Container) */
+    /* 📌 日曆永遠置頂 */
     div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type {
         position: -webkit-sticky !important; position: sticky !important; top: 0px !important; z-index: 99999 !important;
         backdrop-filter: blur(14px) !important; background: rgba(253, 249, 245, 0.97) !important; margin-top: -10px !important;
@@ -70,12 +64,7 @@ st.markdown("""
     }
 
     /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 (大幅增加底部留白防遮擋) */
-    div[data-testid="stPopoverBody"] { 
-        max-height: 65vh !important; 
-        overflow-y: auto !important; 
-        -webkit-overflow-scrolling: touch !important; 
-        padding: 16px 16px 100px 16px !important; 
-    }
+    div[data-testid="stPopoverBody"] { max-height: 65vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 16px 16px 100px 16px !important; }
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; flex-direction: column !important; }
     div[data-testid="stPopoverBody"] div[data-testid="stColumn"], div[data-testid="stPopoverBody"] div[data-testid="column"] { width: 100% !important; flex: none !important; }
     div[data-testid="stPopoverBody"] form { margin-bottom: 20px !important; padding-bottom: 20px !important; }
@@ -91,42 +80,50 @@ st.markdown("""
     /* 🔘 基礎按鈕視覺優化 */
     .stButton > button, div[data-testid="stPopover"] > button { background-color: #FFFFFF !important; color: #3D322C !important; border: 1px solid #E2D5C5 !important; border-radius: 10px !important; font-weight: 800 !important; font-size: 14px !important; padding: 0 !important; width: 100% !important; min-height: 34px !important; box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; display: inline-flex !important; justify-content: center !important; align-items: center !important; }
     .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FAF5F0 !important; }
-    .stButton > button[kind="primary"] { background-color: #A07855 !important; color: #FFFFFF !important; border: 1px solid #A07855 !important; }
     
     /* ========================================================
        🐾 終極腳印按鈕樣式 (由 JS 動態植入 paw-btn Class 確保絕對生效)
        ======================================================== */
+    
+    /* 1. 一般日子（未選取）：純白腳印 Base64，保證 iOS 不破圖 */
     button.paw-btn { 
         border-radius: 0 !important; 
         background-color: transparent !important; 
         border: none !important; 
         box-shadow: none !important; 
-        height: 44px !important; 
+        height: 48px !important; 
         width: 100% !important;
-        font-size: 14px !important; 
+        font-size: 15px !important; 
         font-weight: 900 !important;
         color: #5C4A3E !important; 
-        /* 100% 兼容 iOS Safari 的 URL 編碼 SVG (純白腳印) */
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%23FFFFFF'%3E%3Cpath d='M226.5 92.9c14.3 73-39.9 130-77.2 130c-22.3 0-53-15.3-53-47.9C96.3 105 162.2 0 226.5 92.9zm35.3-45c-20.4 0-43.9 14.8-43.9 45.9c0 33.2 41 114.6 96 114.6c24.6 0 52.2-15.2 52.2-47.6C366.1 87.2 284.5 47.9 261.8 47.9zM111.4 348.3c44.5 0 65.2-67 114.3-67c43.6 0 61.8 59.7 112.5 59.7c52 0 73.8-50.9 73.8-95.2c0-39.6-22.6-82-68.8-82c-41.2 0-82.8 55.5-122.6 55.5c-40.2 0-80-52-122.3-52c-31.4 0-66 22.8-66 81.9C32.3 322.2 77 348.3 111.4 348.3zM67.3 224.3c-23.4 0-51.5-15.1-51.5-47.5c0-34.5 39.5-115.3 95.8-115.3c24.7 0 52.4 15.2 52.4 47.6C164 186.2 88.5 224.3 67.3 224.3z'/%3E%3C/svg%3E") !important;
+        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBmaWxsPSIjRkZGRkZGIj48cGF0aCBkPSJNMjI2LjUgOTIuOWMxNC4zIDczLTM5LjkgMTMwLTc3LjIgMTMwYy0yMi4zIDAtNTMtMTUuMy01My00Ny45Qzk2LjMgMTA1IDE2Mi4yIDAgMjI2LjUgOTIuOXptMzUuMy00NWMtMjAuNCAwLTQzLjkgMTQuOC00My45IDQ1LjljMCAzMy4yIDQxIDExNC42IDk2IDExNC42YzI0LjYgMCA1Mi4yLTE1LjIgNTIuMi00Ny42QzM2Ni4xIDg3LjIgMjg0LjUgNDcuOSAyNjEuOCA0Ny45ek0xMTEuNCAzNDguM2M0NC41IDAgNjUuMi02NyAxMTQuMy02N2M0My42IDAgNjEuOCA1OS43IDExMi41IDU5LjdjNTIgMCA3My44LTUwLjkgNzMuOC05NS4yYzAtMzkuNi0yMi42LTgyLTY4LjgtODJjLTQxLjIgMC04Mi44IDU1LjUtMTIyLjYgNTUuNWMtNDAuMiAwLTgwLTUyLTEyMi4zLTUyYy0zMS40IDAtNjYgMjIuOC02NiA4MS45QzMyLjMgMzIyLjIgNzcgMzQ4LjMgMTExLjQgMzQ4LjN6TTY3LjMgMjI0LjNjLTIzLjQgMC01MS41LTE1LjEtNTEuNS00Ny41YzAtMzQuNSAzOS41LTExNS4zIDk1LjgtMTE1LjNjMjQuNyAwIDUyLjQgMTUuMiA1Mi40IDQ3LjZDMTY0IDE4Ni4yIDg4LjUgMjI0LjMgNjcuMyAyMjQuM3oiLz48L3N2Zz4=") !important;
         background-size: 38px 38px !important;
         background-position: center bottom 2px !important;
         background-repeat: no-repeat !important;
-        padding-top: 12px !important; 
+        padding-top: 14px !important; 
+        transition: transform 0.1s ease !important; /* 按下時稍微縮小，取消原本的變色過場 */
     }
     
-    button.paw-btn:hover {
-        background-color: transparent !important;
-        opacity: 0.85 !important;
-    }
-    
+    /* 2. 已選取的日子：深咖啡色腳印 Base64 */
     button.paw-btn[kind="primary"] { 
         color: #FFFFFF !important; 
         background-color: transparent !important;
         border: none !important;
-        /* 100% 兼容 iOS Safari 的 URL 編碼 SVG (深咖啡色腳印) */
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%237A573C'%3E%3Cpath d='M226.5 92.9c14.3 73-39.9 130-77.2 130c-22.3 0-53-15.3-53-47.9C96.3 105 162.2 0 226.5 92.9zm35.3-45c-20.4 0-43.9 14.8-43.9 45.9c0 33.2 41 114.6 96 114.6c24.6 0 52.2-15.2 52.2-47.6C366.1 87.2 284.5 47.9 261.8 47.9zM111.4 348.3c44.5 0 65.2-67 114.3-67c43.6 0 61.8 59.7 112.5 59.7c52 0 73.8-50.9 73.8-95.2c0-39.6-22.6-82-68.8-82c-41.2 0-82.8 55.5-122.6 55.5c-40.2 0-80-52-122.3-52c-31.4 0-66 22.8-66 81.9C32.3 322.2 77 348.3 111.4 348.3zM67.3 224.3c-23.4 0-51.5-15.1-51.5-47.5c0-34.5 39.5-115.3 95.8-115.3c24.7 0 52.4 15.2 52.4 47.6C164 186.2 88.5 224.3 67.3 224.3z'/%3E%3C/svg%3E") !important;
+        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiBmaWxsPSIjN0E1NzNDIj48cGF0aCBkPSJNMjI2LjUgOTIuOWMxNC4zIDczLTM5LjkgMTMwLTc3LjIgMTMwYy0yMi4zIDAtNTMtMTUuMy01My00Ny45Qzk2LjMgMTA1IDE2Mi4yIDAgMjI2LjUgOTIuOXptMzUuMy00NWMtMjAuNCAwLTQzLjkgMTQuOC00My45IDQ1LjljMCAzMy4yIDQxIDExNC42IDk2IDExNC42YzI0LjYgMCA1Mi4yLTE1LjIgNTIuMi00Ny42QzM2Ni4xIDg3LjIgMjg0LjUgNDcuOSAyNjEuOCA0Ny45ek0xMTEuNCAzNDguM2M0NC41IDAgNjUuMi02NyAxMTQuMy02N2M0My42IDAgNjEuOCA1OS43IDExMi41IDU5LjdjNTIgMCA3My44LTUwLjkgNzMuOC05NS4yYzAtMzkuNi0yMi42LTgyLTY4LjgtODJjLTQxLjIgMC04Mi44IDU1LjUtMTIyLjYgNTUuNWMtNDAuMiAwLTgwLTUyLTEyMi4zLTUyYy0zMS40IDAtNjYgMjIuOC02NiA4MS45QzMyLjMgMzIyLjIgNzcgMzQ4LjMgMTExLjQgMzQ4LjN6TTY3LjMgMjI0LjNjLTIzLjQgMC01MS41LTE1LjEtNTEuNS00Ny41YzAtMzQuNSAzOS41LTExNS4zIDk1LjgtMTE1LjNjMjQuNyAwIDUyLjQgMTUuMiA1Mi40IDQ3LjZDMTY0IDE4Ni4yIDg4LjUgMjI0LjMgNjcuMyAyMjQuM3oiLz48L3N2Zz4=") !important;
     }
 
+    /* 3. 徹底拔除點擊瞬間的「橢圓形」殘影與外框 */
+    button.paw-btn:active, button.paw-btn:focus, button.paw-btn:focus-visible,
+    button.paw-btn[kind="primary"]:active, button.paw-btn[kind="primary"]:focus, button.paw-btn[kind="primary"]:focus-visible {
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        transform: scale(0.9) !important; /* 點擊時可愛地縮小一下 */
+    }
+
+    button.paw-btn:hover { background-color: transparent !important; opacity: 0.8 !important; }
+
+    /* 其他版面美化 */
     div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
     .stTabs [data-baseweb="tab-list"] { gap: 6px; background-color: #E8DDD0; padding: 6px; border-radius: 25px; margin-bottom: 14px; }
     .stTabs [data-baseweb="tab"] { border-radius: 18px; padding: 6px 14px; color: #6E5A4C; font-weight: 700; font-size: 15px !important; }
@@ -206,7 +203,7 @@ if "start_date" not in st.session_state: st.session_state.start_date = date(toda
 if "end_date" not in st.session_state: st.session_state.end_date = date(today_date.year, today_date.month, calendar.monthrange(today_date.year, today_date.month)[1])
 if "members" not in st.session_state: st.session_state.members = ["🐱 鼠寶", "🐱 熊寶"]
 if "expense_categories" not in st.session_state: st.session_state.expense_categories = ["🍽️ 餐費", "🛋️ 居家日用", "🚗 交通費", "🏠 水電瓦斯網路費", "🎬 休閒娛樂", "🏥 醫療健康", "📦 其他"]
-if "income_categories" not in st.session_state: st.session_state.income_categories = ["💰 薪资收入", "🎁 獎金紅包", "📈 投資理財", "🤝 副業兼職", "💵 其他收入"]
+if "income_categories" not in st.session_state: st.session_state.income_categories = ["💰 薪資收入", "🎁 獎金紅包", "📈 投資理財", "🤝 副業兼職", "💵 其他收入"]
 if "cal_selected_date" not in st.session_state: st.session_state.cal_selected_date = date.today()
 if "filter_to_single_day" not in st.session_state: st.session_state.filter_to_single_day = False
 if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
@@ -246,7 +243,7 @@ def save_and_sync():
     
     try: 
         conn.update(data=final_df)
-        st.cache_data.clear()
+        st.cache_data.clear() # 🚀 儲存後強制清除快取
     except: 
         pass
 
@@ -258,6 +255,7 @@ def trigger_auto_fixed_transactions():
         triggered = False
         
         for ft in st.session_state.fixed_transactions:
+            # 容錯解析日期
             s_date_str = ft.get('start_date', '2000-01-01')
             e_date_str = ft.get('end_date', '2099-12-31')
             try: s_date = datetime.strptime(s_date_str, "%Y-%m-%d").date()
@@ -265,6 +263,7 @@ def trigger_auto_fixed_transactions():
             try: e_date = datetime.strptime(e_date_str, "%Y-%m-%d").date()
             except: e_date = date(2099, 12, 31)
 
+            # 判斷是否符合區間與日期條件
             if s_date <= today <= e_date:
                 if today.day >= ft.get('day', 1) and ft.get('last_month') != current_ym:
                     new_id = f"{'EXP' if ft.get('type')=='支出' else 'INC'}-AUTO-{int(datetime.now().timestamp()*1000)}"
