@@ -121,6 +121,26 @@ components.html(
                 input.setAttribute('inputmode', 'none');
             }
         });
+
+        // 1.8 日曆日期按鈕：強制用 JS 直接寫入 style（繞過 CSS 優先權問題），改成圓角正方形
+        const stickyMarker = doc.querySelector('.sticky-marker');
+        if (stickyMarker) {
+            const stickyContainer = stickyMarker.closest('div[data-testid="stVerticalBlockBorderWrapper"]');
+            if (stickyContainer) {
+                stickyContainer.querySelectorAll('.stButton > button').forEach(btn => {
+                    btn.style.setProperty('width', '38px', 'important');
+                    btn.style.setProperty('height', '38px', 'important');
+                    btn.style.setProperty('min-width', '38px', 'important');
+                    btn.style.setProperty('max-width', '38px', 'important');
+                    btn.style.setProperty('border-radius', '10px', 'important');
+                    btn.style.setProperty('aspect-ratio', '1 / 1', 'important');
+                    btn.style.setProperty('padding', '0', 'important');
+                    btn.style.setProperty('-webkit-appearance', 'none', 'important');
+                    btn.style.setProperty('appearance', 'none', 'important');
+                });
+            }
+        }
+        
         
         // 2. 安全隱藏 Streamlit 平台浮標
         doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"], #MainMenu, footer, header').forEach(el => {
