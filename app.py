@@ -38,7 +38,7 @@ st.markdown("""
         background-attachment: fixed !important;
     }
     
-    /* 🚫 徹底移除 Streamlit 官方 Logo、頂端選單與頁尾 */
+    /* 🚫 徹底隱藏 Streamlit 官方 Logo、頂端選單與頁尾 */
     #MainMenu, footer, header, [data-testid="stHeader"] { visibility: hidden !important; display: none !important; }
     div[data-testid="stStatusWidget"], a[href*="streamlit.app"], .stAppToolbar, [data-testid="stToolbar"], [data-testid="stDecoration"], div[class*="viewerBadge"] { display: none !important; }
     [data-testid="stAppViewContainer"] { background: transparent !important; }
@@ -93,31 +93,45 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 封鎖日期鍵盤 + 拔除平台右下角浮標
+# ⚡ 隱藏 JavaScript: 封鎖日期鍵盤 + 安全隱藏平台浮標 (移除易崩潰的 el.remove())
 # ==========================================
 components.html(
     """
     <script>
     function optimizeMobileInputs() {
         const doc = window.parent.document;
+        
+        // 1. 日期選擇器：徹底封鎖鍵盤彈出
         const dateContainers = doc.querySelectorAll('[data-testid="stDateInput"]');
         dateContainers.forEach(container => {
             container.querySelectorAll('input').forEach(input => {
                 if (input.getAttribute('inputmode') !== 'none') {
-                    input.setAttribute('inputmode', 'none'); input.setAttribute('readonly', 'true');
-                    input.style.caretColor = 'transparent'; input.style.cursor = 'pointer';
+                    input.setAttribute('inputmode', 'none'); 
+                    input.setAttribute('readonly', 'true');
+                    input.style.caretColor = 'transparent'; 
+                    input.style.cursor = 'pointer';
                 }
             });
         });
+        
+        // 2. 金額輸入框：啟用簡易數字鍵盤
         doc.querySelectorAll('input[type="text"]').forEach(input => {
             const label = input.getAttribute('aria-label') || '';
-            if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { input.setAttribute('inputmode', 'tel'); }
+            if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
+                input.setAttribute('inputmode', 'tel'); 
+            }
         });
-        doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"]').forEach(el => el.remove());
+        
+        // 3. 安全隱藏 Streamlit 平台浮標 (使用 style.display 防止 React 崩潰)
+        doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"]').forEach(el => {
+            el.style.display = 'none';
+            el.style.opacity = '0';
+            el.style.pointerEvents = 'none';
+        });
     }
-    const observer = new MutationObserver(optimizeMobileInputs);
-    observer.observe(window.parent.document.body, { childList: true, subtree: true });
-    setInterval(optimizeMobileInputs, 500); 
+
+    // 改用更輕量的單純定時器，不使用 MutationObserver 降低手機發熱
+    setInterval(optimizeMobileInputs, 600); 
     </script>
     """,
     height=0, width=0
@@ -189,7 +203,6 @@ def trigger_auto_fixed_transactions():
     triggered = False
     
     for ft in st.session_state.fixed_transactions:
-        # 如果設定的扣款日已到，且這個月還沒觸發過
         if today.day >= ft['day'] and ft.get('last_month') != current_ym:
             new_id = f"{'EXP' if ft['type']=='支出' else 'INC'}-AUTO-{int(datetime.now().timestamp()*1000)}"
             new_row = pd.DataFrame([{
@@ -228,7 +241,7 @@ def load_data_and_recover_settings():
             except: pass
             
         st.session_state.expenses_df = df[df["ID"] != "SYS_SETTINGS"].copy()
-        trigger_auto_fixed_transactions() # 載入完畢後檢查是否需要觸發自動記帳
+        trigger_auto_fixed_transactions() 
     except Exception:
         st.session_state.expenses_df = pd.DataFrame(columns=["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人", "專案"])
 
@@ -419,10 +432,8 @@ with tab_home:
                     c_name, c_amt, c_edit, c_del = st.columns([3.5, 2.5, 1, 1])
                     
                     with c_name:
-                        # 專案標籤顯示
                         proj_str = str(row.get('專案', ''))
                         proj_tag = f"<span style='color:#A07855; font-size:11px; border:1px solid #D4C3B3; padding:1px 4px; border-radius:4px; margin-right:4px;'>{proj_str}</span>" if proj_str and proj_str != "無" else ""
-                        
                         st.markdown(f"<div style='font-size:16px; font-weight:800; color:#3D322C; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{proj_tag}{row['項目']}</div>", unsafe_allow_html=True)
                         st.markdown(f"<div style='font-size:11px; color:#8C7A6B; margin-top:4px;'>{row['記帳人']} · {r_date.month}/{r_date.day}</div>", unsafe_allow_html=True)
                         
@@ -444,7 +455,6 @@ with tab_home:
                                 e_item_val = st.text_input("項目", value=row["項目"])
                                 e_amt_val_str = st.text_input("金額 (支援算式)", value=str(display_amt))
                                 
-                                # 專案標籤回填
                                 p_val = row.get("專案", "無")
                                 if pd.isna(p_val) or p_val == "": p_val = "無"
                                 proj_idx = st.session_state.projects.index(p_val) if p_val in st.session_state.projects else 0
