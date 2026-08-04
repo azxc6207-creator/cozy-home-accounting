@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 日曆絕對置頂 + 徹底隱藏 Streamlit 官方 Logo
+# 2. 終極防跑版 CSS + 日曆絕對置頂 + Expander 優化
 # ==========================================
 st.markdown("""
 <style>
@@ -38,10 +38,9 @@ st.markdown("""
         background-attachment: fixed !important;
     }
     
-    /* 🚫 徹底隱藏 Streamlit 官方 Logo、頂端選單與頁尾 */
-    #MainMenu, footer, header, [data-testid="stHeader"] { visibility: hidden !important; display: none !important; }
-    div[data-testid="stStatusWidget"], a[href*="streamlit.app"], .stAppToolbar, [data-testid="stToolbar"], [data-testid="stDecoration"], div[class*="viewerBadge"] { display: none !important; }
+    /* 隱藏頂端預設白框與頁首頁尾 */
     [data-testid="stAppViewContainer"] { background: transparent !important; }
+    header[data-testid="stHeader"], footer { display: none !important; }
 
     /* 📱 限制最大寬度為手機尺寸 */
     .block-container {
@@ -50,9 +49,13 @@ st.markdown("""
 
     /* 🚀 解鎖 Streamlit 原生阻擋，讓日曆可以完美置頂！ */
     html, body { overflow-y: auto !important; }
-    .stApp, .main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stVerticalBlock"], div[role="tabpanel"], div[role="tabpanel"] > div { overflow: visible !important; }
+    .stApp, .main, .block-container, 
+    [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"], 
+    div[data-testid="stVerticalBlock"], div[data-testid="stTabs"], div[role="tabpanel"], div[role="tabpanel"] > div {
+        overflow: visible !important;
+    }
 
-    /* 📌 日曆永遠置頂 */
+    /* 📌 日曆永遠置頂 (鎖定含有 sticky-marker 的 Container) */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) {
         position: -webkit-sticky !important; position: sticky !important; top: 0px !important; z-index: 99999 !important;
         backdrop-filter: blur(14px) !important; background: rgba(253, 249, 245, 0.97) !important; margin-top: -10px !important;
@@ -93,45 +96,43 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 封鎖日期鍵盤 + 安全隱藏平台浮標 (移除易崩潰的 el.remove())
+# ⚡ 隱藏 JavaScript: 日期防鍵盤 + 金額啟用數字鍵盤 + 隱藏官方標籤
 # ==========================================
 components.html(
     """
     <script>
     function optimizeMobileInputs() {
         const doc = window.parent.document;
-        
         // 1. 日期選擇器：徹底封鎖鍵盤彈出
         const dateContainers = doc.querySelectorAll('[data-testid="stDateInput"]');
         dateContainers.forEach(container => {
             container.querySelectorAll('input').forEach(input => {
                 if (input.getAttribute('inputmode') !== 'none') {
-                    input.setAttribute('inputmode', 'none'); 
+                    input.setAttribute('inputmode', 'none');
                     input.setAttribute('readonly', 'true');
-                    input.style.caretColor = 'transparent'; 
+                    input.style.caretColor = 'transparent';
                     input.style.cursor = 'pointer';
                 }
             });
         });
         
-        // 2. 金額輸入框：啟用簡易數字鍵盤
+        // 2. 金額輸入框：啟用簡易數字鍵盤 (包含加減乘除符號)
         doc.querySelectorAll('input[type="text"]').forEach(input => {
             const label = input.getAttribute('aria-label') || '';
-            if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
+            if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') {
                 input.setAttribute('inputmode', 'tel'); 
             }
         });
         
-        // 3. 安全隱藏 Streamlit 平台浮標 (使用 style.display 防止 React 崩潰)
-        doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"]').forEach(el => {
+        // 3. 安全隱藏 Streamlit 平台浮標
+        doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"], #MainMenu, footer, header').forEach(el => {
             el.style.display = 'none';
             el.style.opacity = '0';
             el.style.pointerEvents = 'none';
         });
     }
 
-    // 改用更輕量的單純定時器，不使用 MutationObserver 降低手機發熱
-    setInterval(optimizeMobileInputs, 600); 
+    setInterval(optimizeMobileInputs, 500); 
     </script>
     """,
     height=0, width=0
@@ -160,7 +161,7 @@ if "expense_categories" not in st.session_state: st.session_state.expense_catego
 if "income_categories" not in st.session_state: st.session_state.income_categories = ["💰 薪資收入", "🎁 獎金紅包", "📈 投資理財", "🤝 副業兼職", "💵 其他收入"]
 if "cal_selected_date" not in st.session_state: st.session_state.cal_selected_date = date.today()
 if "filter_to_single_day" not in st.session_state: st.session_state.filter_to_single_day = False
-if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "歡迎使用小窩記帳！"}]
+if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
 # 新增功能：設定儲存狀態
 if "category_budgets" not in st.session_state: st.session_state.category_budgets = {}
@@ -197,22 +198,36 @@ def save_and_sync():
     except: pass
 
 def trigger_auto_fixed_transactions():
-    """檢查並觸發固定收支自動記帳"""
+    """檢查並觸發固定收支自動記帳 (支援起始日與到期日)"""
     today = date.today()
     current_ym = f"{today.year}-{today.month:02d}"
     triggered = False
     
     for ft in st.session_state.fixed_transactions:
-        if today.day >= ft['day'] and ft.get('last_month') != current_ym:
-            new_id = f"{'EXP' if ft['type']=='支出' else 'INC'}-AUTO-{int(datetime.now().timestamp()*1000)}"
-            new_row = pd.DataFrame([{
-                "ID": new_id, "日期": str(today), "類型": ft["type"], "類別": ft["category"],
-                "項目": f"🔄 {ft['item']}", "金額": float(ft["amount"]), "記帳人": ft["payer"],
-                "備註": "系統自動記帳", "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": "無"
-            }])
-            st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
-            ft['last_month'] = current_ym
-            triggered = True
+        # 解析設定的日期，支援舊資料防呆
+        s_date_str = ft.get('start_date', '2000-01-01')
+        e_date_str = ft.get('end_date', '2099-12-31')
+        
+        try:
+            s_date = datetime.strptime(s_date_str, "%Y-%m-%d").date()
+            e_date = datetime.strptime(e_date_str, "%Y-%m-%d").date()
+        except:
+            s_date = date(2000, 1, 1)
+            e_date = date(2099, 12, 31)
+
+        # 檢查今天是否在起始與到期區間內
+        if s_date <= today <= e_date:
+            # 檢查是否到達本月觸發日，且本月尚未觸發過
+            if today.day >= ft['day'] and ft.get('last_month') != current_ym:
+                new_id = f"{'EXP' if ft['type']=='支出' else 'INC'}-AUTO-{int(datetime.now().timestamp()*1000)}"
+                new_row = pd.DataFrame([{
+                    "ID": new_id, "日期": str(today), "類型": ft["type"], "類別": ft["category"],
+                    "項目": f"🔄 {ft['item']}", "金額": float(ft["amount"]), "記帳人": ft["payer"],
+                    "備註": "系統自動記帳", "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": "無"
+                }])
+                st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
+                ft['last_month'] = current_ym
+                triggered = True
             
     if triggered: save_and_sync()
 
@@ -241,7 +256,7 @@ def load_data_and_recover_settings():
             except: pass
             
         st.session_state.expenses_df = df[df["ID"] != "SYS_SETTINGS"].copy()
-        trigger_auto_fixed_transactions() 
+        trigger_auto_fixed_transactions() # 載入完畢後檢查是否需要觸發自動記帳
     except Exception:
         st.session_state.expenses_df = pd.DataFrame(columns=["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人", "專案"])
 
@@ -264,6 +279,7 @@ with tab_home:
     # 📌 置頂區塊：緊湊日曆
     with st.container(border=True):
         st.markdown("<span class='sticky-marker'></span>", unsafe_allow_html=True)
+        
         cal_head_1, cal_head_2 = st.columns([1.5, 1])
         with cal_head_1:
             st.markdown(f"<div style='font-weight:900; font-size:20px; color:#3D322C; padding-top:4px;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
@@ -594,7 +610,7 @@ with tab_shopping:
 with tab_settings:
     st.subheader("⚙️ 小窩進階設定")
     
-    # --- 1. 預算設定 ---
+    # --- 1. 預算設定 (支援一鍵清除) ---
     st.markdown("### ⚠️ 分類預算設定")
     for c in st.session_state.expense_categories:
         with st.container(border=True):
@@ -605,13 +621,19 @@ with tab_settings:
             with b_col2:
                 with st.popover("設定預算", use_container_width=True):
                     new_b = st.number_input(f"設定 {c} 月預算", min_value=0, value=current_b, step=500)
-                    if st.button("儲存", key=f"btn_bud_{c}", type="primary", use_container_width=True):
+                    btn1, btn2 = st.columns(2)
+                    if btn1.button("儲存", key=f"btn_bud_{c}", type="primary", use_container_width=True):
                         st.toast("💾 儲存中...", icon="⏳")
                         st.session_state.category_budgets[c] = new_b
                         save_and_sync()
                         st.rerun()
+                    if btn2.button("清除", key=f"btn_clr_{c}", use_container_width=True):
+                        st.toast("💾 清除中...", icon="⏳")
+                        st.session_state.category_budgets[c] = 0
+                        save_and_sync()
+                        st.rerun()
 
-    # --- 2. 固定收支設定 ---
+    # --- 2. 固定收支設定 (支援起始/結束日) ---
     st.markdown("### 📅 固定收支自動記帳")
     with st.popover("➕ 新增自動記帳", use_container_width=True):
         f_type = st.radio("收支類型", ["支出", "收入"], horizontal=True)
@@ -620,21 +642,44 @@ with tab_settings:
         f_item = st.text_input("項目名稱 (例如：Netflix 或 房租)")
         f_amt_str = st.text_input("金額 (支援算式)", value="0")
         f_payer = st.selectbox("記帳人", st.session_state.members)
+        
+        # 區間日期設定
+        f_start = st.date_input("開始日期", date.today())
+        f_has_end = st.checkbox("設定結束日期")
+        if f_has_end:
+            f_end = st.date_input("結束日期", date.today())
+        else:
+            f_end = date(2099, 12, 31)
+
         if st.button("確認新增", type="primary", use_container_width=True):
             if f_item:
                 st.toast("💾 儲存中...", icon="⏳")
                 f_amt = parse_math_expr(f_amt_str)
                 st.session_state.fixed_transactions.append({
                     "id": int(datetime.now().timestamp()*1000), "day": f_day, "type": f_type,
-                    "category": f_cat, "item": f_item.strip(), "amount": f_amt, "payer": f_payer, "last_month": ""
+                    "category": f_cat, "item": f_item.strip(), "amount": f_amt, "payer": f_payer, 
+                    "start_date": str(f_start), "end_date": str(f_end), "last_month": ""
                 })
                 save_and_sync()
                 st.rerun()
+                
     for ft in list(st.session_state.fixed_transactions):
         with st.container(border=True):
             f1, f2 = st.columns([4.5, 1.5])
             f1.markdown(f"<div style='font-size:14px; font-weight:700; color:#3D322C;'>每月 {ft['day']} 日 | {ft['item']}</div>", unsafe_allow_html=True)
+            
+            # 日期字串顯示防呆
+            s_d = ft.get('start_date', '')
+            e_d = ft.get('end_date', '')
+            date_str = "📅 "
+            if s_d: date_str += f"從 {s_d} 起 "
+            if e_d and e_d != '2099-12-31': date_str += f"至 {e_d} 止"
+            elif s_d: date_str += "(無結束日)"
+            else: date_str += "舊資料無日期限制"
+                
+            f1.markdown(f"<div style='font-size:11px; color:#A07855; margin-bottom:2px;'>{date_str}</div>", unsafe_allow_html=True)
             f1.markdown(f"<div style='font-size:12px; color:#8C7A6B;'>{ft['type']} - {ft['category']} (${ft['amount']:,})</div>", unsafe_allow_html=True)
+            
             if f2.button("🗑️", key=f"del_ft_{ft['id']}"):
                 st.toast("💾 刪除中...", icon="🗑️")
                 st.session_state.fixed_transactions.remove(ft)
