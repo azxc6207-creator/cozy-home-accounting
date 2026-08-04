@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 日曆置頂 + 🐾 實體腳印專屬樣式
+# 2. 終極防跑版 CSS + 日曆置頂 + 🐾 零延遲完美腳印
 # ==========================================
 st.markdown("""
 <style>
@@ -63,7 +63,7 @@ st.markdown("""
         html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"], html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="column"] { width: 0 !important; min-width: 0 !important; flex: 1 1 0% !important; padding: 0 1px !important; }
     }
 
-    /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 (大幅增加底部留白防遮擋) */
+    /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 */
     div[data-testid="stPopoverBody"] { max-height: 65vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 16px 16px 100px 16px !important; }
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; flex-direction: column !important; }
     div[data-testid="stPopoverBody"] div[data-testid="stColumn"], div[data-testid="stPopoverBody"] div[data-testid="column"] { width: 100% !important; flex: none !important; }
@@ -79,45 +79,71 @@ st.markdown("""
 
     /* 🔘 基礎按鈕視覺優化 */
     .stButton > button, div[data-testid="stPopover"] > button { background-color: #FFFFFF !important; color: #3D322C !important; border: 1px solid #E2D5C5 !important; border-radius: 10px !important; font-weight: 800 !important; font-size: 14px !important; padding: 0 !important; width: 100% !important; min-height: 34px !important; box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; display: inline-flex !important; justify-content: center !important; align-items: center !important; }
-    .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FAF5F0 !important; }
     
     /* ========================================================
-       🐾 徹底殺死橢圓殘影的專屬指令
+       🐾 終極腳印按鈕樣式 (零延遲 CSS + 補齊 5 趾的完美 SVG)
        ======================================================== */
-    /* 讓按鈕本體變成完全透明，由內部植入的 SVG 來顯示圖案 */
-    button.paw-btn {
+       
+    /* 1. 殺掉日曆按鈕裡自作主張的背景與波紋動畫 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button div {
         background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        height: 48px !important;
-        position: relative !important;
-        overflow: visible !important;
-        transition: transform 0.1s ease !important; /* 保留點擊縮小特效 */
-    }
-    
-    button.paw-btn:active {
-        transform: scale(0.85) !important;
-    }
-
-    /* 殺死 Streamlit 按鈕原生的 Hover/Active 變色效果 */
-    button.paw-btn:hover, button.paw-btn:focus, button.paw-btn:active {
         background-color: transparent !important;
         border: none !important;
-    }
-
-    /* 殺死底層波紋與橢圓形 div 背景 */
-    button.paw-btn > div {
-        background: transparent !important;
-        border: none !important;
         box-shadow: none !important;
+        transition: none !important;
     }
     
-    /* 殺死偽元素波紋動畫 */
-    button.paw-btn::before, button.paw-btn::after {
-        display: none !important;
+    /* 2. 讓數字重見天日並加粗對齊 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button p {
+        display: block !important;
+        font-size: 16px !important;
+        font-weight: 900 !important;
+        margin: 0 !important;
+        z-index: 10 !important;
     }
 
-    /* 調整日曆文字對齊 */
+    /* 3. 一般日子（未選取）：純白完整五趾腳印 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button { 
+        border-radius: 0 !important; 
+        background-color: transparent !important; 
+        border: none !important; 
+        box-shadow: none !important; 
+        height: 48px !important; 
+        width: 100% !important;
+        color: #5C4A3E !important; 
+        /* 包含 5 個區塊的完美腳印 SVG */
+        background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M226.5%2092.9c14.3%2073-39.9%20130-77.2%20130c-22.3%200-53-15.3-53-47.9C96.3%20105%20162.2%200%20226.5%2092.9zm35.3-45c-20.4%200-43.9%2014.8-43.9%2045.9c0%2033.2%2041%20114.6%2096%20114.6c24.6%200%2052.2-15.2%2052.2-47.6C366.1%2087.2%20284.5%2047.9%20261.8%2047.9zM111.4%20348.3c44.5%200%2065.2-67%20114.3-67c43.6%200%2061.8%2059.7%20112.5%2059.7c52%200%2073.8-50.9%2073.8-95.2c0-39.6-22.6-82-68.8-82c-41.2%200-82.8%2055.5-122.6%2055.5c-40.2%200-80-52-122.3-52c-31.4%200-66%2022.8-66%2081.9C32.3%20322.2%2077%20348.3%20111.4%20348.3zM67.3%20224.3c-23.4%200-51.5-15.1-51.5-47.5c0-34.5%2039.5-115.3%2095.8-115.3c24.7%200%2052.4%2015.2%2052.4%2047.6C164%20186.2%2088.5%20224.3%2067.3%20224.3zM444.7%20224.3c-21.2%200-56.7-38.1-56.7-47.6c0-32.4%2027.7-47.5%2052.4-47.5c56.3%200%2095.8%2080.8%2095.8%20115.3c0%2032.4-28.1%2047.5-51.5%2047.5z%22%2F%3E%3C%2Fsvg%3E") !important;
+        background-size: 38px 38px !important;
+        background-position: center bottom 2px !important;
+        background-repeat: no-repeat !important;
+        padding-top: 14px !important; /* 把數字推到肉球中央 */
+        transition: transform 0.1s ease !important; /* 保留可愛的按壓微縮放 */
+    }
+    /* 給未選取日期的文字套深色 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button p { color: #5C4A3E !important; }
+    
+    /* 4. 已選取的日子：深咖啡色腳印 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button[kind="primary"] { 
+        background-color: transparent !important;
+        background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22%237A573C%22%20d%3D%22M226.5%2092.9c14.3%2073-39.9%20130-77.2%20130c-22.3%200-53-15.3-53-47.9C96.3%20105%20162.2%200%20226.5%2092.9zm35.3-45c-20.4%200-43.9%2014.8-43.9%2045.9c0%2033.2%2041%20114.6%2096%20114.6c24.6%200%2052.2-15.2%2052.2-47.6C366.1%2087.2%20284.5%2047.9%20261.8%2047.9zM111.4%20348.3c44.5%200%2065.2-67%20114.3-67c43.6%200%2061.8%2059.7%20112.5%2059.7c52%200%2073.8-50.9%2073.8-95.2c0-39.6-22.6-82-68.8-82c-41.2%200-82.8%2055.5-122.6%2055.5c-40.2%200-80-52-122.3-52c-31.4%200-66%2022.8-66%2081.9C32.3%20322.2%2077%20348.3%20111.4%20348.3zM67.3%20224.3c-23.4%200-51.5-15.1-51.5-47.5c0-34.5%2039.5-115.3%2095.8-115.3c24.7%200%2052.4%2015.2%2052.4%2047.6C164%20186.2%2088.5%20224.3%2067.3%20224.3zM444.7%20224.3c-21.2%200-56.7-38.1-56.7-47.6c0-32.4%2027.7-47.5%2052.4-47.5c56.3%200%2095.8%2080.8%2095.8%20115.3c0%2032.4-28.1%2047.5-51.5%2047.5z%22%2F%3E%3C%2Fsvg%3E") !important;
+    }
+    /* 給選取日期的文字套白色 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button[kind="primary"] p { color: #FFFFFF !important; }
+
+    /* 5. 防橢圓閃爍的點擊狀態修正 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button:hover,
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button:active,
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button:focus {
+        background-color: transparent !important;
+        border-color: transparent !important;
+        opacity: 0.8 !important;
+    }
+    
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button:active {
+        transform: scale(0.9) !important; /* 點擊時內縮 */
+    }
+
+    /* 其他版面美化 */
     div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
     .stTabs [data-baseweb="tab-list"] { gap: 6px; background-color: #E8DDD0; padding: 6px; border-radius: 25px; margin-bottom: 14px; }
     .stTabs [data-baseweb="tab"] { border-radius: 18px; padding: 6px 14px; color: #6E5A4C; font-weight: 700; font-size: 15px !important; }
@@ -126,7 +152,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 強制植入實體腳印 SVG + 封鎖日期鍵盤
+# ⚡ 隱藏 JavaScript: 封鎖日期鍵盤 + 隱藏平台浮標
 # ==========================================
 components.html(
     """
@@ -134,53 +160,7 @@ components.html(
     function optimizeMobileInputs() {
         const doc = window.parent.document;
         
-        // 1. 動態植入實體 SVG 腳印 (絕對不破圖，因為不依賴 CSS 連結)
-        doc.querySelectorAll('.stButton > button').forEach(btn => {
-            const txt = btn.innerText.trim();
-            if (!isNaN(txt) && txt !== '' && Number(txt) >= 1 && Number(txt) <= 31 && txt.length <= 2) {
-                btn.classList.add('paw-btn');
-                
-                // 強制清除原生背景
-                btn.style.background = 'transparent';
-                
-                // 強制把按鈕內的 div 背景設為透明，徹底殺死橢圓形閃爍
-                Array.from(btn.children).forEach(child => {
-                    if (!child.classList.contains('paw-svg')) {
-                        child.style.background = 'transparent';
-                        child.style.border = 'none';
-                        child.style.boxShadow = 'none';
-                    }
-                });
-
-                // 如果還沒有植入腳印，就動態插入 SVG 向量元素
-                if (!btn.querySelector('.paw-svg')) {
-                    const isSelected = btn.getAttribute('kind') === 'primary';
-                    const fillColor = isSelected ? '#7A573C' : '#FFFFFF';
-                    const textColor = isSelected ? '#FFFFFF' : '#5C4A3E';
-                    
-                    // 實體 SVG 標籤，保證 100% 任何手機都能顯示
-                    const svgHTML = `<svg class="paw-svg" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -45%); width:38px; height:38px; z-index:0; pointer-events:none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="${fillColor}" d="M226.5 92.9c14.3 73-39.9 130-77.2 130c-22.3 0-53-15.3-53-47.9C96.3 105 162.2 0 226.5 92.9zm35.3-45c-20.4 0-43.9 14.8-43.9 45.9c0 33.2 41 114.6 96 114.6c24.6 0 52.2-15.2 52.2-47.6C366.1 87.2 284.5 47.9 261.8 47.9zM111.4 348.3c44.5 0 65.2-67 114.3-67c43.6 0 61.8 59.7 112.5 59.7c52 0 73.8-50.9 73.8-95.2c0-39.6-22.6-82-68.8-82c-41.2 0-82.8 55.5-122.6 55.5c-40.2 0-80-52-122.3-52c-31.4 0-66 22.8-66 81.9C32.3 322.2 77 348.3 111.4 348.3zM67.3 224.3c-23.4 0-51.5-15.1-51.5-47.5c0-34.5 39.5-115.3 95.8-115.3c24.7 0 52.4 15.2 52.4 47.6C164 186.2 88.5 224.3 67.3 224.3z"/></svg>`;
-                    
-                    btn.insertAdjacentHTML('afterbegin', svgHTML);
-                    
-                    // 確保數字不會被 SVG 蓋住，並把數字推到大肉球中心
-                    const textContainer = btn.querySelector('div:not(.paw-svg)');
-                    if (textContainer) {
-                        textContainer.style.position = 'relative';
-                        textContainer.style.zIndex = '1';
-                        const pTag = textContainer.querySelector('p');
-                        if (pTag) {
-                            pTag.style.color = textColor;
-                            pTag.style.fontWeight = '900';
-                            pTag.style.fontSize = '15px';
-                            pTag.style.marginTop = '8px'; // 往下推對齊腳印大肉球
-                        }
-                    }
-                }
-            }
-        });
-
-        // 2. 日期選擇器：徹底封鎖鍵盤彈出
+        // 1. 日期選擇器：徹底封鎖鍵盤彈出
         const dateContainers = doc.querySelectorAll('[data-testid="stDateInput"]');
         dateContainers.forEach(container => {
             container.querySelectorAll('input').forEach(input => {
@@ -193,7 +173,7 @@ components.html(
             });
         });
         
-        // 3. 金額輸入框：啟用簡易數字鍵盤
+        // 2. 金額輸入框：啟用簡易數字鍵盤
         doc.querySelectorAll('input[type="text"]').forEach(input => {
             const label = input.getAttribute('aria-label') || '';
             if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
@@ -201,7 +181,7 @@ components.html(
             }
         });
         
-        // 4. 安全隱藏 Streamlit 平台浮標
+        // 3. 安全隱藏 Streamlit 平台浮標
         doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"], #MainMenu, footer, header').forEach(el => {
             el.style.display = 'none';
             el.style.opacity = '0';
@@ -209,8 +189,7 @@ components.html(
         });
     }
 
-    // 提高刷新頻率，確保按鈕瞬間被替換，絕不露餡
-    setInterval(optimizeMobileInputs, 100); 
+    setInterval(optimizeMobileInputs, 400); 
     </script>
     """,
     height=0, width=0
@@ -241,7 +220,6 @@ if "cal_selected_date" not in st.session_state: st.session_state.cal_selected_da
 if "filter_to_single_day" not in st.session_state: st.session_state.filter_to_single_day = False
 if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
-# 新增功能：設定儲存狀態
 if "category_budgets" not in st.session_state: st.session_state.category_budgets = {}
 if "fixed_transactions" not in st.session_state: st.session_state.fixed_transactions = []
 if "projects" not in st.session_state: st.session_state.projects = ["無"]
@@ -252,7 +230,6 @@ if "projects" not in st.session_state: st.session_state.projects = ["無"]
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def save_and_sync():
-    """保證寫入雲端的同步儲存機制，並強制清理快取確保重新載入不消失"""
     settings_dict = {
         "members": st.session_state.members,
         "expense_categories": st.session_state.expense_categories,
@@ -276,19 +253,17 @@ def save_and_sync():
     
     try: 
         conn.update(data=final_df)
-        st.cache_data.clear() # 🚀 儲存後強制清除快取
+        st.cache_data.clear()
     except: 
         pass
 
 def trigger_auto_fixed_transactions():
-    """獨立防撞檢查並觸發固定收支自動記帳"""
     try:
         today = date.today()
         current_ym = f"{today.year}-{today.month:02d}"
         triggered = False
         
         for ft in st.session_state.fixed_transactions:
-            # 容錯解析日期
             s_date_str = ft.get('start_date', '2000-01-01')
             e_date_str = ft.get('end_date', '2099-12-31')
             try: s_date = datetime.strptime(s_date_str, "%Y-%m-%d").date()
@@ -296,7 +271,6 @@ def trigger_auto_fixed_transactions():
             try: e_date = datetime.strptime(e_date_str, "%Y-%m-%d").date()
             except: e_date = date(2099, 12, 31)
 
-            # 判斷是否符合區間與日期條件
             if s_date <= today <= e_date:
                 if today.day >= ft.get('day', 1) and ft.get('last_month') != current_ym:
                     new_id = f"{'EXP' if ft.get('type')=='支出' else 'INC'}-AUTO-{int(datetime.now().timestamp()*1000)}"
@@ -314,7 +288,6 @@ def trigger_auto_fixed_transactions():
         pass 
 
 def load_data_and_recover_settings():
-    """從雲端載入資料，並還原設定檔"""
     try:
         df = conn.read(ttl="10m") 
         cols = ["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人", "專案"]
@@ -692,7 +665,6 @@ with tab_shopping:
 with tab_settings:
     st.subheader("⚙️ 小窩進階設定")
     
-    # --- 1. 預算設定 (Expander) ---
     with st.expander("⚠️ 分類預算設定", expanded=False):
         for c in st.session_state.expense_categories:
             with st.container(border=True):
@@ -715,7 +687,6 @@ with tab_settings:
                             save_and_sync()
                             st.rerun()
 
-    # --- 2. 固定收支設定 (Expander) ---
     with st.expander("📅 固定收支自動記帳", expanded=False):
         with st.popover("➕ 新增自動記帳", use_container_width=True):
             f_type = st.radio("收支類型", ["支出", "收入"], horizontal=True)
@@ -766,7 +737,6 @@ with tab_settings:
                     save_and_sync()
                     st.rerun()
 
-    # --- 3. 專案/目標標籤設定 (Expander) ---
     with st.expander("🎯 專案/目標標籤", expanded=False):
         with st.form("add_proj_form", clear_on_submit=True):
             col_proj, col_btn = st.columns([3, 1])
@@ -787,7 +757,6 @@ with tab_settings:
                     save_and_sync()
                     st.rerun()
 
-    # --- 4. 成員管理 (Expander) ---
     with st.expander("🐱 成員管理", expanded=False):
         with st.form("add_member_form", clear_on_submit=True):
             col_icon, col_name = st.columns([1, 2])
@@ -822,7 +791,6 @@ with tab_settings:
                         save_and_sync()
                         st.rerun()
 
-    # --- 5. 支出類別 (Expander) ---
     with st.expander("🏷️ 支出類別", expanded=False):
         with st.form("add_exp_cat_form", clear_on_submit=True):
             col_icon, col_name = st.columns([1, 2])
@@ -857,7 +825,6 @@ with tab_settings:
                         save_and_sync()
                         st.rerun()
 
-    # --- 6. 收入類別 (Expander) ---
     with st.expander("💰 收入類別", expanded=False):
         with st.form("add_inc_cat_form", clear_on_submit=True):
             col_icon, col_name = st.columns([1, 2])
