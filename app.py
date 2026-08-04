@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 日曆絕對置頂 + 徹底隱藏 Streamlit 官方 Logo
+# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 日曆置頂
 # ==========================================
 st.markdown("""
 <style>
@@ -65,11 +65,16 @@ st.markdown("""
         html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"], html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="column"] { width: 0 !important; min-width: 0 !important; flex: 1 1 0% !important; padding: 0 1px !important; }
     }
 
-    /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 */
-    div[data-testid="stPopoverBody"] { max-height: 60vh !important; overflow-y: scroll !important; -webkit-overflow-scrolling: touch !important; padding: 12px 14px 60px 14px !important; }
+    /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 (大幅增加底部留白防遮擋) */
+    div[data-testid="stPopoverBody"] { 
+        max-height: 65vh !important; 
+        overflow-y: auto !important; 
+        -webkit-overflow-scrolling: touch !important; 
+        padding: 16px 16px 100px 16px !important; /* 確保底部絕對有空間滑動，防止按鈕被吃掉 */
+    }
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; flex-direction: column !important; }
     div[data-testid="stPopoverBody"] div[data-testid="stColumn"], div[data-testid="stPopoverBody"] div[data-testid="column"] { width: 100% !important; flex: none !important; }
-    div[data-testid="stPopoverBody"] form { margin-bottom: 60px !important; padding-bottom: 20px !important; }
+    div[data-testid="stPopoverBody"] form { margin-bottom: 20px !important; padding-bottom: 20px !important; }
 
     /* 📌 容器卡片統一樣式 */
     div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #FDF9F5 !important; border-radius: 12px !important; padding: 8px 10px !important; margin-bottom: 8px !important; border: 1px solid #EAE0D5 !important; box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important; }
@@ -158,7 +163,7 @@ if "expense_categories" not in st.session_state: st.session_state.expense_catego
 if "income_categories" not in st.session_state: st.session_state.income_categories = ["💰 薪資收入", "🎁 獎金紅包", "📈 投資理財", "🤝 副業兼職", "💵 其他收入"]
 if "cal_selected_date" not in st.session_state: st.session_state.cal_selected_date = date.today()
 if "filter_to_single_day" not in st.session_state: st.session_state.filter_to_single_day = False
-if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "歡迎使用小窩記帳！"}]
+if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
 # 新增功能：設定儲存狀態
 if "category_budgets" not in st.session_state: st.session_state.category_budgets = {}
@@ -171,7 +176,7 @@ if "projects" not in st.session_state: st.session_state.projects = ["無"]
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 def save_and_sync():
-    """保證寫入雲端的同步儲存機制"""
+    """保證寫入雲端的同步儲存機制，並強制清理快取確保重新載入不消失"""
     settings_dict = {
         "members": st.session_state.members,
         "expense_categories": st.session_state.expense_categories,
@@ -192,8 +197,12 @@ def save_and_sync():
     
     df_core = st.session_state.expenses_df[st.session_state.expenses_df["ID"] != "SYS_SETTINGS"]
     final_df = pd.concat([df_core, settings_df], ignore_index=True)
-    try: conn.update(data=final_df)
-    except: pass
+    
+    try: 
+        conn.update(data=final_df)
+        st.cache_data.clear() # 🚀 極度重要！儲存後強制清除快取，防止重整讀到舊資料
+    except: 
+        pass
 
 def trigger_auto_fixed_transactions():
     """獨立防撞檢查並觸發固定收支自動記帳"""
@@ -226,7 +235,7 @@ def trigger_auto_fixed_transactions():
                 
         if triggered: save_and_sync()
     except Exception:
-        pass # 防止自動記帳報錯影響首頁載入
+        pass 
 
 def load_data_and_recover_settings():
     """從雲端載入資料，並還原設定檔"""
