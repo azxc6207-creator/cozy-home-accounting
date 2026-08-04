@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 完美獨立圓形日曆
+# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 日曆置頂
 # ==========================================
 st.markdown("""
 <style>
@@ -44,11 +44,13 @@ st.markdown("""
     [data-testid="stAppViewContainer"] { background: transparent !important; }
 
     /* 📱 限制最大寬度為手機尺寸 */
-    .block-container { max-width: 480px !important; margin: 0 auto !important; padding: 1rem 0.5rem 3rem 0.5rem !important; }
+    .block-container {
+        max-width: 480px !important; margin: 0 auto !important; padding: 1rem 0.5rem 3rem 0.5rem !important;
+    }
 
     /* 🚀 解鎖 Streamlit 原生阻擋，讓日曆可以完美置頂！ */
     html, body { overflow-y: auto !important; }
-    .stApp, .main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"], div[data-testid="stVerticalBlock"], div[data-testid="stTabs"], div[role="tabpanel"], div[role="tabpanel"] > div { overflow: visible !important; }
+    .stApp, .main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stVerticalBlock"], div[role="tabpanel"], div[role="tabpanel"] > div { overflow: visible !important; }
 
     /* 📌 日曆永遠置頂 */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) {
@@ -63,8 +65,13 @@ st.markdown("""
         html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"], html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="column"] { width: 0 !important; min-width: 0 !important; flex: 1 1 0% !important; padding: 0 1px !important; }
     }
 
-    /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 */
-    div[data-testid="stPopoverBody"] { max-height: 65vh !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 16px 16px 100px 16px !important; }
+    /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 (大幅增加底部留白防遮擋) */
+    div[data-testid="stPopoverBody"] { 
+        max-height: 65vh !important; 
+        overflow-y: auto !important; 
+        -webkit-overflow-scrolling: touch !important; 
+        padding: 16px 16px 100px 16px !important; 
+    }
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; flex-direction: column !important; }
     div[data-testid="stPopoverBody"] div[data-testid="stColumn"], div[data-testid="stPopoverBody"] div[data-testid="column"] { width: 100% !important; flex: none !important; }
     div[data-testid="stPopoverBody"] form { margin-bottom: 20px !important; padding-bottom: 20px !important; }
@@ -77,48 +84,12 @@ st.markdown("""
     [data-testid="stExpander"] { border: 1px solid #EAE0D5 !important; border-radius: 12px !important; background-color: transparent !important; margin-bottom: 12px !important; }
     [data-testid="stExpander"] summary p { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
 
-    /* 🔘 基礎按鈕視覺優化 */
+    /* 🔘 按鈕視覺優化 */
     .stButton > button, div[data-testid="stPopover"] > button { background-color: #FFFFFF !important; color: #3D322C !important; border: 1px solid #E2D5C5 !important; border-radius: 10px !important; font-weight: 800 !important; font-size: 14px !important; padding: 0 !important; width: 100% !important; min-height: 34px !important; box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; display: inline-flex !important; justify-content: center !important; align-items: center !important; }
     .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FAF5F0 !important; }
-    
-    /* ========================================================
-       ⚪ 專屬日曆圓形按鈕樣式 (強制覆蓋全域寬度限制)
-       ======================================================== */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) div.stButton > button { 
-        border-radius: 50% !important; 
-        background-color: #FFFFFF !important; 
-        color: #5C4A3E !important; 
-        border: 1px solid #E2D5C5 !important; 
-        box-shadow: 0 2px 4px rgba(160, 120, 85, 0.05) !important; 
-        height: 38px !important; 
-        width: 38px !important; 
-        max-width: 38px !important;
-        min-width: 38px !important;
-        min-height: 38px !important;
-        margin: 0 auto !important;
-        padding: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        font-size: 14px !important; 
-        font-weight: 800 !important;
-        transition: transform 0.1s ease, background-color 0.1s ease !important;
-    }
-    
-    /* 已選取的日期：深咖啡色圓形按鈕 */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) div.stButton > button[kind="primary"] { 
-        background-color: #A07855 !important; 
-        color: #FFFFFF !important; 
-        border: 1px solid #A07855 !important; 
-        box-shadow: 0 3px 8px rgba(160, 120, 85, 0.25) !important;
-    }
-
-    /* 點擊時可愛的縮小回饋感 */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) div.stButton > button:active {
-        transform: scale(0.85) !important;
-    }
-
-    /* 其他版面美化 */
+    .stButton > button[kind="primary"] { background-color: #A07855 !important; color: #FFFFFF !important; border: 1px solid #A07855 !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button { border-radius: 50% !important; background-color: #FFFFFF !important; color: #5C4A3E !important; border: 1px solid #E2D5C5 !important; box-shadow: 0 2px 4px rgba(160,120,85,0.05) !important; height: 38px !important; width: 38px !important; min-width: 38px !important; margin: 0 auto !important; font-size: 14px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button[kind="primary"] { background-color: #A07855 !important; color: #FFFFFF !important; border: 1px solid #A07855 !important; }
     div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
     .stTabs [data-baseweb="tab-list"] { gap: 6px; background-color: #E8DDD0; padding: 6px; border-radius: 25px; margin-bottom: 14px; }
     .stTabs [data-baseweb="tab"] { border-radius: 18px; padding: 6px 14px; color: #6E5A4C; font-weight: 700; font-size: 15px !important; }
@@ -127,15 +98,14 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 封鎖日期鍵盤 + 隱藏平台浮標
+# ⚡ 隱藏 JavaScript: 封鎖日期鍵盤 + 安全隱藏平台浮標
 # ==========================================
 components.html(
     """
     <script>
     function optimizeMobileInputs() {
         const doc = window.parent.document;
-        
-        // 1. 日期選擇器：徹底封鎖鍵盤彈出
+        # 1. 日期選擇器：徹底封鎖鍵盤彈出
         const dateContainers = doc.querySelectorAll('[data-testid="stDateInput"]');
         dateContainers.forEach(container => {
             container.querySelectorAll('input').forEach(input => {
@@ -148,7 +118,7 @@ components.html(
             });
         });
         
-        // 2. 金額輸入框：啟用簡易數字鍵盤
+        # 2. 金額輸入框：啟用簡易數字鍵盤
         doc.querySelectorAll('input[type="text"]').forEach(input => {
             const label = input.getAttribute('aria-label') || '';
             if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
@@ -156,7 +126,7 @@ components.html(
             }
         });
         
-        // 3. 安全隱藏 Streamlit 平台浮標
+        # 3. 安全隱藏 Streamlit 平台浮標
         doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"], #MainMenu, footer, header').forEach(el => {
             el.style.display = 'none';
             el.style.opacity = '0';
@@ -164,7 +134,7 @@ components.html(
         });
     }
 
-    setInterval(optimizeMobileInputs, 400); 
+    setInterval(optimizeMobileInputs, 600); 
     </script>
     """,
     height=0, width=0
@@ -230,7 +200,7 @@ def save_and_sync():
     
     try: 
         conn.update(data=final_df)
-        st.cache_data.clear()
+        st.cache_data.clear() # 🚀 儲存後強制清除快取
     except: 
         pass
 
@@ -242,6 +212,7 @@ def trigger_auto_fixed_transactions():
         triggered = False
         
         for ft in st.session_state.fixed_transactions:
+            # 容錯解析日期
             s_date_str = ft.get('start_date', '2000-01-01')
             e_date_str = ft.get('end_date', '2099-12-31')
             try: s_date = datetime.strptime(s_date_str, "%Y-%m-%d").date()
@@ -249,6 +220,7 @@ def trigger_auto_fixed_transactions():
             try: e_date = datetime.strptime(e_date_str, "%Y-%m-%d").date()
             except: e_date = date(2099, 12, 31)
 
+            # 判斷是否符合區間與日期條件
             if s_date <= today <= e_date:
                 if today.day >= ft.get('day', 1) and ft.get('last_month') != current_ym:
                     new_id = f"{'EXP' if ft.get('type')=='支出' else 'INC'}-AUTO-{int(datetime.now().timestamp()*1000)}"
@@ -310,7 +282,7 @@ tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
 # TAB 1: 🏠 主頁記帳
 # ==========================================
 with tab_home:
-    # 📌 置頂區塊：緊湊日曆 (含年/月獨立下拉選單)
+    # 📌 置頂區塊：緊湊日曆 (含獨立年份、月份選單)
     with st.container(border=True):
         st.markdown("<span class='sticky-marker'></span>", unsafe_allow_html=True)
         
@@ -381,7 +353,7 @@ with tab_home:
                     if st.form_submit_button("確認新增", type="primary", use_container_width=True):
                         st.toast("💾 儲存中...", icon="⏳")
                         i_amount = parse_math_expr(i_amount_str)
-                        new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
+                        new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(e_note) if 'e_note' in locals() else "", "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
                         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
                         save_and_sync()
                         st.toast("🎉 收入新增成功！")
@@ -581,7 +553,7 @@ with tab_charts:
             st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
             st.divider()
             
-            # 2. 長條圖：各項累積支出 (依金額高低排序)
+            # 2. 長條圖：各分類累積支出 (依金額由高到低排序)
             st.markdown("<h4 style='text-align:center; color:#8C6239;'>📊 各分類累積支出</h4>", unsafe_allow_html=True)
             cat_sum = exp_df.groupby("類別")["金額"].sum().reset_index().sort_values(by="金額", ascending=False)
             fig_bar = px.bar(cat_sum, x="類別", y="金額", color_discrete_sequence=["#A07855"], text_auto=',.0f')
@@ -661,6 +633,7 @@ with tab_shopping:
 with tab_settings:
     st.subheader("⚙️ 小窩進階設定")
     
+    # --- 1. 預算設定 (Expander) ---
     with st.expander("⚠️ 分類預算設定", expanded=False):
         for c in st.session_state.expense_categories:
             with st.container(border=True):
@@ -683,6 +656,7 @@ with tab_settings:
                             save_and_sync()
                             st.rerun()
 
+    # --- 2. 固定收支設定 (Expander) ---
     with st.expander("📅 固定收支自動記帳", expanded=False):
         with st.popover("➕ 新增自動記帳", use_container_width=True):
             f_type = st.radio("收支類型", ["支出", "收入"], horizontal=True)
@@ -733,6 +707,7 @@ with tab_settings:
                     save_and_sync()
                     st.rerun()
 
+    # --- 3. 專案/目標標籤設定 (Expander) ---
     with st.expander("🎯 專案/目標標籤", expanded=False):
         with st.form("add_proj_form", clear_on_submit=True):
             col_proj, col_btn = st.columns([3, 1])
@@ -753,6 +728,7 @@ with tab_settings:
                     save_and_sync()
                     st.rerun()
 
+    # --- 4. 成員管理 (Expander) ---
     with st.expander("🐱 成員管理", expanded=False):
         with st.form("add_member_form", clear_on_submit=True):
             col_icon, col_name = st.columns([1, 2])
@@ -787,6 +763,7 @@ with tab_settings:
                         save_and_sync()
                         st.rerun()
 
+    # --- 5. 支出類別 (Expander) ---
     with st.expander("🏷️ 支出類別", expanded=False):
         with st.form("add_exp_cat_form", clear_on_submit=True):
             col_icon, col_name = st.columns([1, 2])
@@ -821,6 +798,7 @@ with tab_settings:
                         save_and_sync()
                         st.rerun()
 
+    # --- 6. 收入類別 (Expander) ---
     with st.expander("💰 收入類別", expanded=False):
         with st.form("add_inc_cat_form", clear_on_submit=True):
             col_icon, col_name = st.columns([1, 2])
