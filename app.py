@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 圓形精緻日曆 (含縮放動畫)
+# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 完美獨立圓形日曆
 # ==========================================
 st.markdown("""
 <style>
@@ -82,9 +82,9 @@ st.markdown("""
     .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FAF5F0 !important; }
     
     /* ========================================================
-       ⚪ 精緻莫蘭迪圓形日曆 (含點擊縮放動畫)
+       ⚪ 專屬日曆圓形按鈕樣式 (強制覆蓋全域寬度限制)
        ======================================================== */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button { 
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) div.stButton > button { 
         border-radius: 50% !important; 
         background-color: #FFFFFF !important; 
         color: #5C4A3E !important; 
@@ -92,14 +92,21 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(160, 120, 85, 0.05) !important; 
         height: 38px !important; 
         width: 38px !important; 
+        max-width: 38px !important;
+        min-width: 38px !important;
+        min-height: 38px !important;
         margin: 0 auto !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         font-size: 14px !important; 
         font-weight: 800 !important;
         transition: transform 0.1s ease, background-color 0.1s ease !important;
     }
     
     /* 已選取的日期：深咖啡色圓形按鈕 */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button[kind="primary"] { 
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) div.stButton > button[kind="primary"] { 
         background-color: #A07855 !important; 
         color: #FFFFFF !important; 
         border: 1px solid #A07855 !important; 
@@ -107,7 +114,7 @@ st.markdown("""
     }
 
     /* 點擊時可愛的縮小回饋感 */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button:active {
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) div.stButton > button:active {
         transform: scale(0.85) !important;
     }
 
@@ -188,6 +195,7 @@ if "cal_selected_date" not in st.session_state: st.session_state.cal_selected_da
 if "filter_to_single_day" not in st.session_state: st.session_state.filter_to_single_day = False
 if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
+# 新增功能：設定儲存狀態
 if "category_budgets" not in st.session_state: st.session_state.category_budgets = {}
 if "fixed_transactions" not in st.session_state: st.session_state.fixed_transactions = []
 if "projects" not in st.session_state: st.session_state.projects = ["無"]
@@ -302,7 +310,7 @@ tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
 # TAB 1: 🏠 主頁記帳
 # ==========================================
 with tab_home:
-    # 📌 置頂區塊：緊湊日曆 (含年份、月份獨立切換)
+    # 📌 置頂區塊：緊湊日曆 (含年/月獨立下拉選單)
     with st.container(border=True):
         st.markdown("<span class='sticky-marker'></span>", unsafe_allow_html=True)
         
