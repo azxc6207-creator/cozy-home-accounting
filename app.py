@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 🐾 完美防閃爍腳印日曆
+# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 🐾 終極腳印日曆
 # ==========================================
 st.markdown("""
 <style>
@@ -82,10 +82,25 @@ st.markdown("""
     .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FAF5F0 !important; }
     
     /* ========================================================
-       🐾 終極腳印按鈕樣式 (完整防破圖 + 徹底鎖死點擊背景)
+       🐾 終極腳印按鈕樣式 (100% 絕對安全 URL 編碼防破圖 + 徹底鎖死橢圓殘影)
        ======================================================== */
     
-    /* 1. 一般日子（未選取）：純白完整腳印 */
+    /* 1. 徹底消滅 Streamlit 內建按鈕的橢圓形背景跟動畫波紋 */
+    button.paw-btn::before, button.paw-btn::after, 
+    button.paw-btn *, button.paw-btn:active * {
+        background-color: transparent !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        display: none !important; /* 隱藏底層波紋 div */
+    }
+    
+    /* 因為我們隱藏了內部 div，所以要把字體設定拉回最外層按鈕 */
+    button.paw-btn p {
+        display: block !important;
+    }
+
+    /* 2. 一般日子（未選取）：純白完整腳印 */
     button.paw-btn { 
         border-radius: 0 !important; 
         background-color: transparent !important; 
@@ -96,30 +111,30 @@ st.markdown("""
         font-size: 15px !important; 
         font-weight: 900 !important;
         color: #5C4A3E !important; 
-        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iI0ZGRkZGRiI+PHBhdGggZD0iTTIyNi41IDkyLjljMTQuMyA3My0zOS45IDEzMC03Ny4yIDEzMGMtMjIuMyAwLTUzLTE1LjMtNTMtNDcuOSBDOTYuMyAxMDUgMTYyLjIgMCAyMjYuNSA5Mi45em0zNS4zLTQ1Yy0yMC40IDAtNDMuOSAxNC44LTQzLjkgNDUuOWMwIDMzLjIgNDEgMTE0LjYgOTYgMTE0LjZjMjQuNiAwIDUyLjItMTUuMiA1Mi4yLTQ3LjZDMzY2LjEgODcuMiAyODQuNSA0Ny45IDI2MS44IDQ3Ljl6TTExMS40IDM0OC4zYzQ0LjUgMCA2NS4yLTY3IDExNC4zLTY3YzQzLjYgMCA2MS44IDU5LjcgMTEyLjUgNTkuN2M1MiAwIDczLjgtNTAuOSA3My44LTk1LjJjMC0zOS42LTIyLjYtODItNjguOC04MmMtNDEuMiAwLTgyLjggNTUuNS0xMjIuNiA1NS41Yy00MC4yIDAtODAtNTItMTIyLjMtNTJjLTMxLjQgIDAtNjYgMjIuOC02NiA4MS45QzMyLjMgMzIyLjIgNzcgMzQ4LjMgMTExLjQgMzQ4LjN6TTY3LjMgMjI0LjNjLTIzLjQgMC01MS41LTE1LjEtNTEuNS00Ny41YzAtMzQuNSAzOS41LTExNS4zIDk1LjgtMTE1LjNjMjQuNyAwIDUyLjQgMTUuMiA1Mi40IDQ3LjZDMTY0IDE4Ni4yIDg4LjUgMjI0LjMgNjcuMyAyMjQuM3oiLz48L3N2Zz4=") !important;
+        /* 使用最高相容性的百分比 URL 編碼 */
+        background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M226.5%2092.9c14.3%2073-39.9%20130-77.2%20130c-22.3%200-53-15.3-53-47.9C96.3%20105%20162.2%200%20226.5%2092.9zm35.3-45c-20.4%200-43.9%2014.8-43.9%2045.9c0%2033.2%2041%20114.6%2096%20114.6c24.6%200%2052.2-15.2%2052.2-47.6C366.1%2087.2%20284.5%2047.9%20261.8%2047.9zM111.4%20348.3c44.5%200%2065.2-67%20114.3-67c43.6%200%2061.8%2059.7%20112.5%2059.7c52%200%2073.8-50.9%2073.8-95.2c0-39.6-22.6-82-68.8-82c-41.2%200-82.8%2055.5-122.6%2055.5c-40.2%200-80-52-122.3-52c-31.4%200-66%2022.8-66%2081.9C32.3%20322.2%2077%20348.3%20111.4%20348.3zM67.3%20224.3c-23.4%200-51.5-15.1-51.5-47.5c0-34.5%2039.5-115.3%2095.8-115.3c24.7%200%2052.4%2015.2%2052.4%2047.6C164%20186.2%2088.5%20224.3%2067.3%20224.3z%22%2F%3E%3C%2Fsvg%3E") !important;
         background-size: 38px 38px !important;
         background-position: center bottom 2px !important;
         background-repeat: no-repeat !important;
         padding-top: 14px !important; 
-        transition: transform 0.1s ease !important;
+        transition: transform 0.1s ease !important; 
     }
     
-    /* 2. 已選取的日子：深咖啡色完整腳印 */
+    /* 3. 已選取的日子：深咖啡色完整腳印 */
     button.paw-btn[kind="primary"] { 
         color: #FFFFFF !important; 
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
-        background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgZmlsbD0iIzdBNU3M0MiI+PHBhdGggZD0iTTIyNi41IDkyLjljMTQuMyA3My0zOS45IDEzMC03Ny4yIDEzMGMtMjIuMyAwLTUzLTE1LjMtNTMtNDcuOSBDOTYuMyAxMDUgMTYyLjIgMCAyMjYuNSA5Mi45em0zNS4zLTQ1Yy0yMC40IDAtNDMuOSAxNC44LTQzLjkgNDUuOWMwIDMzLjIgNDEgMTE0LjYgOTYgMTE0LjZjMjQuNiAwIDUyLjItMTUuMiA1Mi4yLTQ3LjZDMzY2LjEgODcuMiAyODQuNSA0Ny45IDI2MS44IDQ3Ljl6TTExMS40IDM0OC4zYzQ0LjUgMCA2NS4yLTY3IDExNC4zLTY3YzQzLjYgMCA2MS44IDU5LjcgMTEyLjUgNTkuN2M1MiAwIDczLjgtNTAuOSA3My44LTk1LjJjMC0zOS42LTIyLjYtODItNjguOC04MmMtNDEuMiAwLTgyLjggNTUuNS0xMjIuNiA1NS41Yy00MC4yIDAtODAtNTItMTIyLjMtNTJjLTMxLjQgIDAtNjYgMjIuOC02NiA4MS45QzMyLjMgMzIyLjIgNzcgMzQ4LjMgMTExLjQgMzQ4LjN6TTY3LjMgMjI0LjNjLTIzLjQgMC01MS41LTE1LjEtNTEuNS00Ny41YzAtMzQuNSAzOS41LTExNS4zIDk1LjgtMTE1LjNjMjQuNyAwIDUyLjQgMTUuMiA1Mi40IDQ3LjZDMTY0IDE4Ni4yIDg4LjUgMjI0LjMgNjcuMyAyMjQuM3oiLz48L3N2Zz4=") !important;
+        background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20512%20512%22%3E%3Cpath%20fill%3D%22%237A573C%22%20d%3D%22M226.5%2092.9c14.3%2073-39.9%20130-77.2%20130c-22.3%200-53-15.3-53-47.9C96.3%20105%20162.2%200%20226.5%2092.9zm35.3-45c-20.4%200-43.9%2014.8-43.9%2045.9c0%2033.2%2041%20114.6%2096%20114.6c24.6%200%2052.2-15.2%2052.2-47.6C366.1%2087.2%20284.5%2047.9%20261.8%2047.9zM111.4%20348.3c44.5%200%2065.2-67%20114.3-67c43.6%200%2061.8%2059.7%20112.5%2059.7c52%200%2073.8-50.9%2073.8-95.2c0-39.6-22.6-82-68.8-82c-41.2%200-82.8%2055.5-122.6%2055.5c-40.2%200-80-52-122.3-52c-31.4%200-66%2022.8-66%2081.9C32.3%20322.2%2077%20348.3%20111.4%20348.3zM67.3%20224.3c-23.4%200-51.5-15.1-51.5-47.5c0-34.5%2039.5-115.3%2095.8-115.3c24.7%200%2052.4%2015.2%2052.4%2047.6C164%20186.2%2088.5%20224.3%2067.3%20224.3z%22%2F%3E%3C%2Fsvg%3E") !important;
     }
 
-    /* 3. 強制鎖死所有點擊/聚焦狀態，防止彈出橢圓形殘影 */
+    /* 4. 強制鎖死所有點擊/聚焦狀態，防止彈出橢圓形殘影 */
     button.paw-btn:hover, button.paw-btn:focus, button.paw-btn:active, button.paw-btn:focus-visible,
     button.paw-btn[kind="primary"]:hover, button.paw-btn[kind="primary"]:focus, button.paw-btn[kind="primary"]:active, button.paw-btn[kind="primary"]:focus-visible {
         background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        transform: scale(0.92) !important;
+        border-color: transparent !important;
+        transform: scale(0.85) !important; /* 點擊時可愛地縮小一下 */
     }
 
     /* 其他版面美化 */
@@ -144,6 +159,8 @@ components.html(
             const txt = btn.innerText.trim();
             if (!isNaN(txt) && txt !== '' && Number(txt) >= 1 && Number(txt) <= 31 && txt.length <= 2) {
                 btn.classList.add('paw-btn');
+                // 額外保險：強制清除按鈕內部的底色
+                btn.style.backgroundColor = 'transparent';
             }
         });
 
@@ -176,7 +193,7 @@ components.html(
         });
     }
 
-    setInterval(optimizeMobileInputs, 400); 
+    setInterval(optimizeMobileInputs, 300); 
     </script>
     """,
     height=0, width=0
@@ -207,6 +224,7 @@ if "cal_selected_date" not in st.session_state: st.session_state.cal_selected_da
 if "filter_to_single_day" not in st.session_state: st.session_state.filter_to_single_day = False
 if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
+# 新增功能：設定儲存狀態
 if "category_budgets" not in st.session_state: st.session_state.category_budgets = {}
 if "fixed_transactions" not in st.session_state: st.session_state.fixed_transactions = []
 if "projects" not in st.session_state: st.session_state.projects = ["無"]
@@ -253,6 +271,7 @@ def trigger_auto_fixed_transactions():
         triggered = False
         
         for ft in st.session_state.fixed_transactions:
+            # 容錯解析日期
             s_date_str = ft.get('start_date', '2000-01-01')
             e_date_str = ft.get('end_date', '2099-12-31')
             try: s_date = datetime.strptime(s_date_str, "%Y-%m-%d").date()
@@ -260,6 +279,7 @@ def trigger_auto_fixed_transactions():
             try: e_date = datetime.strptime(e_date_str, "%Y-%m-%d").date()
             except: e_date = date(2099, 12, 31)
 
+            # 判斷是否符合區間與日期條件
             if s_date <= today <= e_date:
                 if today.day >= ft.get('day', 1) and ft.get('last_month') != current_ym:
                     new_id = f"{'EXP' if ft.get('type')=='支出' else 'INC'}-AUTO-{int(datetime.now().timestamp()*1000)}"
