@@ -98,27 +98,33 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 封鎖日期鍵盤 + 安全隱藏平台浮標
+# ⚡ 隱藏 JavaScript: 強制封鎖日期鍵盤彈出 + 隱藏平台浮標
 # ==========================================
 components.html(
     """
     <script>
     function optimizeMobileInputs() {
         const doc = window.parent.document;
-        # 1. 日期選擇器：徹底封鎖鍵盤彈出
-        const dateContainers = doc.querySelectorAll('[data-testid="stDateInput"]');
-        dateContainers.forEach(container => {
-            container.querySelectorAll('input').forEach(input => {
-                if (input.getAttribute('inputmode') !== 'none') {
-                    input.setAttribute('inputmode', 'none'); 
-                    input.setAttribute('readonly', 'true');
-                    input.style.caretColor = 'transparent'; 
-                    input.style.cursor = 'pointer';
-                }
-            });
+        
+        // 1. 日期選擇器：徹底封鎖鍵盤彈出 (加入 blur 與 inputmode/readonly 雙重防護)
+        const dateInputs = doc.querySelectorAll('[data-testid="stDateInput"] input');
+        dateInputs.forEach(input => {
+            input.setAttribute('inputmode', 'none'); 
+            input.setAttribute('readonly', 'readonly');
+            input.style.caretColor = 'transparent'; 
+            input.style.cursor = 'pointer';
+            
+            // 監聽點擊，直接讓鍵盤無法跳出
+            if (!input.dataset.locked) {
+                input.dataset.locked = 'true';
+                input.addEventListener('focus', function(e) {
+                    e.preventDefault();
+                    this.blur();
+                });
+            }
         });
         
-        # 2. 金額輸入框：啟用簡易數字鍵盤
+        // 2. 金額輸入框：啟用簡易數字鍵盤
         doc.querySelectorAll('input[type="text"]').forEach(input => {
             const label = input.getAttribute('aria-label') || '';
             if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
@@ -126,7 +132,7 @@ components.html(
             }
         });
         
-        # 3. 安全隱藏 Streamlit 平台浮標
+        // 3. 安全隱藏 Streamlit 平台浮標
         doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"], #MainMenu, footer, header').forEach(el => {
             el.style.display = 'none';
             el.style.opacity = '0';
@@ -134,7 +140,7 @@ components.html(
         });
     }
 
-    setInterval(optimizeMobileInputs, 600); 
+    setInterval(optimizeMobileInputs, 300); 
     </script>
     """,
     height=0, width=0
@@ -212,7 +218,6 @@ def trigger_auto_fixed_transactions():
         triggered = False
         
         for ft in st.session_state.fixed_transactions:
-            # 容錯解析日期
             s_date_str = ft.get('start_date', '2000-01-01')
             e_date_str = ft.get('end_date', '2099-12-31')
             try: s_date = datetime.strptime(s_date_str, "%Y-%m-%d").date()
@@ -220,7 +225,6 @@ def trigger_auto_fixed_transactions():
             try: e_date = datetime.strptime(e_date_str, "%Y-%m-%d").date()
             except: e_date = date(2099, 12, 31)
 
-            # 判斷是否符合區間與日期條件
             if s_date <= today <= e_date:
                 if today.day >= ft.get('day', 1) and ft.get('last_month') != current_ym:
                     new_id = f"{'EXP' if ft.get('type')=='支出' else 'INC'}-AUTO-{int(datetime.now().timestamp()*1000)}"
@@ -282,20 +286,17 @@ tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
 # TAB 1: 🏠 主頁記帳
 # ==========================================
 with tab_home:
-    # 📌 置頂區塊：緊湊日曆 (含獨立年份、月份選單)
+    # 📌 置頂區塊：緊湊日曆
     with st.container(border=True):
         st.markdown("<span class='sticky-marker'></span>", unsafe_allow_html=True)
-        
-        cal_head_1, cal_head_2, cal_head_3 = st.columns([1.5, 0.9, 0.7])
+        cal_head_1, cal_head_2 = st.columns([1.5, 1])
         with cal_head_1:
-            st.markdown(f"<div style='font-weight:900; font-size:19px; color:#3D322C; padding-top:4px;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='font-weight:900; font-size:20px; color:#3D322C; padding-top:4px;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
         with cal_head_2:
-            year_list = list(range(2020, 2035))
-            sel_year = st.selectbox("切換年份", year_list, index=year_list.index(st.session_state.cal_selected_date.year), label_visibility="collapsed")
-        with cal_head_3:
             sel_month = st.selectbox("切換月份", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
             
-        if sel_year != st.session_state.cal_selected_date.year or sel_month != st.session_state.cal_selected_date.month:
+        sel_year = st.session_state.cal_selected_date.year
+        if sel_month != st.session_state.cal_selected_date.month:
             st.session_state.cal_selected_date = date(sel_year, sel_month, 1)
             st.rerun()
 
@@ -353,7 +354,7 @@ with tab_home:
                     if st.form_submit_button("確認新增", type="primary", use_container_width=True):
                         st.toast("💾 儲存中...", icon="⏳")
                         i_amount = parse_math_expr(i_amount_str)
-                        new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(e_note) if 'e_note' in locals() else "", "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
+                        new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
                         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
                         save_and_sync()
                         st.toast("🎉 收入新增成功！")
@@ -804,7 +805,7 @@ with tab_settings:
             col_icon, col_name = st.columns([1, 2])
             new_i_icon = col_icon.text_input("Icon", value="💵")
             new_i_name = col_name.text_input("名稱")
-            if st.form_submit_button("➕ 新增", type="primary") and new_i_name:
+            if st.form_submit_button("➕ 新ઝ", type="primary") and new_i_name:
                 st.toast("💾 儲存中...", icon="⏳")
                 st.session_state.income_categories.append(f"{new_i_icon.strip()} {new_i_name.strip()}")
                 save_and_sync()
