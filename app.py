@@ -88,7 +88,7 @@ st.markdown("""
     .stButton > button, div[data-testid="stPopover"] > button { background-color: #FFFFFF !important; color: #3D322C !important; border: 1px solid #E2D5C5 !important; border-radius: 10px !important; font-weight: 800 !important; font-size: 14px !important; padding: 0 !important; width: 100% !important; min-height: 34px !important; box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; display: inline-flex !important; justify-content: center !important; align-items: center !important; }
     .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FAF5F0 !important; }
     .stButton > button[kind="primary"] { background-color: #A07855 !important; color: #FFFFFF !important; border: 1px solid #A07855 !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button { border-radius: 50% !important; background-color: #FFFFFF !important; color: #5C4A3E !important; border: 1px solid #E2D5C5 !important; box-shadow: 0 2px 4px rgba(160,120,85,0.05) !important; height: 38px !important; width: 38px !important; min-width: 38px !important; margin: 0 auto !important; font-size: 14px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button { border-radius: 10px !important; background-color: #FFFFFF !important; color: #5C4A3E !important; border: 1px solid #E2D5C5 !important; box-shadow: 0 2px 4px rgba(160,120,85,0.05) !important; height: 38px !important; width: 38px !important; min-width: 38px !important; aspect-ratio: 1 / 1 !important; box-sizing: border-box !important; padding: 0 !important; margin: 0 auto !important; font-size: 14px !important; }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button[kind="primary"] { background-color: #A07855 !important; color: #FFFFFF !important; border: 1px solid #A07855 !important; }
     div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
     .stTabs [data-baseweb="tab-list"] { gap: 6px; background-color: #E8DDD0; padding: 6px; border-radius: 25px; margin-bottom: 14px; }
@@ -98,7 +98,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 僅啟動金額數字鍵盤與平台浮標隱藏（保證日曆 100% 靈敏點擊）
+# ⚡ 隱藏 JavaScript: 僅啟動金額數字鍵盤、日期輸入框防鍵盤、與平台浮標隱藏（保證日曆 100% 靈敏點擊）
 # ==========================================
 components.html(
     """
@@ -111,6 +111,14 @@ components.html(
             const label = input.getAttribute('aria-label') || '';
             if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
                 input.setAttribute('inputmode', 'tel'); 
+            }
+        });
+
+        // 1.5 日期輸入框：禁止跳出鍵盤，只允許點選日曆
+        doc.querySelectorAll('div[data-testid="stDateInput"] input').forEach(input => {
+            if (!input.hasAttribute('readonly')) {
+                input.setAttribute('readonly', 'readonly');
+                input.setAttribute('inputmode', 'none');
             }
         });
         
