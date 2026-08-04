@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 日曆置頂
+# 2. 終極防跑版 CSS + 日曆置頂 + 專案標籤隱藏與字體優化
 # ==========================================
 st.markdown("""
 <style>
@@ -98,7 +98,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 徹底強力封鎖日期鍵盤彈出 + 隱藏平台浮標
+# ⚡ 隱藏 JavaScript: 僅啟動金額數字鍵盤與平台浮標隱藏（保證日曆 100% 靈敏點擊）
 # ==========================================
 components.html(
     """
@@ -106,24 +106,7 @@ components.html(
     function optimizeMobileInputs() {
         const doc = window.parent.document;
         
-        // 1. 日期選擇器：強制攔截焦點，絕對不讓虛擬鍵盤彈出
-        const dateInputs = doc.querySelectorAll('[data-testid="stDateInput"] input');
-        dateInputs.forEach(input => {
-            input.setAttribute('inputmode', 'none'); 
-            input.setAttribute('readonly', 'true');
-            
-            if (!input.dataset.noKeyboard) {
-                input.dataset.noKeyboard = 'true';
-                input.addEventListener('focus', function(e) {
-                    this.blur(); // 一旦取得焦點立刻強制收起鍵盤
-                });
-                input.addEventListener('click', function(e) {
-                    this.blur();
-                });
-            }
-        });
-        
-        // 2. 金額輸入框：啟用簡易數字鍵盤
+        // 1. 金額輸入框：啟用簡易數字鍵盤
         doc.querySelectorAll('input[type="text"]').forEach(input => {
             const label = input.getAttribute('aria-label') || '';
             if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
@@ -131,7 +114,7 @@ components.html(
             }
         });
         
-        // 3. 安全隱藏 Streamlit 平台浮標
+        // 2. 安全隱藏 Streamlit 平台浮標
         doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"], #MainMenu, footer, header').forEach(el => {
             el.style.display = 'none';
             el.style.opacity = '0';
@@ -139,7 +122,7 @@ components.html(
         });
     }
 
-    setInterval(optimizeMobileInputs, 200); 
+    setInterval(optimizeMobileInputs, 600); 
     </script>
     """,
     height=0, width=0
@@ -444,7 +427,7 @@ with tab_home:
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ==========================================
-    # 📝 可摺疊 (Expander) 收支明細區塊
+    # 📝 可摺疊 (Expander) 收支明細區塊 (已移除 nan 標籤、品項字體微縮小)
     # ==========================================
     with st.expander("📝 展開 / 收起各項明細", expanded=True):
         if filtered_df.empty:
@@ -458,9 +441,13 @@ with tab_home:
                     c_name, c_amt, c_edit, c_del = st.columns([3.5, 2.5, 1, 1])
                     
                     with c_name:
-                        proj_str = str(row.get('專案', ''))
-                        proj_tag = f"<span style='color:#A07855; font-size:11px; border:1px solid #D4C3B3; padding:1px 4px; border-radius:4px; margin-right:4px;'>{proj_str}</span>" if proj_str and proj_str != "無" else ""
-                        st.markdown(f"<div style='font-size:16px; font-weight:800; color:#3D322C; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{proj_tag}{row['項目']}</div>", unsafe_allow_html=True)
+                        proj_val = row.get('專案', '')
+                        proj_str = str(proj_val) if proj_val is not None else ''
+                        has_proj = proj_str and proj_str.strip() != "" and proj_str.lower() != "nan" and proj_str != "無"
+                        proj_tag = f"<span style='color:#A07855; font-size:11px; border:1px solid #D4C3B3; padding:1px 4px; border-radius:4px; margin-right:4px;'>{proj_str}</span>" if has_proj else ""
+                        
+                        # 調整品項名稱字體大小為 15px 避免過擠
+                        st.markdown(f"<div style='font-size:15px; font-weight:800; color:#3D322C; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{proj_tag}{row['項目']}</div>", unsafe_allow_html=True)
                         st.markdown(f"<div style='font-size:11px; color:#8C7A6B; margin-top:4px;'>{row['記帳人']} · {r_date.month}/{r_date.day}</div>", unsafe_allow_html=True)
                         
                     with c_amt:
