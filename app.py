@@ -98,7 +98,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 僅針對金額輸入框啟用數字鍵盤 + 隱藏平台浮標 (絕不阻擋日曆點擊)
+# ⚡ 隱藏 JavaScript: 徹底強力封鎖日期鍵盤彈出 + 隱藏平台浮標
 # ==========================================
 components.html(
     """
@@ -106,7 +106,24 @@ components.html(
     function optimizeMobileInputs() {
         const doc = window.parent.document;
         
-        // 1. 金額輸入框：啟用簡易數字鍵盤
+        // 1. 日期選擇器：強制攔截焦點，絕對不讓虛擬鍵盤彈出
+        const dateInputs = doc.querySelectorAll('[data-testid="stDateInput"] input');
+        dateInputs.forEach(input => {
+            input.setAttribute('inputmode', 'none'); 
+            input.setAttribute('readonly', 'true');
+            
+            if (!input.dataset.noKeyboard) {
+                input.dataset.noKeyboard = 'true';
+                input.addEventListener('focus', function(e) {
+                    this.blur(); // 一旦取得焦點立刻強制收起鍵盤
+                });
+                input.addEventListener('click', function(e) {
+                    this.blur();
+                });
+            }
+        });
+        
+        // 2. 金額輸入框：啟用簡易數字鍵盤
         doc.querySelectorAll('input[type="text"]').forEach(input => {
             const label = input.getAttribute('aria-label') || '';
             if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
@@ -114,7 +131,7 @@ components.html(
             }
         });
         
-        # 2. 安全隱藏 Streamlit 平台浮標
+        // 3. 安全隱藏 Streamlit 平台浮標
         doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"], #MainMenu, footer, header').forEach(el => {
             el.style.display = 'none';
             el.style.opacity = '0';
@@ -122,7 +139,7 @@ components.html(
         });
     }
 
-    setInterval(optimizeMobileInputs, 600); 
+    setInterval(optimizeMobileInputs, 200); 
     </script>
     """,
     height=0, width=0
