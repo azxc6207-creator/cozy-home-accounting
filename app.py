@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 日曆絕對置頂 + 腳印圖示日曆
+# 2. 終極防跑版 CSS + 彈窗防遮擋留白 + 日曆置頂 + 🐾 專屬腳印日曆
 # ==========================================
 st.markdown("""
 <style>
@@ -50,10 +50,15 @@ st.markdown("""
 
     /* 🚀 解鎖 Streamlit 原生阻擋，讓日曆可以完美置頂！ */
     html, body { overflow-y: auto !important; }
-    .stApp, .main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stVerticalBlock"], div[role="tabpanel"], div[role="tabpanel"] > div { overflow: visible !important; }
+    .stApp, .main, .block-container, 
+    [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"], 
+    div[data-testid="stVerticalBlock"], div[data-testid="stTabs"], div[role="tabpanel"], div[role="tabpanel"] > div {
+        overflow: visible !important;
+    }
 
-    /* 📌 日曆永遠置頂 */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) {
+    /* 📌 日曆永遠置頂 (鎖定含有 sticky-marker 的 Container) */
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker),
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type {
         position: -webkit-sticky !important; position: sticky !important; top: 0px !important; z-index: 99999 !important;
         backdrop-filter: blur(14px) !important; background: rgba(253, 249, 245, 0.97) !important; margin-top: -10px !important;
         border-radius: 0 0 16px 16px !important; box-shadow: 0 6px 16px rgba(160, 120, 85, 0.12) !important; border-bottom: 2px solid #EAE0D5 !important;
@@ -65,12 +70,12 @@ st.markdown("""
         html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"], html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="column"] { width: 0 !important; min-width: 0 !important; flex: 1 1 0% !important; padding: 0 1px !important; }
     }
 
-    /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 */
+    /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 (大幅增加底部留白防遮擋) */
     div[data-testid="stPopoverBody"] { 
         max-height: 65vh !important; 
         overflow-y: auto !important; 
         -webkit-overflow-scrolling: touch !important; 
-        padding: 16px 16px 100px 16px !important; 
+        padding: 16px 16px 100px 16px !important; /* 確保底部絕對有空間滑動，防止按鈕被吃掉 */
     }
     div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; flex-direction: column !important; }
     div[data-testid="stPopoverBody"] div[data-testid="stColumn"], div[data-testid="stPopoverBody"] div[data-testid="column"] { width: 100% !important; flex: none !important; }
@@ -84,38 +89,46 @@ st.markdown("""
     [data-testid="stExpander"] { border: 1px solid #EAE0D5 !important; border-radius: 12px !important; background-color: transparent !important; margin-bottom: 12px !important; }
     [data-testid="stExpander"] summary p { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
 
-    /* 🔘 按鈕視覺優化 */
+    /* 🔘 基礎按鈕視覺優化 */
     .stButton > button, div[data-testid="stPopover"] > button { background-color: #FFFFFF !important; color: #3D322C !important; border: 1px solid #E2D5C5 !important; border-radius: 10px !important; font-weight: 800 !important; font-size: 14px !important; padding: 0 !important; width: 100% !important; min-height: 34px !important; box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; display: inline-flex !important; justify-content: center !important; align-items: center !important; }
     .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FAF5F0 !important; }
     .stButton > button[kind="primary"] { background-color: #A07855 !important; color: #FFFFFF !important; border: 1px solid #A07855 !important; }
     
     /* ========================================================
-       🐾 日曆腳印按鈕樣式大改造
+       🐾 日曆腳印按鈕樣式大改造 (白底實心腳印 / 咖啡色實心腳印)
        ======================================================== */
     /* 一般日子（未選取）：白色腳印 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button,
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button { 
         border-radius: 0 !important; 
         background-color: transparent !important; 
         border: none !important; 
         box-shadow: none !important; 
-        height: 42px !important; 
+        height: 44px !important; 
         width: 100% !important;
         font-size: 14px !important; 
         font-weight: 900 !important;
         color: #5C4A3E !important; /* 白色腳印上的深色數字 */
-        /* 純白腳印向量圖 */
+        /* 純白腳印 SVG 向量圖 */
         background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="%23FFFFFF"><path d="M226.5 92.9c14.3 73-39.9 130-77.2 130c-22.3 0-53-15.3-53-47.9C96.3 105 162.2 0 226.5 92.9zm35.3-45c-20.4 0-43.9 14.8-43.9 45.9c0 33.2 41 114.6 96 114.6c24.6 0 52.2-15.2 52.2-47.6C366.1 87.2 284.5 47.9 261.8 47.9zM111.4 348.3c44.5 0 65.2-67 114.3-67c43.6 0 61.8 59.7 112.5 59.7c52 0 73.8-50.9 73.8-95.2c0-39.6-22.6-82-68.8-82c-41.2 0-82.8 55.5-122.6 55.5c-40.2 0-80-52-122.3-52c-31.4 0-66 22.8-66 81.9C32.3 322.2 77 348.3 111.4 348.3zM67.3 224.3c-23.4 0-51.5-15.1-51.5-47.5c0-34.5 39.5-115.3 95.8-115.3c24.7 0 52.4 15.2 52.4 47.6C164 186.2 88.5 224.3 67.3 224.3z"/></svg>') !important;
-        background-size: 34px 34px !important;
+        background-size: 38px 38px !important;
         background-position: center bottom 2px !important;
         background-repeat: no-repeat !important;
-        padding-top: 10px !important; /* 將數字推到大肉球的中央 */
+        padding-top: 12px !important; /* 將數字推到大肉球的中央 */
+    }
+    
+    /* 防止懸停時跑出白框 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button:hover {
+        background-color: transparent !important;
+        opacity: 0.85 !important;
     }
     
     /* 已選取的日子：深咖啡色腳印 */
+    div[data-testid="stVerticalBlockBorderWrapper"]:first-of-type .stButton > button[kind="primary"],
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button[kind="primary"] { 
         color: #FFFFFF !important; /* 深色腳印上的白色數字 */
         background-color: transparent !important;
-        /* 莫蘭迪深咖啡色腳印向量圖 */
+        /* 莫蘭迪深咖啡色腳印 SVG 向量圖 */
         background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="%237A573C"><path d="M226.5 92.9c14.3 73-39.9 130-77.2 130c-22.3 0-53-15.3-53-47.9C96.3 105 162.2 0 226.5 92.9zm35.3-45c-20.4 0-43.9 14.8-43.9 45.9c0 33.2 41 114.6 96 114.6c24.6 0 52.2-15.2 52.2-47.6C366.1 87.2 284.5 47.9 261.8 47.9zM111.4 348.3c44.5 0 65.2-67 114.3-67c43.6 0 61.8 59.7 112.5 59.7c52 0 73.8-50.9 73.8-95.2c0-39.6-22.6-82-68.8-82c-41.2 0-82.8 55.5-122.6 55.5c-40.2 0-80-52-122.3-52c-31.4 0-66 22.8-66 81.9C32.3 322.2 77 348.3 111.4 348.3zM67.3 224.3c-23.4 0-51.5-15.1-51.5-47.5c0-34.5 39.5-115.3 95.8-115.3c24.7 0 52.4 15.2 52.4 47.6C164 186.2 88.5 224.3 67.3 224.3z"/></svg>') !important;
     }
 
@@ -229,7 +242,7 @@ def save_and_sync():
     
     try: 
         conn.update(data=final_df)
-        st.cache_data.clear()
+        st.cache_data.clear() # 🚀 儲存後強制清除快取
     except: 
         pass
 
@@ -241,6 +254,7 @@ def trigger_auto_fixed_transactions():
         triggered = False
         
         for ft in st.session_state.fixed_transactions:
+            # 容錯解析日期
             s_date_str = ft.get('start_date', '2000-01-01')
             e_date_str = ft.get('end_date', '2099-12-31')
             try: s_date = datetime.strptime(s_date_str, "%Y-%m-%d").date()
@@ -248,6 +262,7 @@ def trigger_auto_fixed_transactions():
             try: e_date = datetime.strptime(e_date_str, "%Y-%m-%d").date()
             except: e_date = date(2099, 12, 31)
 
+            # 判斷是否符合區間與日期條件
             if s_date <= today <= e_date:
                 if today.day >= ft.get('day', 1) and ft.get('last_month') != current_ym:
                     new_id = f"{'EXP' if ft.get('type')=='支出' else 'INC'}-AUTO-{int(datetime.now().timestamp()*1000)}"
@@ -312,6 +327,7 @@ with tab_home:
     # 📌 置頂區塊：緊湊日曆
     with st.container(border=True):
         st.markdown("<span class='sticky-marker'></span>", unsafe_allow_html=True)
+        
         cal_head_1, cal_head_2 = st.columns([1.5, 1])
         with cal_head_1:
             st.markdown(f"<div style='font-weight:900; font-size:20px; color:#3D322C; padding-top:4px;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
