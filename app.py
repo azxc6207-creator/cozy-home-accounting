@@ -18,7 +18,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. 終極防跑版 CSS + 日曆絕對置頂 + Expander 優化
+# 2. 終極防跑版 CSS + 日曆絕對置頂 + 徹底隱藏 Streamlit 官方 Logo
 # ==========================================
 st.markdown("""
 <style>
@@ -38,155 +38,54 @@ st.markdown("""
         background-attachment: fixed !important;
     }
     
-    /* 隱藏頂端預設白框與頁首頁尾 */
+    /* 🚫 徹底移除 Streamlit 官方 Logo、頂端選單與頁尾 */
+    #MainMenu, footer, header, [data-testid="stHeader"] { visibility: hidden !important; display: none !important; }
+    div[data-testid="stStatusWidget"], a[href*="streamlit.app"], .stAppToolbar, [data-testid="stToolbar"], [data-testid="stDecoration"], div[class*="viewerBadge"] { display: none !important; }
     [data-testid="stAppViewContainer"] { background: transparent !important; }
-    header[data-testid="stHeader"], footer { display: none !important; }
 
     /* 📱 限制最大寬度為手機尺寸 */
     .block-container {
-        max-width: 480px !important;
-        margin: 0 auto !important;
-        padding: 1rem 0.5rem 3rem 0.5rem !important;
+        max-width: 480px !important; margin: 0 auto !important; padding: 1rem 0.5rem 3rem 0.5rem !important;
     }
 
-    /* ========================================================
-       🚀 解鎖 Streamlit 原生阻擋，讓日曆可以完美置頂！
-       ======================================================== */
+    /* 🚀 解鎖 Streamlit 原生阻擋，讓日曆可以完美置頂！ */
     html, body { overflow-y: auto !important; }
-    .stApp, .main, .block-container, 
-    [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"], 
-    div[data-testid="stVerticalBlock"], div[data-testid="stTabs"], div[role="tabpanel"], div[role="tabpanel"] > div {
-        overflow: visible !important;
-    }
+    .stApp, .main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stVerticalBlock"], div[role="tabpanel"], div[role="tabpanel"] > div { overflow: visible !important; }
 
-    /* 📌 日曆永遠置頂 (鎖定含有 sticky-marker 的 Container) */
+    /* 📌 日曆永遠置頂 */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) {
-        position: -webkit-sticky !important;
-        position: sticky !important;
-        top: 0px !important;
-        z-index: 99999 !important;
-        backdrop-filter: blur(14px) !important;
-        background: rgba(253, 249, 245, 0.97) !important;
-        margin-top: -10px !important;
-        border-radius: 0 0 16px 16px !important;
-        box-shadow: 0 6px 16px rgba(160, 120, 85, 0.12) !important;
-        border-bottom: 2px solid #EAE0D5 !important;
+        position: -webkit-sticky !important; position: sticky !important; top: 0px !important; z-index: 99999 !important;
+        backdrop-filter: blur(14px) !important; background: rgba(253, 249, 245, 0.97) !important; margin-top: -10px !important;
+        border-radius: 0 0 16px 16px !important; box-shadow: 0 6px 16px rgba(160, 120, 85, 0.12) !important; border-bottom: 2px solid #EAE0D5 !important;
     }
 
-    /* ========================================================
-       🚀 手機橫向不折行霸道 CSS 覆寫
-       ======================================================== */
+    /* 🚀 手機橫向不折行霸道 CSS 覆寫 */
     @media screen and (max-width: 1024px) {
-        html body .stApp div[data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            align-items: center !important;
-            width: 100% !important;
-            gap: 4px !important;
-        }
-        
-        html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"],
-        html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-            width: 0 !important;
-            min-width: 0 !important;
-            flex: 1 1 0% !important;
-            padding: 0 1px !important;
-        }
+        html body .stApp div[data-testid="stHorizontalBlock"] { display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important; align-items: center !important; width: 100% !important; gap: 4px !important; }
+        html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"], html body .stApp div[data-testid="stHorizontalBlock"] > div[data-testid="column"] { width: 0 !important; min-width: 0 !important; flex: 1 1 0% !important; padding: 0 1px !important; }
     }
 
     /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 */
-    div[data-testid="stPopoverBody"] {
-        max-height: 60vh !important;
-        overflow-y: scroll !important;
-        -webkit-overflow-scrolling: touch !important;
-        padding: 12px 14px 60px 14px !important;
-    }
-
-    div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] {
-        flex-wrap: wrap !important;
-        flex-direction: column !important;
-    }
-    div[data-testid="stPopoverBody"] div[data-testid="stColumn"],
-    div[data-testid="stPopoverBody"] div[data-testid="column"] {
-        width: 100% !important;
-        flex: none !important;
-    }
-    
-    div[data-testid="stPopoverBody"] form {
-        margin-bottom: 60px !important;
-        padding-bottom: 20px !important;
-    }
+    div[data-testid="stPopoverBody"] { max-height: 60vh !important; overflow-y: scroll !important; -webkit-overflow-scrolling: touch !important; padding: 12px 14px 60px 14px !important; }
+    div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; flex-direction: column !important; }
+    div[data-testid="stPopoverBody"] div[data-testid="stColumn"], div[data-testid="stPopoverBody"] div[data-testid="column"] { width: 100% !important; flex: none !important; }
+    div[data-testid="stPopoverBody"] form { margin-bottom: 60px !important; padding-bottom: 20px !important; }
 
     /* 📌 容器卡片統一樣式 */
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #FDF9F5 !important;
-        border-radius: 12px !important;
-        padding: 8px 10px !important;
-        margin-bottom: 8px !important;
-        border: 1px solid #EAE0D5 !important;
-        box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important;
-    }
+    div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #FDF9F5 !important; border-radius: 12px !important; padding: 8px 10px !important; margin-bottom: 8px !important; border: 1px solid #EAE0D5 !important; box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important; }
     div[data-testid="stVerticalBlockBorderWrapper"] p { margin-bottom: 0 !important; }
 
     /* 📂 收放功能 (Expander) 樣式美化 */
-    [data-testid="stExpander"] {
-        border: 1px solid #EAE0D5 !important;
-        border-radius: 12px !important;
-        background-color: transparent !important;
-        margin-bottom: 12px !important;
-    }
-    [data-testid="stExpander"] summary p {
-        font-size: 16px !important;
-        font-weight: 800 !important;
-        color: #7A573C !important;
-    }
+    [data-testid="stExpander"] { border: 1px solid #EAE0D5 !important; border-radius: 12px !important; background-color: transparent !important; margin-bottom: 12px !important; }
+    [data-testid="stExpander"] summary p { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
 
     /* 🔘 按鈕視覺優化 */
-    .stButton > button, div[data-testid="stPopover"] > button {
-        background-color: #FFFFFF !important;
-        color: #3D322C !important;
-        border: 1px solid #E2D5C5 !important;
-        border-radius: 10px !important;
-        font-weight: 800 !important;
-        font-size: 14px !important;
-        padding: 0 !important;
-        width: 100% !important;
-        min-height: 34px !important;
-        box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important;
-        display: inline-flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-    }
-    .stButton > button:hover, div[data-testid="stPopover"] > button:hover {
-        background-color: #FAF5F0 !important;
-    }
-    
-    /* 日曆選中天數 & 查詢主按鈕 */
-    .stButton > button[kind="primary"] {
-        background-color: #A07855 !important;
-        color: #FFFFFF !important;
-        border: 1px solid #A07855 !important;
-    }
-
-    /* 日曆數字按鈕圓形化 */
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button {
-        border-radius: 50% !important;
-        background-color: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        height: 36px !important;
-        font-size: 14px !important;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button[kind="primary"] {
-        background-color: #A07855 !important;
-        color: #FFFFFF !important;
-    }
-
-    /* 調整日期選擇器字體 */
+    .stButton > button, div[data-testid="stPopover"] > button { background-color: #FFFFFF !important; color: #3D322C !important; border: 1px solid #E2D5C5 !important; border-radius: 10px !important; font-weight: 800 !important; font-size: 14px !important; padding: 0 !important; width: 100% !important; min-height: 34px !important; box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; display: inline-flex !important; justify-content: center !important; align-items: center !important; }
+    .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FAF5F0 !important; }
+    .stButton > button[kind="primary"] { background-color: #A07855 !important; color: #FFFFFF !important; border: 1px solid #A07855 !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button { border-radius: 50% !important; background-color: transparent !important; border: none !important; box-shadow: none !important; height: 36px !important; font-size: 14px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button[kind="primary"] { background-color: #A07855 !important; color: #FFFFFF !important; }
     div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
-    
-    /* 分頁 Tabs 導覽列 */
     .stTabs [data-baseweb="tab-list"] { gap: 6px; background-color: #E8DDD0; padding: 6px; border-radius: 25px; margin-bottom: 14px; }
     .stTabs [data-baseweb="tab"] { border-radius: 18px; padding: 6px 14px; color: #6E5A4C; font-weight: 700; font-size: 15px !important; }
     .stTabs [aria-selected="true"] { background-color: #A07855 !important; color: #FFFFFF !important; }
@@ -194,42 +93,31 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# ⚡ 隱藏 JavaScript: 日期防鍵盤 + 金額啟用數字鍵盤
+# ⚡ 隱藏 JavaScript: 封鎖日期鍵盤 + 拔除平台右下角浮標
 # ==========================================
 components.html(
     """
     <script>
     function optimizeMobileInputs() {
         const doc = window.parent.document;
-        // 1. 日期選擇器：徹底封鎖鍵盤彈出
         const dateContainers = doc.querySelectorAll('[data-testid="stDateInput"]');
         dateContainers.forEach(container => {
-            const inputs = container.querySelectorAll('input');
-            inputs.forEach(input => {
+            container.querySelectorAll('input').forEach(input => {
                 if (input.getAttribute('inputmode') !== 'none') {
-                    input.setAttribute('inputmode', 'none');
-                    input.setAttribute('readonly', 'true');
-                    input.style.caretColor = 'transparent';
-                    input.style.cursor = 'pointer';
+                    input.setAttribute('inputmode', 'none'); input.setAttribute('readonly', 'true');
+                    input.style.caretColor = 'transparent'; input.style.cursor = 'pointer';
                 }
             });
         });
-        
-        // 2. 金額輸入框：啟用簡易數字鍵盤 (包含加減乘除符號)
-        const allInputs = doc.querySelectorAll('input[type="text"]');
-        allInputs.forEach(input => {
+        doc.querySelectorAll('input[type="text"]').forEach(input => {
             const label = input.getAttribute('aria-label') || '';
-            if (label.includes('金額')) {
-                if (input.getAttribute('inputmode') !== 'tel') {
-                    input.setAttribute('inputmode', 'tel'); 
-                }
-            }
+            if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { input.setAttribute('inputmode', 'tel'); }
         });
+        doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"]').forEach(el => el.remove());
     }
-
     const observer = new MutationObserver(optimizeMobileInputs);
     observer.observe(window.parent.document.body, { childList: true, subtree: true });
-    setInterval(optimizeMobileInputs, 800); 
+    setInterval(optimizeMobileInputs, 500); 
     </script>
     """,
     height=0, width=0
@@ -258,8 +146,12 @@ if "expense_categories" not in st.session_state: st.session_state.expense_catego
 if "income_categories" not in st.session_state: st.session_state.income_categories = ["💰 薪資收入", "🎁 獎金紅包", "📈 投資理財", "🤝 副業兼職", "💵 其他收入"]
 if "cal_selected_date" not in st.session_state: st.session_state.cal_selected_date = date.today()
 if "filter_to_single_day" not in st.session_state: st.session_state.filter_to_single_day = False
-if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
+if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "歡迎使用小窩記帳！"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
+# 新增功能：設定儲存狀態
+if "category_budgets" not in st.session_state: st.session_state.category_budgets = {}
+if "fixed_transactions" not in st.session_state: st.session_state.fixed_transactions = []
+if "projects" not in st.session_state: st.session_state.projects = ["無"]
 
 # ==========================================
 # 4. 連接 Google Sheets & 絕對可靠的雲端同步機制
@@ -273,13 +165,16 @@ def save_and_sync():
         "expense_categories": st.session_state.expense_categories,
         "income_categories": st.session_state.income_categories,
         "memos": st.session_state.memos,
-        "shopping_list": st.session_state.shopping_list
+        "shopping_list": st.session_state.shopping_list,
+        "category_budgets": st.session_state.category_budgets,
+        "fixed_transactions": st.session_state.fixed_transactions,
+        "projects": st.session_state.projects
     }
     settings_df = pd.DataFrame([{
         "ID": "SYS_SETTINGS", "日期": "2099-12-31", "類型": "系統", 
         "類別": "系統", "項目": "設定檔", "金額": 0, 
         "記帳人": "系統", "備註": json.dumps(settings_dict),
-        "結帳狀態": "", "結帳單號": "", "已同意人": ""
+        "結帳狀態": "", "結帳單號": "", "已同意人": "", "專案": ""
     }])
     
     df_core = st.session_state.expenses_df[st.session_state.expenses_df["ID"] != "SYS_SETTINGS"]
@@ -287,11 +182,32 @@ def save_and_sync():
     try: conn.update(data=final_df)
     except: pass
 
+def trigger_auto_fixed_transactions():
+    """檢查並觸發固定收支自動記帳"""
+    today = date.today()
+    current_ym = f"{today.year}-{today.month:02d}"
+    triggered = False
+    
+    for ft in st.session_state.fixed_transactions:
+        # 如果設定的扣款日已到，且這個月還沒觸發過
+        if today.day >= ft['day'] and ft.get('last_month') != current_ym:
+            new_id = f"{'EXP' if ft['type']=='支出' else 'INC'}-AUTO-{int(datetime.now().timestamp()*1000)}"
+            new_row = pd.DataFrame([{
+                "ID": new_id, "日期": str(today), "類型": ft["type"], "類別": ft["category"],
+                "項目": f"🔄 {ft['item']}", "金額": float(ft["amount"]), "記帳人": ft["payer"],
+                "備註": "系統自動記帳", "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": "無"
+            }])
+            st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
+            ft['last_month'] = current_ym
+            triggered = True
+            
+    if triggered: save_and_sync()
+
 def load_data_and_recover_settings():
     """從雲端載入資料，並自動還原永久記憶的設定檔"""
     try:
         df = conn.read(ttl="10m") 
-        cols = ["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人"]
+        cols = ["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人", "專案"]
         for c in cols:
             if c not in df.columns: df[c] = ""
         df["類型"] = df["類型"].replace("", "支出")
@@ -306,11 +222,15 @@ def load_data_and_recover_settings():
                 if "income_categories" in settings: st.session_state.income_categories = settings["income_categories"]
                 if "memos" in settings: st.session_state.memos = settings["memos"]
                 if "shopping_list" in settings: st.session_state.shopping_list = settings["shopping_list"]
+                if "category_budgets" in settings: st.session_state.category_budgets = settings["category_budgets"]
+                if "fixed_transactions" in settings: st.session_state.fixed_transactions = settings["fixed_transactions"]
+                if "projects" in settings: st.session_state.projects = settings["projects"]
             except: pass
             
         st.session_state.expenses_df = df[df["ID"] != "SYS_SETTINGS"].copy()
+        trigger_auto_fixed_transactions() # 載入完畢後檢查是否需要觸發自動記帳
     except Exception:
-        st.session_state.expenses_df = pd.DataFrame(columns=["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人"])
+        st.session_state.expenses_df = pd.DataFrame(columns=["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人", "專案"])
 
 if "expenses_df" not in st.session_state:
     load_data_and_recover_settings()
@@ -331,7 +251,6 @@ with tab_home:
     # 📌 置頂區塊：緊湊日曆
     with st.container(border=True):
         st.markdown("<span class='sticky-marker'></span>", unsafe_allow_html=True)
-        
         cal_head_1, cal_head_2 = st.columns([1.5, 1])
         with cal_head_1:
             st.markdown(f"<div style='font-weight:900; font-size:20px; color:#3D322C; padding-top:4px;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
@@ -372,12 +291,13 @@ with tab_home:
                     e_payer = st.selectbox("付款人", st.session_state.members)
                     e_cat = st.selectbox("支出分類", st.session_state.expense_categories)
                     e_item = st.text_input("消費項目", placeholder="例如：麵包")
-                    e_amount_str = st.text_input("金額 ($) - 支援算式如 80+50", value="100")
+                    e_amount_str = st.text_input("金額 ($) - 支援算式", value="100")
+                    e_proj = st.selectbox("專案目標 (選填)", st.session_state.projects)
                     e_note = st.text_input("備註 (非必填)")
                     if st.form_submit_button("確認新增", type="primary", use_container_width=True):
                         st.toast("💾 儲存中...", icon="⏳")
                         e_amount = parse_math_expr(e_amount_str)
-                        new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp())}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": ""}])
+                        new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp())}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(e_proj) if e_proj != "無" else ""}])
                         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
                         save_and_sync()
                         st.toast("🎉 支出新增成功！")
@@ -391,11 +311,12 @@ with tab_home:
                     i_cat = st.selectbox("收入分類", st.session_state.income_categories)
                     i_item = st.text_input("收入項目", placeholder="例如：薪資")
                     i_amount_str = st.text_input("金額 ($) - 支援算式", value="1000")
+                    i_proj = st.selectbox("專案目標 (選填)", st.session_state.projects)
                     i_note = st.text_input("備註 (非必填)")
                     if st.form_submit_button("確認新增", type="primary", use_container_width=True):
                         st.toast("💾 儲存中...", icon="⏳")
                         i_amount = parse_math_expr(i_amount_str)
-                        new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": ""}])
+                        new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
                         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
                         save_and_sync()
                         st.toast("🎉 收入新增成功！")
@@ -443,29 +364,48 @@ with tab_home:
     week_days_tw = ["一", "二", "三", "四", "五", "六", "日"]
 
     # ==========================================
-    # 📊 新增功能：各成員收支總計面板
+    # 📊 各成員收支總計面板與預算警戒線
     # ==========================================
     if not filtered_df.empty:
         total_exp = filtered_df[filtered_df["類型"] == "支出"]["金額"].sum()
         total_inc = filtered_df[filtered_df["類型"] == "收入"]["金額"].sum()
         
-        # 繪製總計 HTML UI，確保不受 CSS 限制影響
         st.markdown("<div style='background-color:#FDF9F5; border-radius:12px; padding:12px 14px; border:1px solid #EAE0D5; margin-bottom:12px; box-shadow: 0 2px 6px rgba(160,120,85,0.05);'>", unsafe_allow_html=True)
         st.markdown("<div style='font-size:15px; font-weight:900; color:#7A573C; margin-bottom:8px; border-bottom:1px solid #EAE0D5; padding-bottom:4px;'>📊 區間收支總計</div>", unsafe_allow_html=True)
         
-        # 個別成員統計
         for member in st.session_state.members:
             mem_df = filtered_df[filtered_df["記帳人"] == member]
             mem_exp = mem_df[mem_df["類型"] == "支出"]["金額"].sum()
             mem_inc = mem_df[mem_df["類型"] == "收入"]["金額"].sum()
             st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px;'><span style='font-weight:800; color:#3D322C;'>{member}</span><span><span style='color:#8C6239;'>支 {mem_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {mem_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
-        
-        # 小窩總計
         st.markdown(f"<div style='display:flex; justify-content:space-between; margin-top:8px; padding-top:6px; border-top:1px dashed #E2D5C5; font-size:14px;'><span style='font-weight:900; color:#7A573C;'>🏠 小窩總計</span><span style='font-weight:800;'><span style='color:#8C6239;'>支 {total_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {total_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
+        
+        # ⚠️ 分類預算進度條 (抓取當月資料)
+        current_month_mask = (pd.to_datetime(df_current["日期"]).dt.year == sel_year) & (pd.to_datetime(df_current["日期"]).dt.month == sel_month)
+        curr_m_exp = df_current[current_month_mask & (df_current["類型"] == "支出")]
+        
+        has_budget = any(b > 0 for b in st.session_state.category_budgets.values())
+        if has_budget:
+            st.markdown("<div style='font-size:15px; font-weight:900; color:#7A573C; margin-top:16px; margin-bottom:8px; border-bottom:1px solid #EAE0D5; padding-bottom:4px;'>⚠️ 本月分類預算警戒線</div>", unsafe_allow_html=True)
+            for cat, budget in st.session_state.category_budgets.items():
+                if budget > 0:
+                    spent = curr_m_exp[curr_m_exp["類別"] == cat]["金額"].sum()
+                    pct = (spent / budget) * 100
+                    color = "#558B6E" if pct < 70 else "#E9C46A" if pct < 90 else "#E07A5F"
+                    st.markdown(f"""
+                    <div style='margin-bottom: 10px;'>
+                        <div style='display:flex; justify-content:space-between; font-size:13px; font-weight:700; color:#5C4A3E; margin-bottom:4px;'>
+                            <span>{cat} ({pct:.1f}%)</span><span>{spent:,.0f} / {budget:,.0f}</span>
+                        </div>
+                        <div style='width: 100%; background-color: #EAE0D5; border-radius: 6px; height: 8px; overflow:hidden;'>
+                            <div style='width: {min(pct, 100)}%; background-color: {color}; height: 100%; border-radius: 6px;'></div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ==========================================
-    # 📝 新增功能：可摺疊 (Expander) 收支明細區塊
+    # 📝 可摺疊 (Expander) 收支明細區塊
     # ==========================================
     with st.expander("📝 展開 / 收起各項明細", expanded=True):
         if filtered_df.empty:
@@ -479,11 +419,15 @@ with tab_home:
                     c_name, c_amt, c_edit, c_del = st.columns([3.5, 2.5, 1, 1])
                     
                     with c_name:
-                        st.markdown(f"<div style='font-size:16px; font-weight:800; color:#3D322C; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{row['項目']}</div>", unsafe_allow_html=True)
-                        st.markdown(f"<div style='font-size:11px; color:#8C7A6B; margin-top:2px;'>{row['記帳人']} · {r_date.month}/{r_date.day}</div>", unsafe_allow_html=True)
+                        # 專案標籤顯示
+                        proj_str = str(row.get('專案', ''))
+                        proj_tag = f"<span style='color:#A07855; font-size:11px; border:1px solid #D4C3B3; padding:1px 4px; border-radius:4px; margin-right:4px;'>{proj_str}</span>" if proj_str and proj_str != "無" else ""
+                        
+                        st.markdown(f"<div style='font-size:16px; font-weight:800; color:#3D322C; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{proj_tag}{row['項目']}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-size:11px; color:#8C7A6B; margin-top:4px;'>{row['記帳人']} · {r_date.month}/{r_date.day}</div>", unsafe_allow_html=True)
                         
                     with c_amt:
-                        amt_color = "#558B6E" if row["類型"] == "收入" else "#8C6239"
+                        amt_color = "#558B6E" if row["類型"] == "收入" else "#E07A5F"
                         display_amt = int(row['金額']) if row['金額'] % 1 == 0 else row['金額']
                         st.markdown(f"<div style='font-size:17px; font-weight:900; color:{amt_color}; margin-top:4px; text-align:right;'>{'+' if row['類型'] == '收入' else ''}{display_amt:,}</div>", unsafe_allow_html=True)
                     
@@ -500,6 +444,12 @@ with tab_home:
                                 e_item_val = st.text_input("項目", value=row["項目"])
                                 e_amt_val_str = st.text_input("金額 (支援算式)", value=str(display_amt))
                                 
+                                # 專案標籤回填
+                                p_val = row.get("專案", "無")
+                                if pd.isna(p_val) or p_val == "": p_val = "無"
+                                proj_idx = st.session_state.projects.index(p_val) if p_val in st.session_state.projects else 0
+                                e_proj_val = st.selectbox("專案標籤", st.session_state.projects, index=proj_idx)
+                                
                                 mem_idx = st.session_state.members.index(row["記帳人"]) if row["記帳人"] in st.session_state.members else 0
                                 e_payer_val = st.selectbox("成員", st.session_state.members, index=mem_idx)
                                 e_note_val = st.text_input("備註", value=row["備註"])
@@ -507,7 +457,7 @@ with tab_home:
                                 if st.form_submit_button("儲存修改", type="primary", use_container_width=True):
                                     st.toast("💾 儲存中...", icon="⏳")
                                     e_amt_val = parse_math_expr(e_amt_val_str)
-                                    st.session_state.expenses_df.loc[st.session_state.expenses_df["ID"] == row["ID"], ["日期", "類型", "類別", "項目", "金額", "記帳人", "備註"]] = [str(e_date_val), e_type_val, e_cat_val, e_item_val, float(e_amt_val), e_payer_val, e_note_val]
+                                    st.session_state.expenses_df.loc[st.session_state.expenses_df["ID"] == row["ID"], ["日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "專案"]] = [str(e_date_val), e_type_val, e_cat_val, e_item_val, float(e_amt_val), e_payer_val, e_note_val, str(e_proj_val) if e_proj_val != "無" else ""]
                                     save_and_sync()
                                     st.rerun()
                     with c_del:
@@ -553,12 +503,23 @@ with tab_charts:
             fig_pie.update_layout(font=dict(size=14), legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"), paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
             st.divider()
+            
             st.markdown("<h4 style='text-align:center; color:#8C6239;'>📊 時間趨勢</h4>", unsafe_allow_html=True)
             exp_df["日期_dt"] = pd.to_datetime(exp_df["日期"])
             daily_sum = exp_df.groupby(exp_df["日期_dt"].dt.day)["金額"].sum().reset_index()
             fig_bar = px.bar(daily_sum, x="日期_dt", y="金額", color_discrete_sequence=["#A07855"], text_auto=',.0f')
             fig_bar.update_layout(font=dict(size=14), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
+            st.divider()
+            
+            # 專案/目標分析
+            proj_exp = exp_df[(exp_df["專案"].notna()) & (exp_df["專案"] != "無") & (exp_df["專案"] != "")]
+            if not proj_exp.empty:
+                st.markdown("<h4 style='text-align:center; color:#8C6239;'>🎯 專案目標花費統計</h4>", unsafe_allow_html=True)
+                proj_sum = proj_exp.groupby("專案")["金額"].sum().reset_index()
+                fig_proj = px.bar(proj_sum, x="專案", y="金額", text_auto=',.0f', color_discrete_sequence=["#E07A5F"])
+                fig_proj.update_layout(font=dict(size=14), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+                st.plotly_chart(fig_proj, use_container_width=True, config={'displayModeBar': False})
 
 with tab_memo:
     st.subheader("💬 備忘錄")
@@ -621,9 +582,78 @@ with tab_shopping:
                 st.write("")
 
 with tab_settings:
-    st.subheader("⚙️ 小窩設定")
+    st.subheader("⚙️ 小窩進階設定")
     
-    st.markdown(f"### 🐱 成員管理")
+    # --- 1. 預算設定 ---
+    st.markdown("### ⚠️ 分類預算設定")
+    for c in st.session_state.expense_categories:
+        with st.container(border=True):
+            b_col1, b_col2 = st.columns([3, 2])
+            current_b = st.session_state.category_budgets.get(c, 0)
+            b_col1.write(f"**{c}**")
+            b_col1.markdown(f"<div style='font-size:12px; color:#8C7A6B;'>目前預算: ${current_b:,}</div>", unsafe_allow_html=True)
+            with b_col2:
+                with st.popover("設定預算", use_container_width=True):
+                    new_b = st.number_input(f"設定 {c} 月預算", min_value=0, value=current_b, step=500)
+                    if st.button("儲存", key=f"btn_bud_{c}", type="primary", use_container_width=True):
+                        st.toast("💾 儲存中...", icon="⏳")
+                        st.session_state.category_budgets[c] = new_b
+                        save_and_sync()
+                        st.rerun()
+
+    # --- 2. 固定收支設定 ---
+    st.markdown("### 📅 固定收支自動記帳")
+    with st.popover("➕ 新增自動記帳", use_container_width=True):
+        f_type = st.radio("收支類型", ["支出", "收入"], horizontal=True)
+        f_cat = st.selectbox("分類", st.session_state.expense_categories if f_type == "支出" else st.session_state.income_categories)
+        f_day = st.number_input("每月執行日 (1-31號)", min_value=1, max_value=31, value=1)
+        f_item = st.text_input("項目名稱 (例如：Netflix 或 房租)")
+        f_amt_str = st.text_input("金額 (支援算式)", value="0")
+        f_payer = st.selectbox("記帳人", st.session_state.members)
+        if st.button("確認新增", type="primary", use_container_width=True):
+            if f_item:
+                st.toast("💾 儲存中...", icon="⏳")
+                f_amt = parse_math_expr(f_amt_str)
+                st.session_state.fixed_transactions.append({
+                    "id": int(datetime.now().timestamp()*1000), "day": f_day, "type": f_type,
+                    "category": f_cat, "item": f_item.strip(), "amount": f_amt, "payer": f_payer, "last_month": ""
+                })
+                save_and_sync()
+                st.rerun()
+    for ft in list(st.session_state.fixed_transactions):
+        with st.container(border=True):
+            f1, f2 = st.columns([4.5, 1.5])
+            f1.markdown(f"<div style='font-size:14px; font-weight:700; color:#3D322C;'>每月 {ft['day']} 日 | {ft['item']}</div>", unsafe_allow_html=True)
+            f1.markdown(f"<div style='font-size:12px; color:#8C7A6B;'>{ft['type']} - {ft['category']} (${ft['amount']:,})</div>", unsafe_allow_html=True)
+            if f2.button("🗑️", key=f"del_ft_{ft['id']}"):
+                st.toast("💾 刪除中...", icon="🗑️")
+                st.session_state.fixed_transactions.remove(ft)
+                save_and_sync()
+                st.rerun()
+
+    # --- 3. 專案/目標標籤設定 ---
+    st.markdown("### 🎯 專案/目標標籤")
+    with st.form("add_proj_form", clear_on_submit=True):
+        col_proj, col_btn = st.columns([3, 1])
+        new_proj = col_proj.text_input("新增專案 (例如：🇯🇵 東京旅遊)", label_visibility="collapsed")
+        if col_btn.form_submit_button("➕ 新增", type="primary") and new_proj:
+            st.toast("💾 儲存中...", icon="⏳")
+            st.session_state.projects.append(new_proj.strip())
+            save_and_sync()
+            st.rerun()
+    for idx, p in enumerate(st.session_state.projects):
+        if p == "無": continue
+        with st.container(border=True):
+            p1, p2 = st.columns([4.5, 1.5])
+            p1.write(f"• **{p}**")
+            if p2.button("🗑️", key=f"del_p_{idx}"):
+                st.toast("💾 刪除中...", icon="🗑️")
+                st.session_state.projects.pop(idx)
+                save_and_sync()
+                st.rerun()
+
+    # --- 4. 原有基礎設定 ---
+    st.markdown("### 🐱 成員管理")
     with st.form("add_member_form", clear_on_submit=True):
         col_icon, col_name = st.columns([1, 2])
         new_m_icon = col_icon.text_input("Icon", value="🐱")
@@ -633,7 +663,6 @@ with tab_settings:
             st.session_state.members.append(f"{new_m_icon.strip()} {new_m_name.strip()}")
             save_and_sync()
             st.rerun()
-            
     for idx, m in enumerate(st.session_state.members):
         with st.container(border=True):
             m_col1, c_edit, c_del = st.columns([4.5, 1.5, 1.5])
@@ -653,7 +682,7 @@ with tab_settings:
                         st.rerun()
             with c_del:
                 if st.button("🗑️", key=f"d_m_{idx}") and len(st.session_state.members) > 1:
-                    st.toast("💾 儲存中...", icon="⏳")
+                    st.toast("💾 刪除中...", icon="🗑️")
                     st.session_state.members.pop(idx)
                     save_and_sync()
                     st.rerun()
@@ -668,7 +697,6 @@ with tab_settings:
             st.session_state.expense_categories.append(f"{new_e_icon.strip()} {new_e_name.strip()}")
             save_and_sync()
             st.rerun()
-            
     for idx, c in enumerate(st.session_state.expense_categories):
         with st.container(border=True):
             c_col1, c_edit, c_del = st.columns([4.5, 1.5, 1.5])
@@ -688,7 +716,7 @@ with tab_settings:
                         st.rerun()
             with c_del:
                 if st.button("🗑️", key=f"d_e_{idx}") and len(st.session_state.expense_categories) > 1:
-                    st.toast("💾 儲存中...", icon="⏳")
+                    st.toast("💾 刪除中...", icon="🗑️")
                     st.session_state.expense_categories.pop(idx)
                     save_and_sync()
                     st.rerun()
@@ -703,7 +731,6 @@ with tab_settings:
             st.session_state.income_categories.append(f"{new_i_icon.strip()} {new_i_name.strip()}")
             save_and_sync()
             st.rerun()
-            
     for idx, ic in enumerate(st.session_state.income_categories):
         with st.container(border=True):
             ic_col1, c_edit, c_del = st.columns([4.5, 1.5, 1.5])
@@ -723,7 +750,7 @@ with tab_settings:
                         st.rerun()
             with c_del:
                 if st.button("🗑️", key=f"d_i_{idx}") and len(st.session_state.income_categories) > 1:
-                    st.toast("💾 儲存中...", icon="⏳")
+                    st.toast("💾 刪除中...", icon="🗑️")
                     st.session_state.income_categories.pop(idx)
                     save_and_sync()
                     st.rerun()
