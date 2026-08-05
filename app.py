@@ -26,19 +26,26 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap');
 
-    /* 🎨 全局莫蘭迪奶茶色背景 + 🐾 狗狗腳印紋理 */
+    /* 🎨 全局奶黃橘色背景 + 🐱 貓咪剪影紋理 */
     html, body, [class*="css"], .stApp {
         font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         background-color: #FFF8E7 !important;
         background-image: 
-            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%23F5A623" opacity="0.08" transform="rotate(18)"><path d="M12,11.5 C10.6,11.5 9.5,12.6 9.5,14 C9.5,15.4 10.6,17.5 12,17.5 C13.4,17.5 14.5,15.4 14.5,14 C14.5,12.6 13.4,11.5 12,11.5 Z M7.5,12 C8.3,12 9,11.3 9,10.5 C9,9.7 8.3,9 7.5,9 C6.7,9 6,9.7 6,10.5 C6,11.3 6.7,12 7.5,12 Z M16.5,12 C17.3,12 18,11.3 18,10.5 C18,9.7 17.3,9 16.5,9 C15.7,9 15,9.7 15,10.5 C15,11.3 15.7,12 16.5,12 Z M9.5,8 C10.3,8 11,7.3 11,6.5 C11,5.7 10.3,5 9.5,5 C8.7,5 8,5.7 8,6.5 C8,7.3 8.7,8 9.5,8 Z M14.5,8 C15.3,8 16,7.3 16,6.5 C16,5.7 13.3,8 14.5,8 Z"/></svg>'),
-            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="130" height="130" viewBox="0 0 24 24" fill="%23FFC857" opacity="0.10" transform="rotate(-32)"><path d="M12,11.5 C10.6,11.5 9.5,12.6 9.5,14 C9.5,15.4 10.6,17.5 12,17.5 C13.4,17.5 14.5,15.4 14.5,14 C14.5,12.6 13.4,11.5 12,11.5 Z M7.5,12 C8.3,12 9,11.3 9,10.5 C9,9.7 8.3,9 7.5,9 C6.7,9 6,9.7 6,10.5 C6,11.3 6.7,12 7.5,12 Z M16.5,12 C17.3,12 18,11.3 18,10.5 C18,9.7 17.3,9 16.5,9 C15.7,9 15,9.7 15,10.5 C15,11.3 15.7,12 16.5,12 Z M9.5,8 C10.3,8 11,7.3 11,6.5 C11,5.7 10.3,5 9.5,5 C8.7,5 8,5.7 8,6.5 C8,7.3 8.7,8 9.5,8 Z M14.5,8 C15.3,8 16,7.3 16,6.5 C16,5.7 13.3,8 14.5,8 Z"/></svg>'),
+            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%23F5A623" opacity="0.08" transform="rotate(18)"><path d="M12,9 C8.5,9 6,11.7 6,15 C6,18 8.7,20.5 12,20.5 C15.3,20.5 18,18 18,15 C18,11.7 15.5,9 12,9 Z M6.5,9.5 L3.5,4.5 L8.2,7.7 Z M17.5,9.5 L20.5,4.5 L15.8,7.7 Z"/></svg>'),
+            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="130" height="130" viewBox="0 0 24 24" fill="%23FFC857" opacity="0.10" transform="rotate(-32)"><path d="M12,9 C8.5,9 6,11.7 6,15 C6,18 8.7,20.5 12,20.5 C15.3,20.5 18,18 18,15 C18,11.7 15.5,9 12,9 Z M6.5,9.5 L3.5,4.5 L8.2,7.7 Z M17.5,9.5 L20.5,4.5 L15.8,7.7 Z"/></svg>'),
             radial-gradient(circle at 12% 18%, rgba(255, 224, 158, 0.85) 0%, transparent 40%),
             radial-gradient(circle at 88% 12%, rgba(255, 200, 87, 0.55) 0%, transparent 35%),
             radial-gradient(circle at 20% 70%, rgba(255, 241, 214, 0.9) 0%, transparent 45%),
             radial-gradient(circle at 85% 80%, rgba(245, 166, 35, 0.18) 0%, transparent 45%) !important;
         background-attachment: fixed !important;
     }
+
+    /* 🐾 背景貓咪紋理緩慢漂浮動畫（只套在單一根節點，避免影響效能） */
+    @keyframes bgPatternDrift {
+        0%, 100% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%; }
+        50%      { background-position: 5% 5%, -5% -5%, 0% 0%, 0% 0%, 0% 0%, 0% 0%; }
+    }
+    .stApp { animation: bgPatternDrift 24s ease-in-out infinite !important; }
     
     /* 🚫 徹底隱藏 Streamlit 官方 Logo、頂端選單與頁尾 */
     #MainMenu, footer, header, [data-testid="stHeader"] { visibility: hidden !important; display: none !important; }
@@ -87,10 +94,12 @@ st.markdown("""
     [data-testid="stExpander"] summary p { font-size: 16px !important; font-weight: 800 !important; color: #C2410C !important; }
 
     /* 🔘 按鈕視覺優化 */
-    .stButton > button, div[data-testid="stPopover"] > button { -webkit-appearance: none !important; appearance: none !important; background-color: #FFFFFF !important; color: #3D322C !important; border: 1px solid #F5DFAE !important; border-radius: 12px !important; font-weight: 800 !important; font-size: 14px !important; padding: 0 !important; width: 100% !important; min-height: 34px !important; box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; display: inline-flex !important; justify-content: center !important; align-items: center !important; }
+    .stButton > button, div[data-testid="stPopover"] > button { -webkit-appearance: none !important; appearance: none !important; background-color: #FFFFFF !important; color: #3D322C !important; border: 1px solid #F5DFAE !important; border-radius: 12px !important; font-weight: 800 !important; font-size: 14px !important; padding: 0 !important; width: 100% !important; min-height: 34px !important; box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; display: inline-flex !important; justify-content: center !important; align-items: center !important; -webkit-tap-highlight-color: transparent !important; transition: transform 0.12s ease, box-shadow 0.12s ease !important; }
     .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FFF8E7 !important; }
+    .stButton > button:active, div[data-testid="stPopover"] > button:active { transform: scale(0.90) !important; box-shadow: 0 1px 2px rgba(160, 120, 85, 0.08) !important; }
     .stButton > button[kind="primary"] { background-color: #F5A623 !important; color: #FFFFFF !important; border: 1px solid #F5A623 !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button { -webkit-appearance: none !important; appearance: none !important; border-radius: 10px !important; background-color: #FFFFFF !important; color: #8A5A2B !important; border: 1px solid #F5DFAE !important; box-shadow: 0 2px 4px rgba(160,120,85,0.05) !important; height: 38px !important; width: 38px !important; min-width: 38px !important; aspect-ratio: 1 / 1 !important; box-sizing: border-box !important; padding: 0 !important; margin: 0 auto !important; font-size: 14px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button { -webkit-appearance: none !important; appearance: none !important; border-radius: 10px !important; background-color: #FFFFFF !important; color: #8A5A2B !important; border: 1px solid #F5DFAE !important; box-shadow: 0 2px 4px rgba(160,120,85,0.05) !important; height: 38px !important; width: 38px !important; min-width: 38px !important; aspect-ratio: 1 / 1 !important; box-sizing: border-box !important; padding: 0 !important; margin: 0 auto !important; font-size: 14px !important; -webkit-tap-highlight-color: transparent !important; transition: transform 0.12s ease !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button:active { transform: scale(0.82) !important; }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button[kind="primary"] { background-color: #F5A623 !important; color: #FFFFFF !important; border: 1px solid #F5A623 !important; }
     div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #C2410C !important; }
     /* 📱 底部固定分頁列 (Bottom Tab Bar，取代原本頂部橫向導覽列) */
@@ -136,6 +145,9 @@ components.html(
     r"""
     <script>
     const doc = window.parent.document;
+
+    // 📲 iOS Safari 預設不會觸發 :active 樣式，除非頁面上有註冊 touchstart 監聽，這裡補上讓按壓縮放效果生效
+    doc.addEventListener('touchstart', function () {}, { passive: true });
 
     // 🗓️ 日曆日期按鈕：改成圓角正方形（獨立成一個函式，供 MutationObserver 即時呼叫）
     function fixCalendarButtons() {
