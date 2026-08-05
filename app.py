@@ -29,6 +29,8 @@ st.markdown("""
     /* 🎨 全局奶黃橘色背景 + 🐱 貓咪剪影紋理 */
     html, body, [class*="css"], .stApp {
         font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        -webkit-text-size-adjust: 100% !important;
+        text-size-adjust: 100% !important;
         background-color: #FFF8E7 !important;
         background-image: 
             url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260"><g transform="translate(15,15) scale(1.6666666666666667)"><g fill="none" stroke="%23F5A623" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.11"><ellipse cx="6" cy="10" rx="1.8" ry="2.4"/><ellipse cx="10" cy="7" rx="2" ry="2.6"/><ellipse cx="14.5" cy="7" rx="2" ry="2.6"/><ellipse cx="18.5" cy="10" rx="1.8" ry="2.4"/><path d="M12 12c-3 0-5.5 1.8-5.5 4.2 0 2.3 2.3 3.8 5.5 3.8s5.5-1.5 5.5-3.8c0-2.4-2.5-4.2-5.5-4.2z"/></g></g><g transform="translate(90,8) scale(3.5416666666666665)"><g fill="none" stroke="%23D9A441" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.11"><path d="M5.5,3 L3.5,0.3 L6.5,2.2 Z"/><path d="M9.5,2.2 L11.5,0 L10.5,3.2 Z"/><circle cx="7.5" cy="6" r="3.2"/><path d="M4.6,7.8 C3,10 2.3,13 2.7,16 C3,18.3 4.5,19.7 6.5,20 L9.3,20 C11.3,19.5 12.7,17.3 12.5,15 C12.3,11.6 15,9 18,9 C19.6,9 20.7,10.1 20.4,11.4 C20.1,12.6 18.9,13 17.8,12.6"/><path d="M9,13 C8,15 8,18 9,20"/></g></g><g transform="translate(190,30) scale(2.2916666666666665)"><g fill="none" stroke="%23F5A623" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.11"><ellipse cx="6" cy="10" rx="1.8" ry="2.4"/><ellipse cx="10" cy="7" rx="2" ry="2.6"/><ellipse cx="14.5" cy="7" rx="2" ry="2.6"/><ellipse cx="18.5" cy="10" rx="1.8" ry="2.4"/><path d="M12 12c-3 0-5.5 1.8-5.5 4.2 0 2.3 2.3 3.8 5.5 3.8s5.5-1.5 5.5-3.8c0-2.4-2.5-4.2-5.5-4.2z"/></g></g><g transform="translate(8,118) scale(2.5)"><g fill="none" stroke="%23D9A441" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.11"><path d="M5.5,3 L3.5,0.3 L6.5,2.2 Z"/><path d="M9.5,2.2 L11.5,0 L10.5,3.2 Z"/><circle cx="7.5" cy="6" r="3.2"/><path d="M4.6,7.8 C3,10 2.3,13 2.7,16 C3,18.3 4.5,19.7 6.5,20 L9.3,20 C11.3,19.5 12.7,17.3 12.5,15 C12.3,11.6 15,9 18,9 C19.6,9 20.7,10.1 20.4,11.4 C20.1,12.6 18.9,13 17.8,12.6"/><path d="M9,13 C8,15 8,18 9,20"/></g></g><g transform="translate(110,150) scale(1.4583333333333333)"><g fill="none" stroke="%23F5A623" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity="0.11"><ellipse cx="6" cy="10" rx="1.8" ry="2.4"/><ellipse cx="10" cy="7" rx="2" ry="2.6"/><ellipse cx="14.5" cy="7" rx="2" ry="2.6"/><ellipse cx="18.5" cy="10" rx="1.8" ry="2.4"/><path d="M12 12c-3 0-5.5 1.8-5.5 4.2 0 2.3 2.3 3.8 5.5 3.8s5.5-1.5 5.5-3.8c0-2.4-2.5-4.2-5.5-4.2z"/></g></g><g transform="translate(165,138) scale(2.9166666666666665)"><g fill="none" stroke="%23D9A441" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.11"><path d="M5.5,3 L3.5,0.3 L6.5,2.2 Z"/><path d="M9.5,2.2 L11.5,0 L10.5,3.2 Z"/><circle cx="7.5" cy="6" r="3.2"/><path d="M4.6,7.8 C3,10 2.3,13 2.7,16 C3,18.3 4.5,19.7 6.5,20 L9.3,20 C11.3,19.5 12.7,17.3 12.5,15 C12.3,11.6 15,9 18,9 C19.6,9 20.7,10.1 20.4,11.4 C20.1,12.6 18.9,13 17.8,12.6"/><path d="M9,13 C8,15 8,18 9,20"/></g></g></svg>'),
@@ -148,7 +150,7 @@ components.html(
     // 📲 iOS Safari 預設不會觸發 :active 樣式，除非頁面上有註冊 touchstart 監聽，這裡補上讓按壓縮放效果生效
     doc.addEventListener('touchstart', function () {}, { passive: true });
 
-    // 🗓️ 日曆日期按鈕：改成圓角正方形（獨立成一個函式，供 MutationObserver 即時呼叫）
+    // 🗓️ 日曆日期按鈕改圓角正方形 + 所有輸入框防鍵盤跳出（獨立成函式，供 MutationObserver 即時呼叫，不用等輪詢）
     function fixCalendarButtons() {
         doc.querySelectorAll('.stButton > button').forEach(btn => {
             const txt = (btn.textContent || '').trim();
@@ -166,6 +168,22 @@ components.html(
                 btn.style.setProperty('appearance', 'none', 'important');
             }
         });
+
+        // 日期輸入框：禁止跳出鍵盤，只允許點選日曆
+        doc.querySelectorAll('div[data-testid="stDateInput"] input').forEach(input => {
+            if (!input.hasAttribute('readonly')) {
+                input.setAttribute('readonly', 'readonly');
+                input.setAttribute('inputmode', 'none');
+            }
+        });
+
+        // 所有下拉選單（含日曆上方「切換年份／切換月份」）：禁止跳出鍵盤，只允許點選選項
+        doc.querySelectorAll('div[data-baseweb="select"] input').forEach(input => {
+            if (!input.hasAttribute('readonly')) {
+                input.setAttribute('readonly', 'readonly');
+                input.setAttribute('inputmode', 'none');
+            }
+        });
     }
 
     function optimizeMobileInputs() {
@@ -174,23 +192,6 @@ components.html(
             const label = input.getAttribute('aria-label') || '';
             if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
                 input.setAttribute('inputmode', 'tel'); 
-            }
-        });
-
-        // 1.5 日期輸入框：禁止跳出鍵盤，只允許點選日曆
-        doc.querySelectorAll('div[data-testid="stDateInput"] input').forEach(input => {
-            if (!input.hasAttribute('readonly')) {
-                input.setAttribute('readonly', 'readonly');
-                input.setAttribute('inputmode', 'none');
-            }
-        });
-
-        // 1.6 所有下拉選單（含日曆上方「切換年份／切換月份」）：禁止跳出鍵盤，只允許點選選項
-        // 這種單選型下拉選單本來就不需要打字篩選，直接對全部 select 輸入框套用，比用 aria-label 比對更保險
-        doc.querySelectorAll('div[data-baseweb="select"] input').forEach(input => {
-            if (!input.hasAttribute('readonly')) {
-                input.setAttribute('readonly', 'readonly');
-                input.setAttribute('inputmode', 'none');
             }
         });
 
@@ -539,16 +540,16 @@ with tab_home:
                 day_week_str = week_days_tw[r_date.weekday()]
                 
                 with st.container(border=True):
-                    c_name, c_amt, c_edit, c_del = st.columns([3.5, 2.5, 1, 1])
+                    c_name, c_amt, c_edit, c_del = st.columns([4, 2.6, 0.7, 0.7])
                     
                     with c_name:
                         proj_val = row.get('專案', '')
                         proj_str = str(proj_val) if proj_val is not None else ''
                         has_proj = proj_str and proj_str.strip() != "" and proj_str.lower() != "nan" and proj_str != "無"
-                        proj_tag = f"<span style='color:#F5A623; font-size:11px; border:1px solid #F0C888; padding:1px 4px; border-radius:4px; margin-right:4px;'>{proj_str}</span>" if has_proj else ""
+                        proj_tag = f"<span style='color:#F5A623; font-size:11px; border:1px solid #F0C888; padding:1px 4px; border-radius:4px; margin-right:4px; white-space:nowrap;'>{proj_str}</span>" if has_proj else ""
                         
-                        # 調整品項名稱字體大小為 15px 避免過擠
-                        st.markdown(f"<div style='font-size:15px; font-weight:800; color:#3D322C; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{proj_tag}{row['項目']}</div>", unsafe_allow_html=True)
+                        # 品項名稱改成可換行顯示，避免在較窄的手機螢幕上被裁切看不到完整內容
+                        st.markdown(f"<div style='font-size:15px; font-weight:800; color:#3D322C; line-height:1.3; word-break:break-word; overflow-wrap:break-word;'>{proj_tag}{row['項目']}</div>", unsafe_allow_html=True)
                         st.markdown(f"<div style='font-size:11px; color:#A9895C; margin-top:4px;'>{row['記帳人']} · {r_date.month}/{r_date.day}</div>", unsafe_allow_html=True)
                         
                     with c_amt:
