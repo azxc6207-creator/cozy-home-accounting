@@ -27,14 +27,14 @@ st.markdown("""
     /* 🎨 全局莫蘭迪奶茶色背景 + 🐾 狗狗腳印紋理 */
     html, body, [class*="css"], .stApp {
         font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-        background-color: #FAF5F0 !important;
+        background-color: #FFF8E7 !important;
         background-image: 
-            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%23A07855" opacity="0.07" transform="rotate(18)"><path d="M12,11.5 C10.6,11.5 9.5,12.6 9.5,14 C9.5,15.4 10.6,17.5 12,17.5 C13.4,17.5 14.5,15.4 14.5,14 C14.5,12.6 13.4,11.5 12,11.5 Z M7.5,12 C8.3,12 9,11.3 9,10.5 C9,9.7 8.3,9 7.5,9 C6.7,9 6,9.7 6,10.5 C6,11.3 6.7,12 7.5,12 Z M16.5,12 C17.3,12 18,11.3 18,10.5 C18,9.7 17.3,9 16.5,9 C15.7,9 15,9.7 15,10.5 C15,11.3 15.7,12 16.5,12 Z M9.5,8 C10.3,8 11,7.3 11,6.5 C11,5.7 10.3,5 9.5,5 C8.7,5 8,5.7 8,6.5 C8,7.3 8.7,8 9.5,8 Z M14.5,8 C15.3,8 16,7.3 16,6.5 C16,5.7 13.3,8 14.5,8 Z"/></svg>'),
-            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="130" height="130" viewBox="0 0 24 24" fill="%238C6239" opacity="0.05" transform="rotate(-32)"><path d="M12,11.5 C10.6,11.5 9.5,12.6 9.5,14 C9.5,15.4 10.6,17.5 12,17.5 C13.4,17.5 14.5,15.4 14.5,14 C14.5,12.6 13.4,11.5 12,11.5 Z M7.5,12 C8.3,12 9,11.3 9,10.5 C9,9.7 8.3,9 7.5,9 C6.7,9 6,9.7 6,10.5 C6,11.3 6.7,12 7.5,12 Z M16.5,12 C17.3,12 18,11.3 18,10.5 C18,9.7 17.3,9 16.5,9 C15.7,9 15,9.7 15,10.5 C15,11.3 15.7,12 16.5,12 Z M9.5,8 C10.3,8 11,7.3 11,6.5 C11,5.7 10.3,5 9.5,5 C8.7,5 8,5.7 8,6.5 C8,7.3 8.7,8 9.5,8 Z M14.5,8 C15.3,8 16,7.3 16,6.5 C16,5.7 13.3,8 14.5,8 Z"/></svg>'),
-            radial-gradient(circle at 12% 18%, rgba(232, 221, 208, 0.85) 0%, transparent 40%),
-            radial-gradient(circle at 88% 12%, rgba(212, 195, 179, 0.75) 0%, transparent 35%),
-            radial-gradient(circle at 20% 70%, rgba(242, 232, 223, 0.9) 0%, transparent 45%),
-            radial-gradient(circle at 85% 80%, rgba(180, 145, 115, 0.25) 0%, transparent 45%) !important;
+            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 24 24" fill="%23F5A623" opacity="0.08" transform="rotate(18)"><path d="M12,11.5 C10.6,11.5 9.5,12.6 9.5,14 C9.5,15.4 10.6,17.5 12,17.5 C13.4,17.5 14.5,15.4 14.5,14 C14.5,12.6 13.4,11.5 12,11.5 Z M7.5,12 C8.3,12 9,11.3 9,10.5 C9,9.7 8.3,9 7.5,9 C6.7,9 6,9.7 6,10.5 C6,11.3 6.7,12 7.5,12 Z M16.5,12 C17.3,12 18,11.3 18,10.5 C18,9.7 17.3,9 16.5,9 C15.7,9 15,9.7 15,10.5 C15,11.3 15.7,12 16.5,12 Z M9.5,8 C10.3,8 11,7.3 11,6.5 C11,5.7 10.3,5 9.5,5 C8.7,5 8,5.7 8,6.5 C8,7.3 8.7,8 9.5,8 Z M14.5,8 C15.3,8 16,7.3 16,6.5 C16,5.7 13.3,8 14.5,8 Z"/></svg>'),
+            url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="130" height="130" viewBox="0 0 24 24" fill="%23FFC857" opacity="0.10" transform="rotate(-32)"><path d="M12,11.5 C10.6,11.5 9.5,12.6 9.5,14 C9.5,15.4 10.6,17.5 12,17.5 C13.4,17.5 14.5,15.4 14.5,14 C14.5,12.6 13.4,11.5 12,11.5 Z M7.5,12 C8.3,12 9,11.3 9,10.5 C9,9.7 8.3,9 7.5,9 C6.7,9 6,9.7 6,10.5 C6,11.3 6.7,12 7.5,12 Z M16.5,12 C17.3,12 18,11.3 18,10.5 C18,9.7 17.3,9 16.5,9 C15.7,9 15,9.7 15,10.5 C15,11.3 15.7,12 16.5,12 Z M9.5,8 C10.3,8 11,7.3 11,6.5 C11,5.7 10.3,5 9.5,5 C8.7,5 8,5.7 8,6.5 C8,7.3 8.7,8 9.5,8 Z M14.5,8 C15.3,8 16,7.3 16,6.5 C16,5.7 13.3,8 14.5,8 Z"/></svg>'),
+            radial-gradient(circle at 12% 18%, rgba(255, 224, 158, 0.85) 0%, transparent 40%),
+            radial-gradient(circle at 88% 12%, rgba(255, 200, 87, 0.55) 0%, transparent 35%),
+            radial-gradient(circle at 20% 70%, rgba(255, 241, 214, 0.9) 0%, transparent 45%),
+            radial-gradient(circle at 85% 80%, rgba(245, 166, 35, 0.18) 0%, transparent 45%) !important;
         background-attachment: fixed !important;
     }
     
@@ -56,7 +56,7 @@ st.markdown("""
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) {
         position: -webkit-sticky !important; position: sticky !important; top: 0px !important; z-index: 99999 !important;
         backdrop-filter: blur(14px) !important; background: rgba(253, 249, 245, 0.97) !important; margin-top: -10px !important;
-        border-radius: 0 0 16px 16px !important; box-shadow: 0 6px 16px rgba(160, 120, 85, 0.12) !important; border-bottom: 2px solid #EAE0D5 !important;
+        border-radius: 0 0 16px 16px !important; box-shadow: 0 6px 16px rgba(160, 120, 85, 0.12) !important; border-bottom: 2px solid #F5DFAE !important;
     }
 
     /* 🚀 手機橫向不折行霸道 CSS 覆寫 */
@@ -77,23 +77,53 @@ st.markdown("""
     div[data-testid="stPopoverBody"] form { margin-bottom: 20px !important; padding-bottom: 20px !important; }
 
     /* 📌 容器卡片統一樣式 */
-    div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #FDF9F5 !important; border-radius: 12px !important; padding: 8px 10px !important; margin-bottom: 8px !important; border: 1px solid #EAE0D5 !important; box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #FFFDF3 !important; border-radius: 16px !important; padding: 8px 10px !important; margin-bottom: 8px !important; border: 1px solid #F5DFAE !important; box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important; }
     div[data-testid="stVerticalBlockBorderWrapper"] p { margin-bottom: 0 !important; }
 
     /* 📂 收放功能 (Expander) 樣式美化 */
-    [data-testid="stExpander"] { border: 1px solid #EAE0D5 !important; border-radius: 12px !important; background-color: transparent !important; margin-bottom: 12px !important; }
-    [data-testid="stExpander"] summary p { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
+    [data-testid="stExpander"] { border: 1px solid #F5DFAE !important; border-radius: 16px !important; background-color: transparent !important; margin-bottom: 12px !important; }
+    [data-testid="stExpander"] summary p { font-size: 16px !important; font-weight: 800 !important; color: #C2410C !important; }
 
     /* 🔘 按鈕視覺優化 */
-    .stButton > button, div[data-testid="stPopover"] > button { -webkit-appearance: none !important; appearance: none !important; background-color: #FFFFFF !important; color: #3D322C !important; border: 1px solid #E2D5C5 !important; border-radius: 10px !important; font-weight: 800 !important; font-size: 14px !important; padding: 0 !important; width: 100% !important; min-height: 34px !important; box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; display: inline-flex !important; justify-content: center !important; align-items: center !important; }
-    .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FAF5F0 !important; }
-    .stButton > button[kind="primary"] { background-color: #A07855 !important; color: #FFFFFF !important; border: 1px solid #A07855 !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button { -webkit-appearance: none !important; appearance: none !important; border-radius: 10px !important; background-color: #FFFFFF !important; color: #5C4A3E !important; border: 1px solid #E2D5C5 !important; box-shadow: 0 2px 4px rgba(160,120,85,0.05) !important; height: 38px !important; width: 38px !important; min-width: 38px !important; aspect-ratio: 1 / 1 !important; box-sizing: border-box !important; padding: 0 !important; margin: 0 auto !important; font-size: 14px !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button[kind="primary"] { background-color: #A07855 !important; color: #FFFFFF !important; border: 1px solid #A07855 !important; }
-    div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #7A573C !important; }
-    .stTabs [data-baseweb="tab-list"] { gap: 6px; background-color: #E8DDD0; padding: 6px; border-radius: 25px; margin-bottom: 14px; }
-    .stTabs [data-baseweb="tab"] { border-radius: 18px; padding: 6px 14px; color: #6E5A4C; font-weight: 700; font-size: 15px !important; }
-    .stTabs [aria-selected="true"] { background-color: #A07855 !important; color: #FFFFFF !important; }
+    .stButton > button, div[data-testid="stPopover"] > button { -webkit-appearance: none !important; appearance: none !important; background-color: #FFFFFF !important; color: #3D322C !important; border: 1px solid #F5DFAE !important; border-radius: 12px !important; font-weight: 800 !important; font-size: 14px !important; padding: 0 !important; width: 100% !important; min-height: 34px !important; box-shadow: 0 2px 4px rgba(160, 120, 85, 0.04) !important; display: inline-flex !important; justify-content: center !important; align-items: center !important; }
+    .stButton > button:hover, div[data-testid="stPopover"] > button:hover { background-color: #FFF8E7 !important; }
+    .stButton > button[kind="primary"] { background-color: #F5A623 !important; color: #FFFFFF !important; border: 1px solid #F5A623 !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button { -webkit-appearance: none !important; appearance: none !important; border-radius: 10px !important; background-color: #FFFFFF !important; color: #8A5A2B !important; border: 1px solid #F5DFAE !important; box-shadow: 0 2px 4px rgba(160,120,85,0.05) !important; height: 38px !important; width: 38px !important; min-width: 38px !important; aspect-ratio: 1 / 1 !important; box-sizing: border-box !important; padding: 0 !important; margin: 0 auto !important; font-size: 14px !important; }
+    div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button[kind="primary"] { background-color: #F5A623 !important; color: #FFFFFF !important; border: 1px solid #F5A623 !important; }
+    div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #C2410C !important; }
+    /* 📱 底部固定分頁列 (Bottom Tab Bar，取代原本頂部橫向導覽列) */
+    .stTabs [data-baseweb="tab-list"] {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        width: 100% !important;
+        max-width: 480px !important;
+        z-index: 999999 !important;
+        gap: 2px !important;
+        background-color: #FFFDF3 !important;
+        border-top: 1px solid #F5DFAE !important;
+        border-radius: 20px 20px 0 0 !important;
+        box-shadow: 0 -6px 18px rgba(245, 166, 35, 0.16) !important;
+        padding: 8px 4px calc(10px + env(safe-area-inset-bottom, 0px)) 4px !important;
+        margin-bottom: 0 !important;
+        justify-content: space-around !important;
+    }
+    .stTabs [data-baseweb="tab"] {
+        flex-direction: column !important;
+        gap: 2px !important;
+        flex: 1 1 0 !important;
+        border-radius: 14px !important;
+        padding: 6px 2px !important;
+        color: #A9895C !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+        min-width: 0 !important;
+    }
+    .stTabs [aria-selected="true"] { background-color: #FFF1D6 !important; color: #E4572E !important; }
+    /* 讓內容區底部留出空間，避免被固定分頁列遮住 */
+    .block-container { padding-bottom: 92px !important; }
+    div[data-testid="stTabsContent"], div[role="tabpanel"] { padding-bottom: 4px !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -286,7 +316,7 @@ if "expenses_df" not in st.session_state:
 # ==========================================
 # 5. 主選單 Header & 分頁
 # ==========================================
-st.markdown("<h2 style='color:#7A573C; font-weight:900; margin-bottom:10px;'>🏠 小窩記帳 🐾</h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='color:#C2410C; font-weight:900; margin-bottom:10px;'>🏠 小窩記帳 🐾</h2>", unsafe_allow_html=True)
 
 tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
     "🏠 主頁", "📊 圖表", "💬 備忘", "🛒 購物", "⚙️ 設定"
@@ -315,7 +345,7 @@ with tab_home:
 
         w_cols = st.columns(7)
         for idx, w_name in enumerate(["日", "一", "二", "三", "四", "五", "六"]):
-            w_cols[idx].markdown(f"<div style='text-align:center; font-size:12px; color:#8C7A6B; font-weight:800;'>{w_name}</div>", unsafe_allow_html=True)
+            w_cols[idx].markdown(f"<div style='text-align:center; font-size:12px; color:#A9895C; font-weight:800;'>{w_name}</div>", unsafe_allow_html=True)
 
         cal = calendar.Calendar(firstweekday=6)
         for week in cal.monthdayscalendar(int(sel_year), int(sel_month)):
@@ -398,7 +428,7 @@ with tab_home:
         end_str = st.session_state.end_date.strftime('%Y-%m-%d')
         display_title = f"📅 {start_str}" if start_str == end_str else f"📅 {start_str} ~ {end_str}"
     
-    st.markdown(f"<h2 style='text-align:center; color:#7A573C; font-weight:900; font-size:18px; margin:10px 0 6px 0;'>{display_title}</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align:center; color:#C2410C; font-weight:900; font-size:18px; margin:10px 0 6px 0;'>{display_title}</h2>", unsafe_allow_html=True)
 
     # 📊 取得過濾資料
     df_current = st.session_state.expenses_df.copy()
@@ -421,22 +451,22 @@ with tab_home:
         total_exp = filtered_df[filtered_df["類型"] == "支出"]["金額"].sum()
         total_inc = filtered_df[filtered_df["類型"] == "收入"]["金額"].sum()
         
-        st.markdown("<div style='background-color:#FDF9F5; border-radius:12px; padding:12px 14px; border:1px solid #EAE0D5; margin-bottom:12px; box-shadow: 0 2px 6px rgba(160,120,85,0.05);'>", unsafe_allow_html=True)
-        st.markdown("<div style='font-size:15px; font-weight:900; color:#7A573C; margin-bottom:8px; border-bottom:1px solid #EAE0D5; padding-bottom:4px;'>📊 區間收支總計</div>", unsafe_allow_html=True)
+        st.markdown("<div style='background-color:#FFFDF3; border-radius:12px; padding:12px 14px; border:1px solid #F5DFAE; margin-bottom:12px; box-shadow: 0 2px 6px rgba(160,120,85,0.05);'>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:15px; font-weight:900; color:#C2410C; margin-bottom:8px; border-bottom:1px solid #F5DFAE; padding-bottom:4px;'>📊 區間收支總計</div>", unsafe_allow_html=True)
         
         for member in st.session_state.members:
             mem_df = filtered_df[filtered_df["記帳人"] == member]
             mem_exp = mem_df[mem_df["類型"] == "支出"]["金額"].sum()
             mem_inc = mem_df[mem_df["類型"] == "收入"]["金額"].sum()
-            st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px;'><span style='font-weight:800; color:#3D322C;'>{member}</span><span><span style='color:#8C6239;'>支 {mem_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {mem_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
-        st.markdown(f"<div style='display:flex; justify-content:space-between; margin-top:8px; padding-top:6px; border-top:1px dashed #E2D5C5; font-size:14px;'><span style='font-weight:900; color:#7A573C;'>🏠 小窩總計</span><span style='font-weight:800;'><span style='color:#8C6239;'>支 {total_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {total_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px;'><span style='font-weight:800; color:#3D322C;'>{member}</span><span><span style='color:#E4572E;'>支 {mem_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {mem_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='display:flex; justify-content:space-between; margin-top:8px; padding-top:6px; border-top:1px dashed #F5DFAE; font-size:14px;'><span style='font-weight:900; color:#C2410C;'>🏠 小窩總計</span><span style='font-weight:800;'><span style='color:#E4572E;'>支 {total_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {total_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
         
         current_month_mask = (pd.to_datetime(df_current["日期"]).dt.year == sel_year) & (pd.to_datetime(df_current["日期"]).dt.month == sel_month)
         curr_m_exp = df_current[current_month_mask & (df_current["類型"] == "支出")]
         
         has_budget = any(b > 0 for b in st.session_state.category_budgets.values())
         if has_budget:
-            st.markdown("<div style='font-size:15px; font-weight:900; color:#7A573C; margin-top:16px; margin-bottom:8px; border-bottom:1px solid #EAE0D5; padding-bottom:4px;'>⚠️ 本月分類預算警戒線</div>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size:15px; font-weight:900; color:#C2410C; margin-top:16px; margin-bottom:8px; border-bottom:1px solid #F5DFAE; padding-bottom:4px;'>⚠️ 本月分類預算警戒線</div>", unsafe_allow_html=True)
             for cat, budget in st.session_state.category_budgets.items():
                 if budget > 0:
                     spent = curr_m_exp[curr_m_exp["類別"] == cat]["金額"].sum()
@@ -444,10 +474,10 @@ with tab_home:
                     color = "#558B6E" if pct < 70 else "#E9C46A" if pct < 90 else "#E07A5F"
                     st.markdown(f"""
                     <div style='margin-bottom: 10px;'>
-                        <div style='display:flex; justify-content:space-between; font-size:13px; font-weight:700; color:#5C4A3E; margin-bottom:4px;'>
+                        <div style='display:flex; justify-content:space-between; font-size:13px; font-weight:700; color:#8A5A2B; margin-bottom:4px;'>
                             <span>{cat} ({pct:.1f}%)</span><span>{spent:,.0f} / {budget:,.0f}</span>
                         </div>
-                        <div style='width: 100%; background-color: #EAE0D5; border-radius: 6px; height: 8px; overflow:hidden;'>
+                        <div style='width: 100%; background-color: #F5DFAE; border-radius: 6px; height: 8px; overflow:hidden;'>
                             <div style='width: {min(pct, 100)}%; background-color: {color}; height: 100%; border-radius: 6px;'></div>
                         </div>
                     </div>
@@ -472,11 +502,11 @@ with tab_home:
                         proj_val = row.get('專案', '')
                         proj_str = str(proj_val) if proj_val is not None else ''
                         has_proj = proj_str and proj_str.strip() != "" and proj_str.lower() != "nan" and proj_str != "無"
-                        proj_tag = f"<span style='color:#A07855; font-size:11px; border:1px solid #D4C3B3; padding:1px 4px; border-radius:4px; margin-right:4px;'>{proj_str}</span>" if has_proj else ""
+                        proj_tag = f"<span style='color:#F5A623; font-size:11px; border:1px solid #F0C888; padding:1px 4px; border-radius:4px; margin-right:4px;'>{proj_str}</span>" if has_proj else ""
                         
                         # 調整品項名稱字體大小為 15px 避免過擠
                         st.markdown(f"<div style='font-size:15px; font-weight:800; color:#3D322C; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{proj_tag}{row['項目']}</div>", unsafe_allow_html=True)
-                        st.markdown(f"<div style='font-size:11px; color:#8C7A6B; margin-top:4px;'>{row['記帳人']} · {r_date.month}/{r_date.day}</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div style='font-size:11px; color:#A9895C; margin-top:4px;'>{row['記帳人']} · {r_date.month}/{r_date.day}</div>", unsafe_allow_html=True)
                         
                     with c_amt:
                         amt_color = "#558B6E" if row["類型"] == "收入" else "#E07A5F"
@@ -520,7 +550,7 @@ with tab_home:
 
     # 📌 底部自訂區間查詢框
     with st.container(border=True):
-        st.markdown("<h3 style='color:#7A573C; margin-bottom:10px; font-size:18px;'>🔍 底部區間查詢</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color:#C2410C; margin-bottom:10px; font-size:18px;'>🔍 底部區間查詢</h3>", unsafe_allow_html=True)
         picked_range = st.date_input("選擇起始與結束日期", value=(st.session_state.start_date, st.session_state.end_date), key="bottom_date_picker")
         
         q_col1, q_col2 = st.columns(2)
@@ -547,7 +577,7 @@ with tab_charts:
     
     # 📌 圖表區：新增分析區間選擇器
     with st.container(border=True):
-        st.markdown("<div style='font-size:15px; font-weight:800; color:#7A573C; margin-bottom:8px;'>📅 選擇分析區間</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:15px; font-weight:800; color:#C2410C; margin-bottom:8px;'>📅 選擇分析區間</div>", unsafe_allow_html=True)
         ch_col1, ch_col2 = st.columns(2)
         chart_start = ch_col1.date_input("起始日期", st.session_state.start_date, key="chart_start")
         chart_end = ch_col2.date_input("結束日期", st.session_state.end_date, key="chart_end")
@@ -565,16 +595,16 @@ with tab_charts:
         exp_df = chart_df[chart_df["類型"] == "支出"]
         if not exp_df.empty:
             # 1. 圓餅圖：支出類別比例
-            st.markdown("<h4 style='text-align:center; color:#8C6239; margin-top:20px;'>🍕 支出類別比例</h4>", unsafe_allow_html=True)
-            fig_pie = px.pie(exp_df, names="類別", values="金額", hole=0.45, color_discrete_sequence=["#A07855", "#C5A880", "#8C6239", "#7A573C", "#B08968"])
+            st.markdown("<h4 style='text-align:center; color:#E4572E; margin-top:20px;'>🍕 支出類別比例</h4>", unsafe_allow_html=True)
+            fig_pie = px.pie(exp_df, names="類別", values="金額", hole=0.45, color_discrete_sequence=["#F5A623", "#FFC857", "#E4572E", "#C2410C", "#FFD37D"])
             fig_pie.update_layout(font=dict(size=14), legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"), paper_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
             st.divider()
             
             # 2. 長條圖：各分類累積支出 (依金額由高到低排序)
-            st.markdown("<h4 style='text-align:center; color:#8C6239;'>📊 各分類累積支出</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='text-align:center; color:#E4572E;'>📊 各分類累積支出</h4>", unsafe_allow_html=True)
             cat_sum = exp_df.groupby("類別")["金額"].sum().reset_index().sort_values(by="金額", ascending=False)
-            fig_bar = px.bar(cat_sum, x="類別", y="金額", color_discrete_sequence=["#A07855"], text_auto=',.0f')
+            fig_bar = px.bar(cat_sum, x="類別", y="金額", color_discrete_sequence=["#F5A623"], text_auto=',.0f')
             fig_bar.update_layout(font=dict(size=14), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="", yaxis_title="")
             st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
             st.divider()
@@ -582,7 +612,7 @@ with tab_charts:
             # 3. 專案目標統計
             proj_exp = exp_df[(exp_df["專案"].notna()) & (exp_df["專案"] != "無") & (exp_df["專案"] != "")]
             if not proj_exp.empty:
-                st.markdown("<h4 style='text-align:center; color:#8C6239;'>🎯 專案目標花費統計</h4>", unsafe_allow_html=True)
+                st.markdown("<h4 style='text-align:center; color:#E4572E;'>🎯 專案目標花費統計</h4>", unsafe_allow_html=True)
                 proj_sum = proj_exp.groupby("專案")["金額"].sum().reset_index().sort_values(by="金額", ascending=False)
                 fig_proj = px.bar(proj_sum, x="專案", y="金額", text_auto=',.0f', color_discrete_sequence=["#E07A5F"])
                 fig_proj.update_layout(font=dict(size=14), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="", yaxis_title="")
@@ -658,7 +688,7 @@ with tab_settings:
                 b_col1, b_col2 = st.columns([3, 2])
                 current_b = st.session_state.category_budgets.get(c, 0)
                 b_col1.write(f"**{c}**")
-                b_col1.markdown(f"<div style='font-size:12px; color:#8C7A6B;'>目前預算: ${current_b:,}</div>", unsafe_allow_html=True)
+                b_col1.markdown(f"<div style='font-size:12px; color:#A9895C;'>目前預算: ${current_b:,}</div>", unsafe_allow_html=True)
                 with b_col2:
                     with st.popover("設定預算", use_container_width=True):
                         new_b = st.number_input(f"設定 {c} 月預算", min_value=0, value=current_b, step=500)
@@ -716,8 +746,8 @@ with tab_settings:
                 elif s_d: date_str += "(無結束日)"
                 else: date_str += "舊資料無日期限制"
                     
-                f1.markdown(f"<div style='font-size:11px; color:#A07855; margin-bottom:2px;'>{date_str}</div>", unsafe_allow_html=True)
-                f1.markdown(f"<div style='font-size:12px; color:#8C7A6B;'>{ft.get('type', '')} - {ft.get('category', '')} (${ft.get('amount', 0):,})</div>", unsafe_allow_html=True)
+                f1.markdown(f"<div style='font-size:11px; color:#F5A623; margin-bottom:2px;'>{date_str}</div>", unsafe_allow_html=True)
+                f1.markdown(f"<div style='font-size:12px; color:#A9895C;'>{ft.get('type', '')} - {ft.get('category', '')} (${ft.get('amount', 0):,})</div>", unsafe_allow_html=True)
                 
                 if f2.button("🗑️", key=f"del_ft_{ft.get('id', '')}"):
                     st.toast("💾 刪除中...", icon="🗑️")
