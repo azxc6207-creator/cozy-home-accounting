@@ -135,27 +135,10 @@ st.markdown("""
 components.html(
     r"""
     <script>
-    function optimizeMobileInputs() {
-        const doc = window.parent.document;
-        
-        // 1. 金額輸入框：啟用簡易數字鍵盤
-        doc.querySelectorAll('input[type="text"]').forEach(input => {
-            const label = input.getAttribute('aria-label') || '';
-            if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
-                input.setAttribute('inputmode', 'tel'); 
-            }
-        });
+    const doc = window.parent.document;
 
-        // 1.5 日期輸入框：禁止跳出鍵盤，只允許點選日曆
-        doc.querySelectorAll('div[data-testid="stDateInput"] input').forEach(input => {
-            if (!input.hasAttribute('readonly')) {
-                input.setAttribute('readonly', 'readonly');
-                input.setAttribute('inputmode', 'none');
-            }
-        });
-
-        // 1.8 日曆日期按鈕：強制用 JS 直接寫入 style（繞過 CSS 優先權問題），改成圓角正方形
-        // 直接用「按鈕文字是 1~2 位數字」來辨識日曆日期按鈕，不依賴父層容器結構，避免抓不到的問題
+    // 🗓️ 日曆日期按鈕：改成圓角正方形（獨立成一個函式，供 MutationObserver 即時呼叫）
+    function fixCalendarButtons() {
         doc.querySelectorAll('.stButton > button').forEach(btn => {
             const txt = (btn.textContent || '').trim();
             if (/^\d{1,2}$/.test(txt)) {
@@ -172,7 +155,26 @@ components.html(
                 btn.style.setProperty('appearance', 'none', 'important');
             }
         });
-        
+    }
+
+    function optimizeMobileInputs() {
+        // 1. 金額輸入框：啟用簡易數字鍵盤
+        doc.querySelectorAll('input[type="text"]').forEach(input => {
+            const label = input.getAttribute('aria-label') || '';
+            if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
+                input.setAttribute('inputmode', 'tel'); 
+            }
+        });
+
+        // 1.5 日期輸入框：禁止跳出鍵盤，只允許點選日曆
+        doc.querySelectorAll('div[data-testid="stDateInput"] input').forEach(input => {
+            if (!input.hasAttribute('readonly')) {
+                input.setAttribute('readonly', 'readonly');
+                input.setAttribute('inputmode', 'none');
+            }
+        });
+
+        fixCalendarButtons();
         
         // 2. 安全隱藏 Streamlit 平台浮標
         doc.querySelectorAll('a[href*="streamlit.app"], div[class*="viewerBadge"], [data-testid="stStatusWidget"], [data-testid="stToolbar"], #MainMenu, footer, header').forEach(el => {
@@ -181,6 +183,12 @@ components.html(
             el.style.pointerEvents = 'none';
         });
     }
+
+    // ⚡ 用 MutationObserver 即時監看畫面變化：一旦 Streamlit 重新渲染出新的按鈕，馬上套用樣式，
+    // 不用等下一次 setInterval，避免點擊後短暫「打回原型」的閃爍
+    fixCalendarButtons();
+    const observer = new MutationObserver(() => { fixCalendarButtons(); });
+    observer.observe(doc.body, { childList: true, subtree: true });
 
     setInterval(optimizeMobileInputs, 600); 
     </script>
