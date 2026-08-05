@@ -6,6 +6,8 @@ from datetime import datetime, date
 import calendar
 import streamlit.components.v1 as components
 import json
+import threading
+from streamlit.runtime.scriptrunner import add_script_run_ctx
 
 # ==========================================
 # 1. 頁面設定 (使用 centered 限制最大寬度)
@@ -131,7 +133,7 @@ st.markdown("""
 # ⚡ 隱藏 JavaScript: 僅啟動金額數字鍵盤、日期輸入框防鍵盤、與平台浮標隱藏（保證日曆 100% 靈敏點擊）
 # ==========================================
 components.html(
-    """
+    r"""
     <script>
     function optimizeMobileInputs() {
         const doc = window.parent.document;
@@ -153,23 +155,23 @@ components.html(
         });
 
         // 1.8 日曆日期按鈕：強制用 JS 直接寫入 style（繞過 CSS 優先權問題），改成圓角正方形
-        const stickyMarker = doc.querySelector('.sticky-marker');
-        if (stickyMarker) {
-            const stickyContainer = stickyMarker.closest('div[data-testid="stVerticalBlockBorderWrapper"]');
-            if (stickyContainer) {
-                stickyContainer.querySelectorAll('.stButton > button').forEach(btn => {
-                    btn.style.setProperty('width', '38px', 'important');
-                    btn.style.setProperty('height', '38px', 'important');
-                    btn.style.setProperty('min-width', '38px', 'important');
-                    btn.style.setProperty('max-width', '38px', 'important');
-                    btn.style.setProperty('border-radius', '10px', 'important');
-                    btn.style.setProperty('aspect-ratio', '1 / 1', 'important');
-                    btn.style.setProperty('padding', '0', 'important');
-                    btn.style.setProperty('-webkit-appearance', 'none', 'important');
-                    btn.style.setProperty('appearance', 'none', 'important');
-                });
+        // 直接用「按鈕文字是 1~2 位數字」來辨識日曆日期按鈕，不依賴父層容器結構，避免抓不到的問題
+        doc.querySelectorAll('.stButton > button').forEach(btn => {
+            const txt = (btn.textContent || '').trim();
+            if (/^\d{1,2}$/.test(txt)) {
+                btn.style.setProperty('width', '38px', 'important');
+                btn.style.setProperty('height', '38px', 'important');
+                btn.style.setProperty('min-width', '38px', 'important');
+                btn.style.setProperty('max-width', '38px', 'important');
+                btn.style.setProperty('min-height', '38px', 'important');
+                btn.style.setProperty('max-height', '38px', 'important');
+                btn.style.setProperty('border-radius', '10px', 'important');
+                btn.style.setProperty('aspect-ratio', '1 / 1', 'important');
+                btn.style.setProperty('padding', '0', 'important');
+                btn.style.setProperty('-webkit-appearance', 'none', 'important');
+                btn.style.setProperty('appearance', 'none', 'important');
             }
-        }
+        });
         
         
         // 2. 安全隱藏 Streamlit 平台浮標
@@ -215,14 +217,24 @@ if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"
 if "category_budgets" not in st.session_state: st.session_state.category_budgets = {}
 if "fixed_transactions" not in st.session_state: st.session_state.fixed_transactions = []
 if "projects" not in st.session_state: st.session_state.projects = ["無"]
+if "sync_error" not in st.session_state: st.session_state.sync_error = None
 
 # ==========================================
 # 4. 連接 Google Sheets & 絕對可靠的雲端同步機制
 # ==========================================
 conn = st.connection("gsheets", type=GSheetsConnection)
 
+def _background_sync(final_df):
+    """實際寫入 Google Sheets 的動作，丟到背景執行緒跑，不卡住畫面更新"""
+    try:
+        conn.update(data=final_df)
+        st.cache_data.clear() # 🚀 儲存後強制清除快取
+        st.session_state.sync_error = None
+    except Exception as e:
+        st.session_state.sync_error = str(e)
+
 def save_and_sync():
-    """保證寫入雲端的同步儲存機制，並強制清理快取確保重新載入不消失"""
+    """準備好要寫入的資料後，交給背景執行緒非同步上傳，UI 立刻可以繼續、不必等待雲端回應"""
     settings_dict = {
         "members": st.session_state.members,
         "expense_categories": st.session_state.expense_categories,
@@ -244,11 +256,9 @@ def save_and_sync():
     df_core = st.session_state.expenses_df[st.session_state.expenses_df["ID"] != "SYS_SETTINGS"]
     final_df = pd.concat([df_core, settings_df], ignore_index=True)
     
-    try: 
-        conn.update(data=final_df)
-        st.cache_data.clear() # 🚀 儲存後強制清除快取
-    except: 
-        pass
+    sync_thread = threading.Thread(target=_background_sync, args=(final_df,), daemon=True)
+    add_script_run_ctx(sync_thread)  # 讓背景執行緒能安全存取 session_state
+    sync_thread.start()
 
 def trigger_auto_fixed_transactions():
     """獨立防撞檢查並觸發固定收支自動記帳"""
@@ -312,6 +322,11 @@ def load_data_and_recover_settings():
 
 if "expenses_df" not in st.session_state:
     load_data_and_recover_settings()
+
+# ⚠️ 檢查上一次背景同步是否失敗，若失敗則跳出警告提示（顯示一次後清除）
+if st.session_state.get("sync_error"):
+    st.toast(f"⚠️ 雲端同步失敗，資料僅暫存在畫面上，請檢查網路後重新操作一次：{st.session_state.sync_error}", icon="⚠️")
+    st.session_state.sync_error = None
 
 # ==========================================
 # 5. 主選單 Header & 分頁
