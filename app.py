@@ -582,7 +582,16 @@ with tab_home:
                                 if st.form_submit_button("儲存修改", type="primary", use_container_width=True):
                                     st.toast("💾 儲存中...", icon="⏳")
                                     e_amt_val = parse_math_expr(e_amt_val_str)
-                                    st.session_state.expenses_df.loc[st.session_state.expenses_df["ID"] == row["ID"], ["日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "專案"]] = [str(e_date_val), e_type_val, e_cat_val, e_item_val, float(e_amt_val), e_payer_val, e_note_val, str(e_proj_val) if e_proj_val != "無" else ""]
+                                    edit_mask = st.session_state.expenses_df["ID"] == row["ID"]
+                                    # 新版 pandas 對「一次寫入多個混合型態欄位」的檢查變嚴格，改成一欄一欄分開寫，避免 dtype 衝突報錯
+                                    st.session_state.expenses_df.loc[edit_mask, "日期"] = str(e_date_val)
+                                    st.session_state.expenses_df.loc[edit_mask, "類型"] = e_type_val
+                                    st.session_state.expenses_df.loc[edit_mask, "類別"] = e_cat_val
+                                    st.session_state.expenses_df.loc[edit_mask, "項目"] = e_item_val
+                                    st.session_state.expenses_df.loc[edit_mask, "金額"] = float(e_amt_val)
+                                    st.session_state.expenses_df.loc[edit_mask, "記帳人"] = e_payer_val
+                                    st.session_state.expenses_df.loc[edit_mask, "備註"] = e_note_val
+                                    st.session_state.expenses_df.loc[edit_mask, "專案"] = str(e_proj_val) if e_proj_val != "無" else ""
                                     save_and_sync()
                                     st.rerun()
                     with c_del:
