@@ -939,3 +939,29 @@ with tab_settings:
                         st.session_state.income_categories.pop(idx)
                         save_and_sync()
                         st.rerun()
+
+    # --- 7. 雲端資料表快速連結 (Expander) ---
+    with st.expander("☁️ 雲端資料表", expanded=False):
+        st.markdown("<div style='font-size:13px; color:#A9895C; margin-bottom:8px;'>點下方按鈕，直接在 Google Sheet 開啟你的記帳資料表（新分頁）。</div>", unsafe_allow_html=True)
+        
+        sheet_url = None
+        try:
+            sheet_url = st.secrets["connections"]["gsheets"].get("spreadsheet")
+        except Exception:
+            sheet_url = None
+        
+        if not sheet_url:
+            # 抓不到 secrets 設定時，讓使用者手動貼一次網址（存在 session_state 裡，之後同一次連線期間都能用）
+            if "manual_sheet_url" not in st.session_state:
+                st.session_state.manual_sheet_url = ""
+            st.session_state.manual_sheet_url = st.text_input(
+                "找不到自動偵測的試算表網址，請手動貼上一次：",
+                value=st.session_state.manual_sheet_url,
+                placeholder="https://docs.google.com/spreadsheets/d/xxxxxxxx/edit"
+            )
+            sheet_url = st.session_state.manual_sheet_url
+
+        if sheet_url:
+            st.link_button("📄 開啟 Google Sheet", sheet_url, type="primary", use_container_width=True)
+        else:
+            st.caption("尚未設定網址，請先在上方貼上。")
