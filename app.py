@@ -327,6 +327,12 @@ def load_data_and_recover_settings():
         cols = ["ID", "日期", "類型", "類別", "項目", "金額", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人", "專案"]
         for c in cols:
             if c not in df.columns: df[c] = ""
+        # 強制把所有「文字類」欄位轉成字串型態，避免空白欄位被 pandas 誤判成數字型態，
+        # 導致之後寫入文字時被新版 pandas 的嚴格型態檢查擋下來報錯
+        text_cols = ["ID", "日期", "類型", "類別", "項目", "記帳人", "備註", "結帳狀態", "結帳單號", "已同意人", "專案"]
+        for c in text_cols:
+            df[c] = df[c].fillna("").astype(str)
+            df.loc[df[c].isin(["nan", "None", "NaN"]), c] = ""
         df["類型"] = df["類型"].replace("", "支出")
         df["金額"] = pd.to_numeric(df["金額"], errors="coerce").fillna(0)
         
