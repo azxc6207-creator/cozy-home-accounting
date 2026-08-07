@@ -104,7 +104,7 @@ st.markdown("""
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button[kind="primary"] { background-color: #F5A623 !important; color: #FFFFFF !important; border: 1px solid #F5A623 !important; }
     div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #C2410C !important; }
     /* 🚫 下拉選單的輸入框直接關閉點擊互動，改由外層容器接收點擊來開啟選單 —— 這樣鍵盤在物理上就不可能被叫出來 */
-    div[data-baseweb="select"] input { pointer-events: none !important; caret-color: transparent !important; }
+    input[role="combobox"] { pointer-events: none !important; caret-color: transparent !important; }
     /* 📱 底部固定分頁列 (Bottom Tab Bar，取代原本頂部橫向導覽列) */
     .stTabs [data-baseweb="tab-list"] {
         position: fixed !important;
@@ -157,7 +157,7 @@ components.html(
     doc.addEventListener('focusin', function (e) {
         const el = e.target;
         if (el && el.tagName === 'INPUT') {
-            const inSelect = el.closest('div[data-baseweb="select"]');
+            const inSelect = el.matches('input[role="combobox"]');
             const inDate = el.closest('div[data-testid="stDateInput"]');
             if ((inSelect || inDate) && !el.hasAttribute('readonly')) {
                 el.setAttribute('readonly', 'readonly');
@@ -194,7 +194,7 @@ components.html(
         });
 
         // 所有下拉選單（含日曆上方「切換年份／切換月份」）：禁止跳出鍵盤，只允許點選選項
-        doc.querySelectorAll('div[data-baseweb="select"] input').forEach(input => {
+        doc.querySelectorAll('input[role="combobox"]').forEach(input => {
             if (!input.hasAttribute('readonly')) {
                 input.setAttribute('readonly', 'readonly');
                 input.setAttribute('inputmode', 'none');
