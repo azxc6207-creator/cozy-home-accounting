@@ -240,6 +240,8 @@ if "expense_categories" not in st.session_state: st.session_state.expense_catego
 if "income_categories" not in st.session_state: st.session_state.income_categories = ["💰 薪資收入", "🎁 獎金紅包", "📈 投資理財", "🤝 副業兼職", "💵 其他收入"]
 if "cal_selected_date" not in st.session_state: st.session_state.cal_selected_date = date.today()
 if "filter_to_single_day" not in st.session_state: st.session_state.filter_to_single_day = False
+if "category_filter" not in st.session_state: st.session_state.category_filter = "全部類別"
+if "person_filter" not in st.session_state: st.session_state.person_filter = "全部成員"
 if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
 # 新增功能：設定儲存狀態
@@ -422,7 +424,7 @@ with tab_home:
                     e_payer = st.selectbox("付款人", st.session_state.members)
                     e_cat = st.selectbox("支出分類", st.session_state.expense_categories)
                     e_item = st.text_input("消費項目", placeholder="例如：麵包")
-                    e_amount_str = st.text_input("金額 ($) - 支援算式", value="100")
+                    e_amount_str = st.text_input("金額 ($) - 支援算式", value="", placeholder="輸入金額")
                     e_proj = st.selectbox("專案目標 (選填)", st.session_state.projects)
                     e_note = st.text_input("備註 (非必填)")
                     if st.form_submit_button("確認新增", type="primary", use_container_width=True):
@@ -441,7 +443,7 @@ with tab_home:
                     i_receiver = st.selectbox("收款人", st.session_state.members)
                     i_cat = st.selectbox("收入分類", st.session_state.income_categories)
                     i_item = st.text_input("收入項目", placeholder="例如：薪資")
-                    i_amount_str = st.text_input("金額 ($) - 支援算式", value="1000")
+                    i_amount_str = st.text_input("金額 ($) - 支援算式", value="", placeholder="輸入金額")
                     i_proj = st.selectbox("專案目標 (選填)", st.session_state.projects)
                     i_note = st.text_input("備註 (非必填)")
                     if st.form_submit_button("確認新增", type="primary", use_container_width=True):
@@ -480,6 +482,24 @@ with tab_home:
     
     st.markdown(f"<h2 style='text-align:center; color:#C2410C; font-weight:900; font-size:18px; margin:10px 0 6px 0;'>{display_title}</h2>", unsafe_allow_html=True)
 
+    # 🔎 分類／成員篩選：可以只看某一個類別（例如餐費）或某一個人在目前區間內的所有紀錄
+    st.markdown("<div style='font-size:12px; color:#A9895C; margin-bottom:2px;'>🔎 篩選（可與上方日期區間一起套用）</div>", unsafe_allow_html=True)
+    f_col1, f_col2 = st.columns(2)
+    all_categories = ["全部類別"] + st.session_state.expense_categories + st.session_state.income_categories
+    with f_col1:
+        st.session_state.category_filter = st.selectbox(
+            "篩選類別", all_categories,
+            index=all_categories.index(st.session_state.category_filter) if st.session_state.category_filter in all_categories else 0,
+            label_visibility="collapsed"
+        )
+    all_people = ["全部成員"] + st.session_state.members
+    with f_col2:
+        st.session_state.person_filter = st.selectbox(
+            "篩選成員", all_people,
+            index=all_people.index(st.session_state.person_filter) if st.session_state.person_filter in all_people else 0,
+            label_visibility="collapsed"
+        )
+
     # 📊 取得過濾資料
     df_current = st.session_state.expenses_df.copy()
     if not df_current.empty:
@@ -488,6 +508,10 @@ with tab_home:
             filtered_df = df_current[df_current["日期_dt"] == st.session_state.cal_selected_date]
         else:
             filtered_df = df_current[(df_current["日期_dt"] >= st.session_state.start_date) & (df_current["日期_dt"] <= st.session_state.end_date)]
+        if st.session_state.category_filter != "全部類別":
+            filtered_df = filtered_df[filtered_df["類別"] == st.session_state.category_filter]
+        if st.session_state.person_filter != "全部成員":
+            filtered_df = filtered_df[filtered_df["記帳人"] == st.session_state.person_filter]
     else:
         filtered_df = pd.DataFrame()
 
