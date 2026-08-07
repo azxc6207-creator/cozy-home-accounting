@@ -103,6 +103,8 @@ st.markdown("""
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button:active { transform: scale(0.82) !important; }
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) .stButton > button[kind="primary"] { background-color: #F5A623 !important; color: #FFFFFF !important; border: 1px solid #F5A623 !important; }
     div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #C2410C !important; }
+    /* 🚫 下拉選單／日期選單的輸入框直接關閉點擊互動，改由外層容器接收點擊來開啟選單 —— 這樣鍵盤在物理上就不可能被叫出來，不受任何 JS 時間差影響 */
+    div[data-baseweb="select"] input, div[data-testid="stDateInput"] input { pointer-events: none !important; caret-color: transparent !important; }
     /* 📱 底部固定分頁列 (Bottom Tab Bar，取代原本頂部橫向導覽列) */
     .stTabs [data-baseweb="tab-list"] {
         position: fixed !important;
