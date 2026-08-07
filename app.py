@@ -503,7 +503,9 @@ with tab_home:
         st.markdown("<h3 style='color:#C2410C; margin-bottom:8px; font-size:16px;'>🔍 篩選查詢</h3>", unsafe_allow_html=True)
         picked_range = st.date_input("日期區間", value=(st.session_state.start_date, st.session_state.end_date), key="unified_date_picker")
 
-        all_categories = ["全部類別"] + st.session_state.expense_categories + st.session_state.income_categories
+        DIVIDER_EXPENSE = "── 支出 ──"
+        DIVIDER_INCOME = "── 收入 ──"
+        all_categories = ["全部類別", DIVIDER_EXPENSE] + st.session_state.expense_categories + [DIVIDER_INCOME] + st.session_state.income_categories
         all_people = ["全部成員"] + st.session_state.members
         f_col1, f_col2 = st.columns(2)
         with f_col1:
@@ -523,7 +525,8 @@ with tab_home:
                 st.session_state.start_date, st.session_state.end_date = picked_range[0], picked_range[1]
             elif isinstance(picked_range, tuple) and len(picked_range) == 1:
                 st.session_state.start_date = st.session_state.end_date = picked_range[0]
-            st.session_state.category_filter = picked_category
+            # 「── 支出 ──」「── 收入 ──」只是清單裡的分隔標題，不是真的分類，選到就當作沒篩選
+            st.session_state.category_filter = picked_category if picked_category not in (DIVIDER_EXPENSE, DIVIDER_INCOME) else "全部類別"
             st.session_state.person_filter = picked_person
             st.session_state.filter_to_single_day = False
             st.rerun()
