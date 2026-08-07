@@ -150,6 +150,20 @@ components.html(
     // 📲 iOS Safari 預設不會觸發 :active 樣式，除非頁面上有註冊 touchstart 監聽，這裡補上讓按壓縮放效果生效
     doc.addEventListener('touchstart', function () {}, { passive: true });
 
+    // 🚫 最終防線：只要任何輸入框「一被點擊聚焦」，立刻鎖成唯讀不跳鍵盤，不管它是什麼時候才出現在畫面上的
+    // （比 MutationObserver／輪詢都更即時，直接在聚焦當下攔截）
+    doc.addEventListener('focusin', function (e) {
+        const el = e.target;
+        if (el && el.tagName === 'INPUT') {
+            const inSelect = el.closest('div[data-baseweb="select"]');
+            const inDate = el.closest('div[data-testid="stDateInput"]');
+            if ((inSelect || inDate) && !el.hasAttribute('readonly')) {
+                el.setAttribute('readonly', 'readonly');
+                el.setAttribute('inputmode', 'none');
+            }
+        }
+    }, true);
+
     // 🗓️ 日曆日期按鈕改圓角正方形 + 所有輸入框防鍵盤跳出（獨立成函式，供 MutationObserver 即時呼叫，不用等輪詢）
     function fixCalendarButtons() {
         doc.querySelectorAll('.stButton > button').forEach(btn => {
@@ -482,23 +496,44 @@ with tab_home:
     
     st.markdown(f"<h2 style='text-align:center; color:#C2410C; font-weight:900; font-size:18px; margin:10px 0 6px 0;'>{display_title}</h2>", unsafe_allow_html=True)
 
-    # 🔎 分類／成員篩選：可以只看某一個類別（例如餐費）或某一個人在目前區間內的所有紀錄
-    st.markdown("<div style='font-size:12px; color:#A9895C; margin-bottom:2px;'>🔎 篩選（可與上方日期區間一起套用）</div>", unsafe_allow_html=True)
-    f_col1, f_col2 = st.columns(2)
-    all_categories = ["全部類別"] + st.session_state.expense_categories + st.session_state.income_categories
-    with f_col1:
-        st.session_state.category_filter = st.selectbox(
-            "篩選類別", all_categories,
-            index=all_categories.index(st.session_state.category_filter) if st.session_state.category_filter in all_categories else 0,
-            label_visibility="collapsed"
-        )
-    all_people = ["全部成員"] + st.session_state.members
-    with f_col2:
-        st.session_state.person_filter = st.selectbox(
-            "篩選成員", all_people,
-            index=all_people.index(st.session_state.person_filter) if st.session_state.person_filter in all_people else 0,
-            label_visibility="collapsed"
-        )
+    # 🔍 篩選查詢：日期區間、類別、成員整合在同一個區塊，設定好按「套用篩選」一次套用
+    with st.container(border=True):
+        st.markdown("<h3 style='color:#C2410C; margin-bottom:8px; font-size:16px;'>🔍 篩選查詢</h3>", unsafe_allow_html=True)
+        picked_range = st.date_input("日期區間", value=(st.session_state.start_date, st.session_state.end_date), key="unified_date_picker")
+
+        all_categories = ["全部類別"] + st.session_state.expense_categories + st.session_state.income_categories
+        all_people = ["全部成員"] + st.session_state.members
+        f_col1, f_col2 = st.columns(2)
+        with f_col1:
+            picked_category = st.selectbox(
+                "篩選類別", all_categories,
+                index=all_categories.index(st.session_state.category_filter) if st.session_state.category_filter in all_categories else 0
+            )
+        with f_col2:
+            picked_person = st.selectbox(
+                "篩選成員", all_people,
+                index=all_people.index(st.session_state.person_filter) if st.session_state.person_filter in all_people else 0
+            )
+
+        q_col1, q_col2 = st.columns(2)
+        if q_col1.button("✅ 套用篩選", type="primary", use_container_width=True):
+            if isinstance(picked_range, tuple) and len(picked_range) == 2:
+                st.session_state.start_date, st.session_state.end_date = picked_range[0], picked_range[1]
+            elif isinstance(picked_range, tuple) and len(picked_range) == 1:
+                st.session_state.start_date = st.session_state.end_date = picked_range[0]
+            st.session_state.category_filter = picked_category
+            st.session_state.person_filter = picked_person
+            st.session_state.filter_to_single_day = False
+            st.rerun()
+
+        if q_col2.button("↺ 重置全部", use_container_width=True):
+            today = date.today()
+            st.session_state.start_date = date(today.year, today.month, 1)
+            st.session_state.end_date = date(today.year, today.month, calendar.monthrange(today.year, today.month)[1])
+            st.session_state.category_filter = "全部類別"
+            st.session_state.person_filter = "全部成員"
+            st.session_state.filter_to_single_day = False
+            st.rerun()
 
     # 📊 取得過濾資料
     df_current = st.session_state.expenses_df.copy()
@@ -631,26 +666,7 @@ with tab_home:
                             save_and_sync()
                             st.rerun()
 
-    # 📌 底部自訂區間查詢框
-    with st.container(border=True):
-        st.markdown("<h3 style='color:#C2410C; margin-bottom:10px; font-size:18px;'>🔍 底部區間查詢</h3>", unsafe_allow_html=True)
-        picked_range = st.date_input("選擇起始與結束日期", value=(st.session_state.start_date, st.session_state.end_date), key="bottom_date_picker")
-        
-        q_col1, q_col2 = st.columns(2)
-        if q_col1.button("✅ 查詢此區間", type="primary", use_container_width=True):
-            if isinstance(picked_range, tuple) and len(picked_range) == 2:
-                st.session_state.start_date, st.session_state.end_date = picked_range[0], picked_range[1]
-            elif isinstance(picked_range, tuple) and len(picked_range) == 1:
-                st.session_state.start_date = st.session_state.end_date = picked_range[0]
-            st.session_state.filter_to_single_day = False
-            st.rerun()
-                
-        if q_col2.button("↺ 看本月全部", use_container_width=True):
-            today = date.today()
-            st.session_state.start_date = date(today.year, today.month, 1)
-            st.session_state.end_date = date(today.year, today.month, calendar.monthrange(today.year, today.month)[1])
-            st.session_state.filter_to_single_day = False
-            st.rerun()
+
 
 # ==========================================
 # TAB 2~5: 統計、備忘錄、購物、設定 
