@@ -245,6 +245,35 @@ def parse_math_expr(expr_str):
     except:
         return 0.0
 
+def amount_keypad(state_key):
+    """自訂計算機鍵盤：可加減乘除，取代手機原生鍵盤（原生鍵盤沒有運算符號可用）"""
+    if state_key not in st.session_state:
+        st.session_state[state_key] = ""
+
+    display_val = st.session_state[state_key] if st.session_state[state_key] else "0"
+    st.markdown(
+        f"<div style='background:#FFF8E7; border:1px solid #F5DFAE; border-radius:10px; padding:10px 12px; text-align:right; font-size:22px; font-weight:900; color:#3D322C; margin-bottom:8px; min-height:44px; overflow-x:auto; white-space:nowrap;'>{display_val}</div>",
+        unsafe_allow_html=True
+    )
+
+    rows = [["7", "8", "9", "÷"], ["4", "5", "6", "×"], ["1", "2", "3", "−"], ["C", "0", "⌫", "+"]]
+    op_map = {"÷": "/", "×": "*", "−": "-", "+": "+"}
+    for r, row in enumerate(rows):
+        cols = st.columns(4)
+        for c, label in enumerate(row):
+            if cols[c].button(label, key=f"{state_key}_key_{r}_{c}", use_container_width=True):
+                if label == "C":
+                    st.session_state[state_key] = ""
+                elif label == "⌫":
+                    st.session_state[state_key] = st.session_state[state_key][:-1]
+                elif label in op_map:
+                    st.session_state[state_key] += op_map[label]
+                else:
+                    st.session_state[state_key] += label
+                st.rerun()
+
+    return st.session_state[state_key]
+
 # ==========================================
 # 3. Session State 初始化預設值
 # ==========================================
@@ -435,41 +464,47 @@ with tab_home:
         with top_col1:
             with st.popover("💸 記支出", use_container_width=True):
                 st.markdown("### 💸 新增支出")
-                with st.form("add_exp_form", clear_on_submit=True):
-                    e_date = st.date_input("支出日期", st.session_state.cal_selected_date)
-                    e_payer = st.selectbox("付款人", st.session_state.members)
-                    e_cat = st.selectbox("支出分類", st.session_state.expense_categories)
-                    e_item = st.text_input("消費項目", placeholder="例如：麵包")
-                    e_amount_str = st.text_input("金額 ($) - 支援算式", value="", placeholder="輸入金額")
-                    e_proj = st.selectbox("專案目標 (選填)", st.session_state.projects)
-                    e_note = st.text_input("備註 (非必填)")
-                    if st.form_submit_button("確認新增", type="primary", use_container_width=True):
-                        st.toast("💾 儲存中...", icon="⏳")
-                        e_amount = parse_math_expr(e_amount_str)
-                        new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp())}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(e_proj) if e_proj != "無" else ""}])
-                        st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
-                        save_and_sync()
-                        st.toast("🎉 支出新增成功！")
-                        st.rerun()
+                e_date = st.date_input("支出日期", st.session_state.cal_selected_date, key="e_date_input")
+                e_payer = st.selectbox("付款人", st.session_state.members, key="e_payer_input")
+                e_cat = st.selectbox("支出分類", st.session_state.expense_categories, key="e_cat_input")
+                e_item = st.text_input("消費項目", placeholder="例如：麵包", key="e_item_input")
+                st.markdown("<div style='font-size:14px; font-weight:800; color:#C2410C; margin-top:6px;'>金額 ($)</div>", unsafe_allow_html=True)
+                e_amount_str = amount_keypad("e_amount_pad")
+                e_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="e_proj_input")
+                e_note = st.text_input("備註 (非必填)", key="e_note_input")
+                if st.button("確認新增", type="primary", use_container_width=True, key="e_submit_btn"):
+                    st.toast("💾 儲存中...", icon="⏳")
+                    e_amount = parse_math_expr(e_amount_str)
+                    new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp())}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(e_proj) if e_proj != "無" else ""}])
+                    st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
+                    save_and_sync()
+                    st.session_state.e_item_input = ""
+                    st.session_state.e_note_input = ""
+                    st.session_state.e_amount_pad = ""
+                    st.toast("🎉 支出新增成功！")
+                    st.rerun()
         with top_col2:
             with st.popover("✨ 記收入", use_container_width=True):
                 st.markdown("### ✨ 新增收入")
-                with st.form("add_inc_form", clear_on_submit=True):
-                    i_date = st.date_input("收入日期", st.session_state.cal_selected_date)
-                    i_receiver = st.selectbox("收款人", st.session_state.members)
-                    i_cat = st.selectbox("收入分類", st.session_state.income_categories)
-                    i_item = st.text_input("收入項目", placeholder="例如：薪資")
-                    i_amount_str = st.text_input("金額 ($) - 支援算式", value="", placeholder="輸入金額")
-                    i_proj = st.selectbox("專案目標 (選填)", st.session_state.projects)
-                    i_note = st.text_input("備註 (非必填)")
-                    if st.form_submit_button("確認新增", type="primary", use_container_width=True):
-                        st.toast("💾 儲存中...", icon="⏳")
-                        i_amount = parse_math_expr(i_amount_str)
-                        new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
-                        st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
-                        save_and_sync()
-                        st.toast("🎉 收入新增成功！")
-                        st.rerun()
+                i_date = st.date_input("收入日期", st.session_state.cal_selected_date, key="i_date_input")
+                i_receiver = st.selectbox("收款人", st.session_state.members, key="i_receiver_input")
+                i_cat = st.selectbox("收入分類", st.session_state.income_categories, key="i_cat_input")
+                i_item = st.text_input("收入項目", placeholder="例如：薪資", key="i_item_input")
+                st.markdown("<div style='font-size:14px; font-weight:800; color:#C2410C; margin-top:6px;'>金額 ($)</div>", unsafe_allow_html=True)
+                i_amount_str = amount_keypad("i_amount_pad")
+                i_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="i_proj_input")
+                i_note = st.text_input("備註 (非必填)", key="i_note_input")
+                if st.button("確認新增", type="primary", use_container_width=True, key="i_submit_btn"):
+                    st.toast("💾 儲存中...", icon="⏳")
+                    i_amount = parse_math_expr(i_amount_str)
+                    new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
+                    st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
+                    save_and_sync()
+                    st.session_state.i_item_input = ""
+                    st.session_state.i_note_input = ""
+                    st.session_state.i_amount_pad = ""
+                    st.toast("🎉 收入新增成功！")
+                    st.rerun()
         with top_col3:
             with st.popover("🐾 算算帳", use_container_width=True):
                 st.markdown("### 🐾 結帳專區")
