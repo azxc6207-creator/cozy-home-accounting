@@ -86,6 +86,22 @@ st.markdown("""
     div[data-testid="stPopoverBody"] div[data-testid="stColumn"], div[data-testid="stPopoverBody"] div[data-testid="column"] { width: 100% !important; flex: none !important; }
     div[data-testid="stPopoverBody"] form { margin-bottom: 20px !important; padding-bottom: 20px !important; }
 
+    /* 🧮 計算機鍵盤：用 Streamlit 自動產生的 st-key-<key名稱> class 精準定位，純 CSS 直接鎖定排版，
+       第一時間畫面繪製就是對的，不會有 JS 事後補救造成的閃爍延遲 */
+    div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"]:has([class*="st-key-e_amount_pad_key_"]),
+    div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"]:has([class*="st-key-i_amount_pad_key_"]) {
+        flex-flow: row !important; flex-wrap: nowrap !important; gap: 6px !important;
+    }
+    div[data-testid="stPopoverBody"] div[data-testid="stColumn"]:has([class*="st-key-e_amount_pad_key_"]),
+    div[data-testid="stPopoverBody"] div[data-testid="stColumn"]:has([class*="st-key-i_amount_pad_key_"]) {
+        width: auto !important; min-width: 0 !important; flex: 1 1 0 !important;
+    }
+    div[class*="st-key-e_amount_pad_key_"] .stButton > button,
+    div[class*="st-key-i_amount_pad_key_"] .stButton > button {
+        width: 100% !important; height: 44px !important; min-height: 44px !important; border-radius: 10px !important;
+        -webkit-appearance: none !important; appearance: none !important;
+    }
+
     /* 📌 容器卡片統一樣式 */
     div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #FFFDF3 !important; border-radius: 16px !important; padding: 8px 10px !important; margin-bottom: 8px !important; border: 1px solid #F5DFAE !important; box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important; }
     div[data-testid="stVerticalBlockBorderWrapper"] p { margin-bottom: 0 !important; }
@@ -183,29 +199,6 @@ components.html(
                 btn.style.setProperty('border-radius', '10px', 'important');
                 btn.style.setProperty('aspect-ratio', '1 / 1', 'important');
                 btn.style.setProperty('padding', '0', 'important');
-                btn.style.setProperty('-webkit-appearance', 'none', 'important');
-                btn.style.setProperty('appearance', 'none', 'important');
-            }
-
-            // 🧮 計算機鍵盤按鈕（在彈窗裡的數字／運算符號）：讓所在那一排強制變回橫向排列
-            const isKeypadKey = /^[0-9]$/.test(txt) || ['÷', '×', '−', '+', 'C', '⌫'].includes(txt);
-            if (inPopover && isKeypadKey) {
-                const row = btn.closest('div[data-testid="stHorizontalBlock"]');
-                if (row) {
-                    row.style.setProperty('flex-direction', 'row', 'important');
-                    row.style.setProperty('flex-wrap', 'nowrap', 'important');
-                    row.style.setProperty('gap', '6px', 'important');
-                }
-                const col = btn.closest('div[data-testid="stColumn"]');
-                if (col) {
-                    col.style.setProperty('width', 'auto', 'important');
-                    col.style.setProperty('min-width', '0', 'important');
-                    col.style.setProperty('flex', '1 1 0', 'important');
-                }
-                btn.style.setProperty('width', '100%', 'important');
-                btn.style.setProperty('height', '44px', 'important');
-                btn.style.setProperty('min-height', '44px', 'important');
-                btn.style.setProperty('border-radius', '10px', 'important');
                 btn.style.setProperty('-webkit-appearance', 'none', 'important');
                 btn.style.setProperty('appearance', 'none', 'important');
             }
