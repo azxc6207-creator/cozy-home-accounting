@@ -86,6 +86,23 @@ st.markdown("""
     div[data-testid="stPopoverBody"] div[data-testid="stColumn"], div[data-testid="stPopoverBody"] div[data-testid="column"] { width: 100% !important; flex: none !important; }
     div[data-testid="stPopoverBody"] form { margin-bottom: 20px !important; padding-bottom: 20px !important; }
 
+    /* 🧮 計算機鍵盤：用純 CSS（不靠 JS 補救）把鍵盤這一區的排版強制改回 4 欄橫排，
+       第一時間畫面繪製就是正確排版，不會有 JS 事後修正造成的閃爍延遲 */
+    div[data-testid="stPopoverBody"] div[data-testid="stVerticalBlockBorderWrapper"]:has(.keypad-marker) {
+        border: none !important; background: transparent !important; padding: 0 !important; box-shadow: none !important; margin-bottom: 8px !important;
+    }
+    div[data-testid="stPopoverBody"] div[data-testid="stVerticalBlockBorderWrapper"]:has(.keypad-marker) div[data-testid="stHorizontalBlock"] {
+        flex-direction: row !important; flex-wrap: nowrap !important; gap: 6px !important;
+    }
+    div[data-testid="stPopoverBody"] div[data-testid="stVerticalBlockBorderWrapper"]:has(.keypad-marker) div[data-testid="stColumn"],
+    div[data-testid="stPopoverBody"] div[data-testid="stVerticalBlockBorderWrapper"]:has(.keypad-marker) div[data-testid="column"] {
+        width: auto !important; min-width: 0 !important; flex: 1 1 0 !important;
+    }
+    div[data-testid="stPopoverBody"] div[data-testid="stVerticalBlockBorderWrapper"]:has(.keypad-marker) .stButton > button {
+        width: 100% !important; height: 44px !important; min-height: 44px !important; border-radius: 10px !important;
+        -webkit-appearance: none !important; appearance: none !important;
+    }
+
     /* 📌 容器卡片統一樣式 */
     div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #FFFDF3 !important; border-radius: 16px !important; padding: 8px 10px !important; margin-bottom: 8px !important; border: 1px solid #F5DFAE !important; box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important; }
     div[data-testid="stVerticalBlockBorderWrapper"] p { margin-bottom: 0 !important; }
@@ -186,30 +203,6 @@ components.html(
                 btn.style.setProperty('-webkit-appearance', 'none', 'important');
                 btn.style.setProperty('appearance', 'none', 'important');
             }
-
-            // 🧮 計算機鍵盤按鈕（在彈窗裡的數字／運算符號）：讓所在那一排強制變回橫向排列，
-            // 因為彈窗預設會把所有橫向元件打成直向堆疊，這裡單獨把鍵盤這幾排排回 4 欄橫排
-            const isKeypadKey = /^[0-9]$/.test(txt) || ['÷', '×', '−', '+', 'C', '⌫'].includes(txt);
-            if (inPopover && isKeypadKey) {
-                const row = btn.closest('div[data-testid="stHorizontalBlock"]');
-                if (row) {
-                    row.style.setProperty('flex-direction', 'row', 'important');
-                    row.style.setProperty('flex-wrap', 'nowrap', 'important');
-                    row.style.setProperty('gap', '6px', 'important');
-                }
-                const col = btn.closest('div[data-testid="stColumn"]');
-                if (col) {
-                    col.style.setProperty('width', 'auto', 'important');
-                    col.style.setProperty('min-width', '0', 'important');
-                    col.style.setProperty('flex', '1 1 0', 'important');
-                }
-                btn.style.setProperty('width', '100%', 'important');
-                btn.style.setProperty('height', '44px', 'important');
-                btn.style.setProperty('min-height', '44px', 'important');
-                btn.style.setProperty('border-radius', '10px', 'important');
-                btn.style.setProperty('-webkit-appearance', 'none', 'important');
-                btn.style.setProperty('appearance', 'none', 'important');
-            }
         });
 
         // 日期輸入框：禁止跳出鍵盤，只允許點選日曆
@@ -278,26 +271,29 @@ def amount_keypad(state_key):
         st.session_state[state_key] = ""
 
     display_val = st.session_state[state_key] if st.session_state[state_key] else "0"
-    st.markdown(
-        f"<div style='background:#FFF8E7; border:1px solid #F5DFAE; border-radius:10px; padding:10px 12px; text-align:right; font-size:22px; font-weight:900; color:#3D322C; margin-bottom:8px; min-height:44px; overflow-x:auto; white-space:nowrap;'>{display_val}</div>",
-        unsafe_allow_html=True
-    )
 
-    rows = [["7", "8", "9", "÷"], ["4", "5", "6", "×"], ["1", "2", "3", "−"], ["C", "0", "⌫", "+"]]
-    op_map = {"÷": "/", "×": "*", "−": "-", "+": "+"}
-    for r, row in enumerate(rows):
-        cols = st.columns(4)
-        for c, label in enumerate(row):
-            if cols[c].button(label, key=f"{state_key}_key_{r}_{c}", use_container_width=True):
-                if label == "C":
-                    st.session_state[state_key] = ""
-                elif label == "⌫":
-                    st.session_state[state_key] = st.session_state[state_key][:-1]
-                elif label in op_map:
-                    st.session_state[state_key] += op_map[label]
-                else:
-                    st.session_state[state_key] += label
-                st.rerun()
+    with st.container(border=True):
+        st.markdown(
+            f"<span class='keypad-marker'></span>"
+            f"<div style='background:#FFF8E7; border:1px solid #F5DFAE; border-radius:10px; padding:10px 12px; text-align:right; font-size:22px; font-weight:900; color:#3D322C; margin-bottom:8px; min-height:44px; overflow-x:auto; white-space:nowrap;'>{display_val}</div>",
+            unsafe_allow_html=True
+        )
+
+        rows = [["7", "8", "9", "÷"], ["4", "5", "6", "×"], ["1", "2", "3", "−"], ["C", "0", "⌫", "+"]]
+        op_map = {"÷": "/", "×": "*", "−": "-", "+": "+"}
+        for r, row in enumerate(rows):
+            cols = st.columns(4)
+            for c, label in enumerate(row):
+                if cols[c].button(label, key=f"{state_key}_key_{r}_{c}", use_container_width=True):
+                    if label == "C":
+                        st.session_state[state_key] = ""
+                    elif label == "⌫":
+                        st.session_state[state_key] = st.session_state[state_key][:-1]
+                    elif label in op_map:
+                        st.session_state[state_key] += op_map[label]
+                    else:
+                        st.session_state[state_key] += label
+                    st.rerun()
 
     return st.session_state[state_key]
 
