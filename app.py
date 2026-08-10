@@ -170,7 +170,10 @@ components.html(
     function fixCalendarButtons() {
         doc.querySelectorAll('.stButton > button').forEach(btn => {
             const txt = (btn.textContent || '').trim();
-            if (/^\d{1,2}$/.test(txt)) {
+            const inPopover = btn.closest('div[data-testid="stPopoverBody"]');
+
+            // 🗓️ 日曆日期按鈕（不在彈窗裡）：固定 38x38 圓角正方形
+            if (!inPopover && /^\d{1,2}$/.test(txt)) {
                 btn.style.setProperty('width', '38px', 'important');
                 btn.style.setProperty('height', '38px', 'important');
                 btn.style.setProperty('min-width', '38px', 'important');
@@ -180,6 +183,30 @@ components.html(
                 btn.style.setProperty('border-radius', '10px', 'important');
                 btn.style.setProperty('aspect-ratio', '1 / 1', 'important');
                 btn.style.setProperty('padding', '0', 'important');
+                btn.style.setProperty('-webkit-appearance', 'none', 'important');
+                btn.style.setProperty('appearance', 'none', 'important');
+            }
+
+            // 🧮 計算機鍵盤按鈕（在彈窗裡的數字／運算符號）：讓所在那一排強制變回橫向排列，
+            // 因為彈窗預設會把所有橫向元件打成直向堆疊，這裡單獨把鍵盤這幾排排回 4 欄橫排
+            const isKeypadKey = /^[0-9]$/.test(txt) || ['÷', '×', '−', '+', 'C', '⌫'].includes(txt);
+            if (inPopover && isKeypadKey) {
+                const row = btn.closest('div[data-testid="stHorizontalBlock"]');
+                if (row) {
+                    row.style.setProperty('flex-direction', 'row', 'important');
+                    row.style.setProperty('flex-wrap', 'nowrap', 'important');
+                    row.style.setProperty('gap', '6px', 'important');
+                }
+                const col = btn.closest('div[data-testid="stColumn"]');
+                if (col) {
+                    col.style.setProperty('width', 'auto', 'important');
+                    col.style.setProperty('min-width', '0', 'important');
+                    col.style.setProperty('flex', '1 1 0', 'important');
+                }
+                btn.style.setProperty('width', '100%', 'important');
+                btn.style.setProperty('height', '44px', 'important');
+                btn.style.setProperty('min-height', '44px', 'important');
+                btn.style.setProperty('border-radius', '10px', 'important');
                 btn.style.setProperty('-webkit-appearance', 'none', 'important');
                 btn.style.setProperty('appearance', 'none', 'important');
             }
