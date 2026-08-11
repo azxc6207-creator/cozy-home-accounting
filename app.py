@@ -206,13 +206,8 @@ components.html(
     }
 
     function optimizeMobileInputs() {
-        // 1. 金額輸入框：啟用簡易數字鍵盤
-        doc.querySelectorAll('input[type="text"]').forEach(input => {
-            const label = input.getAttribute('aria-label') || '';
-            if (label.includes('金額') && input.getAttribute('inputmode') !== 'tel') { 
-                input.setAttribute('inputmode', 'tel'); 
-            }
-        });
+        // 1. 金額輸入框：維持一般文字鍵盤（不要用電話鍵盤，那個只有數字跟 +，沒有 -、*、/，
+        //    無法輸入完整的加減乘除算式；一般鍵盤可以切換到符號頁打出完整運算式）
 
         fixCalendarButtons();
         
