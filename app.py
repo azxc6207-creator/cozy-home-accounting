@@ -86,22 +86,6 @@ st.markdown("""
     div[data-testid="stPopoverBody"] div[data-testid="stColumn"], div[data-testid="stPopoverBody"] div[data-testid="column"] { width: 100% !important; flex: none !important; }
     div[data-testid="stPopoverBody"] form { margin-bottom: 20px !important; padding-bottom: 20px !important; }
 
-    /* 🧮 計算機鍵盤：用 Streamlit 自動產生的 st-key-<key名稱> class 精準定位，純 CSS 直接鎖定排版，
-       第一時間畫面繪製就是對的，不會有 JS 事後補救造成的閃爍延遲 */
-    div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"]:has([class*="st-key-e_amount_pad_key_"]),
-    div[data-testid="stPopoverBody"] div[data-testid="stHorizontalBlock"]:has([class*="st-key-i_amount_pad_key_"]) {
-        flex-flow: row !important; flex-wrap: nowrap !important; gap: 6px !important;
-    }
-    div[data-testid="stPopoverBody"] div[data-testid="stColumn"]:has([class*="st-key-e_amount_pad_key_"]),
-    div[data-testid="stPopoverBody"] div[data-testid="stColumn"]:has([class*="st-key-i_amount_pad_key_"]) {
-        width: auto !important; min-width: 0 !important; flex: 1 1 0 !important;
-    }
-    div[class*="st-key-e_amount_pad_key_"] .stButton > button,
-    div[class*="st-key-i_amount_pad_key_"] .stButton > button {
-        width: 100% !important; height: 44px !important; min-height: 44px !important; border-radius: 10px !important;
-        -webkit-appearance: none !important; appearance: none !important;
-    }
-
     /* 📌 容器卡片統一樣式 */
     div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #FFFDF3 !important; border-radius: 16px !important; padding: 8px 10px !important; margin-bottom: 8px !important; border: 1px solid #F5DFAE !important; box-shadow: 0 2px 6px rgba(160, 120, 85, 0.05) !important; }
     div[data-testid="stVerticalBlockBorderWrapper"] p { margin-bottom: 0 !important; }
@@ -264,35 +248,6 @@ def parse_math_expr(expr_str):
     except:
         return 0.0
 
-def amount_keypad(state_key):
-    """自訂計算機鍵盤：可加減乘除，取代手機原生鍵盤（原生鍵盤沒有運算符號可用）"""
-    if state_key not in st.session_state:
-        st.session_state[state_key] = ""
-
-    display_val = st.session_state[state_key] if st.session_state[state_key] else "0"
-    st.markdown(
-        f"<div style='background:#FFF8E7; border:1px solid #F5DFAE; border-radius:10px; padding:10px 12px; text-align:right; font-size:22px; font-weight:900; color:#3D322C; margin-bottom:8px; min-height:44px; overflow-x:auto; white-space:nowrap;'>{display_val}</div>",
-        unsafe_allow_html=True
-    )
-
-    rows = [["7", "8", "9", "÷"], ["4", "5", "6", "×"], ["1", "2", "3", "−"], ["C", "0", "⌫", "+"]]
-    op_map = {"÷": "/", "×": "*", "−": "-", "+": "+"}
-    for r, row in enumerate(rows):
-        cols = st.columns(4)
-        for c, label in enumerate(row):
-            if cols[c].button(label, key=f"{state_key}_key_{r}_{c}", use_container_width=True):
-                if label == "C":
-                    st.session_state[state_key] = ""
-                elif label == "⌫":
-                    st.session_state[state_key] = st.session_state[state_key][:-1]
-                elif label in op_map:
-                    st.session_state[state_key] += op_map[label]
-                else:
-                    st.session_state[state_key] += label
-                st.rerun(scope="fragment")
-
-    return st.session_state[state_key]
-
 # ==========================================
 # 3. Session State 初始化預設值
 # ==========================================
@@ -439,8 +394,7 @@ def expense_entry_fragment():
     e_payer = st.selectbox("付款人", st.session_state.members, key="e_payer_input")
     e_cat = st.selectbox("支出分類", st.session_state.expense_categories, key="e_cat_input")
     e_item = st.text_input("消費項目", placeholder="例如：麵包", key="e_item_input")
-    st.markdown("<div style='font-size:14px; font-weight:800; color:#C2410C; margin-top:6px;'>金額 ($)</div>", unsafe_allow_html=True)
-    e_amount_str = amount_keypad("e_amount_pad")
+    e_amount_str = st.text_input("金額 ($)", key="e_amount_str_input", placeholder="可輸入算式，如 120+35")
     e_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="e_proj_input")
     e_note = st.text_input("備註 (非必填)", key="e_note_input")
     if st.button("確認新增", type="primary", use_container_width=True, key="e_submit_btn"):
@@ -451,7 +405,7 @@ def expense_entry_fragment():
         save_and_sync()
         st.session_state.pop("e_item_input", None)
         st.session_state.pop("e_note_input", None)
-        st.session_state.pop("e_amount_pad", None)
+        st.session_state.pop("e_amount_str_input", None)
         st.toast("🎉 支出新增成功！")
         st.rerun()  # 這裡要整頁重跑，讓外面的明細清單／總計立刻反映新增的這一筆
 
@@ -462,8 +416,7 @@ def income_entry_fragment():
     i_receiver = st.selectbox("收款人", st.session_state.members, key="i_receiver_input")
     i_cat = st.selectbox("收入分類", st.session_state.income_categories, key="i_cat_input")
     i_item = st.text_input("收入項目", placeholder="例如：薪資", key="i_item_input")
-    st.markdown("<div style='font-size:14px; font-weight:800; color:#C2410C; margin-top:6px;'>金額 ($)</div>", unsafe_allow_html=True)
-    i_amount_str = amount_keypad("i_amount_pad")
+    i_amount_str = st.text_input("金額 ($)", key="i_amount_str_input", placeholder="可輸入算式，如 1000+500")
     i_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="i_proj_input")
     i_note = st.text_input("備註 (非必填)", key="i_note_input")
     if st.button("確認新增", type="primary", use_container_width=True, key="i_submit_btn"):
@@ -474,7 +427,7 @@ def income_entry_fragment():
         save_and_sync()
         st.session_state.pop("i_item_input", None)
         st.session_state.pop("i_note_input", None)
-        st.session_state.pop("i_amount_pad", None)
+        st.session_state.pop("i_amount_str_input", None)
         st.toast("🎉 收入新增成功！")
         st.rerun()  # 這裡要整頁重跑，讓外面的明細清單／總計立刻反映新增的這一筆
 
