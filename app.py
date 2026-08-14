@@ -24,11 +24,11 @@ st.set_page_config(
 # ==========================================
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap');
 
     /* 🎨 全局奶黃橘色背景 + 🐱 貓咪剪影紋理 */
     html, body, [class*="css"], .stApp {
-        font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        font-family: 'Klee One', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         -webkit-text-size-adjust: 100% !important;
         text-size-adjust: 100% !important;
         background-color: #FFF8E7 !important;
