@@ -380,9 +380,8 @@ if st.session_state.get("sync_error"):
     st.session_state.sync_error = None
 
 # ==========================================
-# 4.5 記支出／記收入彈窗（獨立成 @st.fragment，鍵盤按鈕只重跑這一小塊，不用整支程式全部重算，減少延遲）
+# 4.5 記支出／記收入彈窗
 # ==========================================
-@st.fragment
 def expense_entry_fragment():
     st.markdown("### 💸 新增支出")
     e_date = st.date_input("支出日期", st.session_state.cal_selected_date, key="e_date_input")
@@ -404,7 +403,6 @@ def expense_entry_fragment():
         st.toast("🎉 支出新增成功！")
         st.rerun()  # 這裡要整頁重跑，讓外面的明細清單／總計立刻反映新增的這一筆
 
-@st.fragment
 def income_entry_fragment():
     st.markdown("### ✨ 新增收入")
     i_date = st.date_input("收入日期", st.session_state.cal_selected_date, key="i_date_input")
@@ -767,33 +765,38 @@ with tab_memo:
 
 with tab_shopping:
     st.subheader("🛒 購物清單")
-    with st.form("add_shop_form", clear_on_submit=True):
-        col_s1, col_s2 = st.columns([3, 1])
-        new_shop_item = col_s1.text_input("輸入商品", label_visibility="collapsed")
-        if col_s2.form_submit_button("➕ 新增", type="primary") and new_shop_item:
-            st.toast("💾 儲存中...", icon="⏳")
-            st.session_state.shopping_list.append({"id": int(datetime.now().timestamp()*1000), "item": new_shop_item})
-            save_and_sync()
-            st.rerun()
-            
-    for item in list(st.session_state.shopping_list):
-        with st.container(border=True):
-            c1, c2, c3, c4 = st.columns([0.8, 4.5, 1.5, 1.5])
-            if c1.checkbox("", key=f"sc_{item['id']}"):
-                st.session_state.shopping_list.remove(item)
+
+    @st.fragment
+    def shopping_list_fragment():
+        with st.form("add_shop_form", clear_on_submit=True):
+            col_s1, col_s2 = st.columns([3, 1])
+            new_shop_item = col_s1.text_input("輸入商品", label_visibility="collapsed")
+            if col_s2.form_submit_button("➕ 新增", type="primary") and new_shop_item:
+                st.toast("💾 儲存中...", icon="⏳")
+                st.session_state.shopping_list.append({"id": int(datetime.now().timestamp()*1000), "item": new_shop_item})
                 save_and_sync()
-                st.rerun()
-            c2.markdown(f"🛒 {item['item']}")
-            with c3:
-                with st.popover("✏️"):
-                    new_item = st.text_input("修改", value=item["item"], key=f"si_{item['id']}")
-                    if st.button("儲存", key=f"ss_{item['id']}", type="primary", use_container_width=True):
-                        st.toast("💾 儲存中...", icon="⏳")
-                        item["item"] = new_item
-                        save_and_sync()
-                        st.rerun()
-            with c4:
-                st.write("")
+                st.rerun(scope="fragment")
+
+        for item in list(st.session_state.shopping_list):
+            with st.container(border=True):
+                c1, c2, c3, c4 = st.columns([0.8, 4.5, 1.5, 1.5])
+                if c1.checkbox("", key=f"sc_{item['id']}"):
+                    st.session_state.shopping_list.remove(item)
+                    save_and_sync()
+                    st.rerun(scope="fragment")
+                c2.markdown(f"🛒 {item['item']}")
+                with c3:
+                    with st.popover("✏️"):
+                        new_item = st.text_input("修改", value=item["item"], key=f"si_{item['id']}")
+                        if st.button("儲存", key=f"ss_{item['id']}", type="primary", use_container_width=True):
+                            st.toast("💾 儲存中...", icon="⏳")
+                            item["item"] = new_item
+                            save_and_sync()
+                            st.rerun(scope="fragment")
+                with c4:
+                    st.write("")
+
+    shopping_list_fragment()
 
 with tab_settings:
     st.subheader("⚙️ 小窩進階設定")
