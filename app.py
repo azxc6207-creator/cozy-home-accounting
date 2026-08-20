@@ -256,6 +256,8 @@ if "cal_selected_date" not in st.session_state: st.session_state.cal_selected_da
 if "filter_to_single_day" not in st.session_state: st.session_state.filter_to_single_day = False
 if "category_filter" not in st.session_state: st.session_state.category_filter = "全部類別"
 if "person_filter" not in st.session_state: st.session_state.person_filter = "全部成員"
+if "keyword_search" not in st.session_state: st.session_state.keyword_search = ""
+if "savings_goals" not in st.session_state: st.session_state.savings_goals = []
 if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
 # 新增功能：設定儲存狀態
@@ -288,7 +290,8 @@ def save_and_sync():
         "shopping_list": st.session_state.shopping_list,
         "category_budgets": st.session_state.category_budgets,
         "fixed_transactions": st.session_state.fixed_transactions,
-        "projects": st.session_state.projects
+        "projects": st.session_state.projects,
+        "savings_goals": st.session_state.savings_goals
     }
     
     settings_df = pd.DataFrame([{
@@ -364,6 +367,7 @@ def load_data_and_recover_settings():
                 if "category_budgets" in settings: st.session_state.category_budgets = settings["category_budgets"]
                 if "fixed_transactions" in settings: st.session_state.fixed_transactions = settings["fixed_transactions"]
                 if "projects" in settings: st.session_state.projects = settings["projects"]
+                if "savings_goals" in settings: st.session_state.savings_goals = settings["savings_goals"]
             except: pass
             
         st.session_state.expenses_df = df[df["ID"] != "SYS_SETTINGS"].copy()
@@ -394,7 +398,7 @@ def expense_entry_fragment():
     if st.button("確認新增", type="primary", use_container_width=True, key="e_submit_btn"):
         st.toast("💾 儲存中...", icon="⏳")
         e_amount = parse_math_expr(e_amount_str)
-        new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp())}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(e_proj) if e_proj != "無" else ""}])
+        new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp()*1000)}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(e_proj) if e_proj != "無" else ""}])
         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
         save_and_sync()
         st.session_state.pop("e_item_input", None)
@@ -415,7 +419,7 @@ def income_entry_fragment():
     if st.button("確認新增", type="primary", use_container_width=True, key="i_submit_btn"):
         st.toast("💾 儲存中...", icon="⏳")
         i_amount = parse_math_expr(i_amount_str)
-        new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp())}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
+        new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp()*1000)}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
         save_and_sync()
         st.session_state.pop("i_item_input", None)
@@ -530,6 +534,8 @@ with tab_home:
                 index=all_people.index(st.session_state.person_filter) if st.session_state.person_filter in all_people else 0
             )
 
+        picked_keyword = st.text_input("🔎 搜尋備註/項目關鍵字", value=st.session_state.keyword_search, placeholder="例如：牙醫")
+
         q_col1, q_col2 = st.columns(2)
         if q_col1.button("✅ 套用篩選", type="primary", use_container_width=True):
             if isinstance(picked_range, tuple) and len(picked_range) == 2:
@@ -539,6 +545,7 @@ with tab_home:
             # 「── 支出 ──」「── 收入 ──」只是清單裡的分隔標題，不是真的分類，選到就當作沒篩選
             st.session_state.category_filter = picked_category if picked_category not in (DIVIDER_EXPENSE, DIVIDER_INCOME) else "全部類別"
             st.session_state.person_filter = picked_person
+            st.session_state.keyword_search = picked_keyword.strip()
             st.session_state.filter_to_single_day = False
             st.rerun()
 
@@ -548,6 +555,7 @@ with tab_home:
             st.session_state.end_date = date(today.year, today.month, calendar.monthrange(today.year, today.month)[1])
             st.session_state.category_filter = "全部類別"
             st.session_state.person_filter = "全部成員"
+            st.session_state.keyword_search = ""
             st.session_state.filter_to_single_day = False
             st.rerun()
 
@@ -563,6 +571,12 @@ with tab_home:
             filtered_df = filtered_df[filtered_df["類別"] == st.session_state.category_filter]
         if st.session_state.person_filter != "全部成員":
             filtered_df = filtered_df[filtered_df["記帳人"] == st.session_state.person_filter]
+        if st.session_state.keyword_search:
+            kw = st.session_state.keyword_search
+            filtered_df = filtered_df[
+                filtered_df["項目"].str.contains(kw, case=False, na=False) |
+                filtered_df["備註"].str.contains(kw, case=False, na=False)
+            ]
     else:
         filtered_df = pd.DataFrame()
 
@@ -586,7 +600,7 @@ with tab_home:
             st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px;'><span style='font-weight:800; color:#3D322C;'>{member}</span><span><span style='color:#E4572E;'>支 {mem_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {mem_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
         st.markdown(f"<div style='display:flex; justify-content:space-between; margin-top:8px; padding-top:6px; border-top:1px dashed #F5DFAE; font-size:14px;'><span style='font-weight:900; color:#C2410C;'>🏠 小窩總計</span><span style='font-weight:800;'><span style='color:#E4572E;'>支 {total_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {total_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
         
-        current_month_mask = (pd.to_datetime(df_current["日期"]).dt.year == sel_year) & (pd.to_datetime(df_current["日期"]).dt.month == sel_month)
+        current_month_mask = (df_current["日期_dt"].apply(lambda d: d.year) == sel_year) & (df_current["日期_dt"].apply(lambda d: d.month) == sel_month)
         curr_m_exp = df_current[current_month_mask & (df_current["類型"] == "支出")]
         
         has_budget = any(b > 0 for b in st.session_state.category_budgets.values())
@@ -607,6 +621,40 @@ with tab_home:
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # ==========================================
+    # 🐷 儲蓄/收入目標進度條（用「該目標期間內的收入減支出」＝淨儲蓄，對比目標金額）
+    # ==========================================
+    if st.session_state.savings_goals and not df_current.empty:
+        st.markdown("<div style='background-color:#FFFDF3; border-radius:12px; padding:12px 14px; border:1px solid #F5DFAE; margin-bottom:12px; box-shadow: 0 2px 6px rgba(160,120,85,0.05);'>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:15px; font-weight:900; color:#C2410C; margin-bottom:8px; border-bottom:1px solid #F5DFAE; padding-bottom:4px;'>🐷 儲蓄/收入目標</div>", unsafe_allow_html=True)
+        for g in st.session_state.savings_goals:
+            try:
+                g_start_d = datetime.strptime(g.get("start_date", ""), "%Y-%m-%d").date()
+                g_end_d = datetime.strptime(g.get("end_date", ""), "%Y-%m-%d").date()
+            except Exception:
+                continue
+            g_target = g.get("target", 0)
+            if g_target <= 0:
+                continue
+            g_mask = (df_current["日期_dt"] >= g_start_d) & (df_current["日期_dt"] <= g_end_d)
+            g_df = df_current[g_mask]
+            g_inc = g_df[g_df["類型"] == "收入"]["金額"].sum()
+            g_exp = g_df[g_df["類型"] == "支出"]["金額"].sum()
+            g_saved = g_inc - g_exp
+            g_pct = (g_saved / g_target) * 100
+            g_color = "#558B6E" if g_pct >= 70 else "#E9C46A" if g_pct >= 30 else "#E4572E"
+            st.markdown(f"""
+            <div style='margin-bottom: 10px;'>
+                <div style='display:flex; justify-content:space-between; font-size:13px; font-weight:700; color:#8A5A2B; margin-bottom:4px;'>
+                    <span>{g.get('name','')} ({g_pct:.1f}%)</span><span>{g_saved:,.0f} / {g_target:,.0f}</span>
+                </div>
+                <div style='width: 100%; background-color: #F5DFAE; border-radius: 6px; height: 8px; overflow:hidden;'>
+                    <div style='width: {max(min(g_pct, 100), 0)}%; background-color: {g_color}; height: 100%; border-radius: 6px;'></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ==========================================
@@ -800,7 +848,36 @@ with tab_shopping:
 
 with tab_settings:
     st.subheader("⚙️ 小窩進階設定")
-    
+
+    # --- 0. 儲蓄/收入目標設定 (Expander) ---
+    with st.expander("🐷 儲蓄/收入目標", expanded=False):
+        with st.popover("➕ 新增目標", use_container_width=True):
+            g_name = st.text_input("目標名稱", placeholder="例如：今年存 10 萬")
+            g_target = st.number_input("目標金額 ($)", min_value=0, value=10000, step=1000)
+            g_col1, g_col2 = st.columns(2)
+            g_start = g_col1.date_input("起算日期", date(date.today().year, 1, 1), key="g_start_input")
+            g_end = g_col2.date_input("結束日期", date(date.today().year, 12, 31), key="g_end_input")
+            if st.button("確認新增", type="primary", use_container_width=True, key="g_submit_btn"):
+                if g_name:
+                    st.toast("💾 儲存中...", icon="⏳")
+                    st.session_state.savings_goals.append({
+                        "id": int(datetime.now().timestamp()*1000), "name": g_name.strip(), "target": g_target,
+                        "start_date": str(g_start), "end_date": str(g_end)
+                    })
+                    save_and_sync()
+                    st.rerun()
+
+        for g in list(st.session_state.savings_goals):
+            with st.container(border=True):
+                gc1, gc2 = st.columns([4.5, 1.5])
+                gc1.markdown(f"<div style='font-size:14px; font-weight:700; color:#3D322C;'>{g.get('name','')}</div>", unsafe_allow_html=True)
+                gc1.markdown(f"<div style='font-size:11px; color:#A9895C;'>{g.get('start_date','')} ~ {g.get('end_date','')} · 目標 ${g.get('target',0):,}</div>", unsafe_allow_html=True)
+                if gc2.button("🗑️", key=f"del_g_{g.get('id','')}"):
+                    st.toast("💾 刪除中...", icon="🗑️")
+                    st.session_state.savings_goals.remove(g)
+                    save_and_sync()
+                    st.rerun()
+
     # --- 1. 預算設定 (Expander) ---
     with st.expander("⚠️ 分類預算設定", expanded=False):
         for c in st.session_state.expense_categories:
