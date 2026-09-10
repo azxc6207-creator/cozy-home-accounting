@@ -258,6 +258,8 @@ if "category_filter" not in st.session_state: st.session_state.category_filter =
 if "person_filter" not in st.session_state: st.session_state.person_filter = "全部成員"
 if "keyword_search" not in st.session_state: st.session_state.keyword_search = ""
 if "savings_goals" not in st.session_state: st.session_state.savings_goals = []
+if "settlement_history" not in st.session_state: st.session_state.settlement_history = []
+if "temp_settle_extras" not in st.session_state: st.session_state.temp_settle_extras = []
 if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
 # 新增功能：設定儲存狀態
@@ -291,7 +293,8 @@ def save_and_sync():
         "category_budgets": st.session_state.category_budgets,
         "fixed_transactions": st.session_state.fixed_transactions,
         "projects": st.session_state.projects,
-        "savings_goals": st.session_state.savings_goals
+        "savings_goals": st.session_state.savings_goals,
+        "settlement_history": st.session_state.settlement_history
     }
     
     settings_df = pd.DataFrame([{
@@ -368,6 +371,7 @@ def load_data_and_recover_settings():
                 if "fixed_transactions" in settings: st.session_state.fixed_transactions = settings["fixed_transactions"]
                 if "projects" in settings: st.session_state.projects = settings["projects"]
                 if "savings_goals" in settings: st.session_state.savings_goals = settings["savings_goals"]
+                if "settlement_history" in settings: st.session_state.settlement_history = settings["settlement_history"]
             except: pass
             
         st.session_state.expenses_df = df[df["ID"] != "SYS_SETTINGS"].copy()
@@ -488,20 +492,124 @@ with tab_home:
         with top_col3:
             with st.popover("🐾 算算帳", use_container_width=True):
                 st.markdown("### 🐾 結帳專區")
-                unsettled_df = st.session_state.expenses_df[st.session_state.expenses_df["結帳狀態"] != "已結帳"].copy()
-                if unsettled_df.empty:
-                    st.info("目前無待結帳筆數。")
+
+                # 📅 結帳區間選擇：本月 / 自訂月份 / 自訂日期區間
+                period_mode = st.radio("結帳區間", ["本月", "自訂月份", "自訂日期區間"], horizontal=True, key="settle_period_mode")
+                today = date.today()
+                if period_mode == "本月":
+                    p_start = date(today.year, today.month, 1)
+                    p_end = date(today.year, today.month, calendar.monthrange(today.year, today.month)[1])
+                elif period_mode == "自訂月份":
+                    sm_col1, sm_col2 = st.columns(2)
+                    year_opts = list(range(2020, 2035))
+                    sel_y = sm_col1.selectbox("年", year_opts, index=year_opts.index(today.year), key="settle_sel_year")
+                    sel_m = sm_col2.selectbox("月", list(range(1, 13)), index=today.month - 1, key="settle_sel_month")
+                    p_start = date(sel_y, sel_m, 1)
+                    p_end = date(sel_y, sel_m, calendar.monthrange(sel_y, sel_m)[1])
                 else:
-                    st.write(f"待結帳：**{len(unsettled_df)}** 筆")
-                    chk_cols = st.columns(len(st.session_state.members))
-                    agreed_flags = [chk_cols[i].checkbox(f"{m}", key=f"settle_chk_{m}") for i, m in enumerate(st.session_state.members)]
-                    if st.button("🤝 完成結帳", type="primary", use_container_width=True, disabled=(not all(agreed_flags))):
-                        st.toast("💾 儲存中...", icon="⏳")
-                        st.session_state.expenses_df.loc[unsettled_df.index, "結帳狀態"] = "已結帳"
-                        st.session_state.expenses_df.loc[unsettled_df.index, "結帳單號"] = f"SETTLE-{datetime.now().strftime('%Y%m%d%H%M')}"
-                        save_and_sync()
-                        st.success("🎉 已完成結帳！")
-                        st.rerun()
+                    p_range = st.date_input("選擇日期區間", value=(date(today.year, today.month, 1), today), key="settle_custom_range")
+                    if isinstance(p_range, tuple) and len(p_range) == 2:
+                        p_start, p_end = p_range
+                    elif isinstance(p_range, tuple) and len(p_range) == 1:
+                        p_start = p_end = p_range[0]
+                    else:
+                        p_start = p_end = today
+
+                df_all = st.session_state.expenses_df.copy()
+                if not df_all.empty:
+                    df_all["日期_dt"] = pd.to_datetime(df_all["日期"]).dt.date
+                    settle_candidates = df_all[(df_all["結帳狀態"] != "已結帳") & (df_all["日期_dt"] >= p_start) & (df_all["日期_dt"] <= p_end)]
+                else:
+                    settle_candidates = df_all
+
+                st.markdown(f"**區間內待結帳：{len(settle_candidates)} 筆**（{p_start} ~ {p_end}）")
+                if not settle_candidates.empty:
+                    with st.expander("查看帳本明細", expanded=False):
+                        for _, row in settle_candidates.sort_values("日期").iterrows():
+                            note_str = f"（{row['備註']}）" if row.get("備註") else ""
+                            amt_sign = "+" if row["類型"] == "收入" else "-"
+                            st.markdown(f"<div style='font-size:12px; padding:3px 0; border-bottom:1px dashed #F5DFAE;'>{row['日期']} · {row['項目']} {amt_sign}${row['金額']:,.0f}（{row['記帳人']}）{note_str}</div>", unsafe_allow_html=True)
+
+                st.markdown("---")
+                st.markdown("**➕ 額外項目**（不在帳本內、但要一起結帳計算的金額）")
+                with st.form("add_extra_settle_item", clear_on_submit=True):
+                    ex_desc = st.text_input("項目說明", placeholder="例如：代墊的計程車費")
+                    ex_col1, ex_col2 = st.columns(2)
+                    ex_amount = ex_col1.number_input("金額", min_value=0.0, step=10.0)
+                    ex_type = ex_col2.selectbox("類型", ["支出", "收入"])
+                    ex_col3, ex_col4 = st.columns(2)
+                    ex_payer = ex_col3.selectbox("由誰支付/收取", st.session_state.members)
+                    ex_note = ex_col4.text_input("備註 (選填)")
+                    if st.form_submit_button("加入結帳清單", use_container_width=True):
+                        if ex_desc and ex_amount > 0:
+                            st.session_state.temp_settle_extras.append({
+                                "id": int(datetime.now().timestamp()*1000), "desc": ex_desc.strip(), "amount": float(ex_amount),
+                                "type": ex_type, "payer": ex_payer, "note": ex_note.strip()
+                            })
+                            st.rerun()
+
+                if st.session_state.temp_settle_extras:
+                    for ex in list(st.session_state.temp_settle_extras):
+                        exc1, exc2, exc3 = st.columns([3, 1.3, 0.7])
+                        note_suffix = f"（{ex['note']}）" if ex.get("note") else ""
+                        amt_sign = "+" if ex["type"] == "收入" else "-"
+                        exc1.markdown(f"<div style='font-size:12px;'>{ex['desc']}{note_suffix}<br><span style='color:#A9895C;'>{ex['payer']}</span></div>", unsafe_allow_html=True)
+                        exc2.markdown(f"<div style='font-size:13px; text-align:right; margin-top:6px;'>{amt_sign}${ex['amount']:,.0f}</div>", unsafe_allow_html=True)
+                        if exc3.button("✕", key=f"del_extra_{ex['id']}"):
+                            st.session_state.temp_settle_extras.remove(ex)
+                            st.rerun()
+
+                # 💰 計算各成員應付/應收（依支出 AA 平分）
+                member_paid = {m: 0.0 for m in st.session_state.members}
+                total_expense_pool = 0.0
+                for _, row in settle_candidates.iterrows():
+                    if row["記帳人"] in member_paid and row["類型"] == "支出":
+                        member_paid[row["記帳人"]] += row["金額"]
+                        total_expense_pool += row["金額"]
+                for ex in st.session_state.temp_settle_extras:
+                    if ex["payer"] in member_paid and ex["type"] == "支出":
+                        member_paid[ex["payer"]] += ex["amount"]
+                        total_expense_pool += ex["amount"]
+
+                n_members = len(st.session_state.members)
+                fair_share = total_expense_pool / n_members if n_members else 0
+
+                st.markdown("---")
+                st.markdown(f"<div style='font-size:14px; font-weight:800; color:#C2410C;'>💰 結帳計算（AA 平分）</div>", unsafe_allow_html=True)
+                st.markdown(f"<div style='font-size:13px; color:#3D322C; margin-bottom:6px;'>區間總支出：${total_expense_pool:,.0f}　平均每人：${fair_share:,.0f}</div>", unsafe_allow_html=True)
+                for m in st.session_state.members:
+                    diff = member_paid[m] - fair_share
+                    if diff >= 0:
+                        st.markdown(f"<div style='font-size:13px; margin-bottom:2px;'>{m}：已付 ${member_paid[m]:,.0f} → <span style='color:#558B6E; font-weight:700;'>應收回 ${diff:,.0f}</span></div>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"<div style='font-size:13px; margin-bottom:2px;'>{m}：已付 ${member_paid[m]:,.0f} → <span style='color:#E4572E; font-weight:700;'>應補 ${abs(diff):,.0f}</span></div>", unsafe_allow_html=True)
+
+                st.markdown("---")
+                chk_cols = st.columns(len(st.session_state.members))
+                agreed_flags = [chk_cols[i].checkbox(f"{m}", key=f"settle_chk_{m}") for i, m in enumerate(st.session_state.members)]
+                nothing_to_settle = settle_candidates.empty and not st.session_state.temp_settle_extras
+                if st.button("🤝 確認結帳", type="primary", use_container_width=True, disabled=(not all(agreed_flags)) or nothing_to_settle):
+                    st.toast("💾 儲存中...", icon="⏳")
+                    settle_no = f"SETTLE-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    if not settle_candidates.empty:
+                        st.session_state.expenses_df.loc[settle_candidates.index, "結帳狀態"] = "已結帳"
+                        st.session_state.expenses_df.loc[settle_candidates.index, "結帳單號"] = settle_no
+                    st.session_state.settlement_history.append({
+                        "id": int(datetime.now().timestamp()*1000),
+                        "settle_no": settle_no,
+                        "settle_date": str(date.today()),
+                        "period_start": str(p_start),
+                        "period_end": str(p_end),
+                        "total": total_expense_pool,
+                        "fair_share": fair_share,
+                        "member_paid": member_paid,
+                        "extra_items": list(st.session_state.temp_settle_extras),
+                        "ledger_count": int(len(settle_candidates))
+                    })
+                    st.session_state.temp_settle_extras = []
+                    save_and_sync()
+                    st.success("🎉 已完成結帳！")
+                    st.rerun()
 
     # 📌 顯示當前檢視區間標題
     if st.session_state.filter_to_single_day:
@@ -849,7 +957,29 @@ with tab_shopping:
 with tab_settings:
     st.subheader("⚙️ 小窩進階設定")
 
-    # --- 0. 儲蓄/收入目標設定 (Expander) ---
+    # --- 0. 結帳歷史紀錄查詢 (Expander) ---
+    with st.expander("📜 結帳歷史紀錄", expanded=False):
+        if not st.session_state.settlement_history:
+            st.info("目前還沒有結帳紀錄。")
+        else:
+            for rec in sorted(st.session_state.settlement_history, key=lambda r: r.get("settle_date", ""), reverse=True):
+                with st.container(border=True):
+                    st.markdown(f"<div style='font-size:14px; font-weight:800; color:#3D322C;'>📅 {rec.get('period_start','')} ~ {rec.get('period_end','')}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-size:11px; color:#A9895C; margin-bottom:6px;'>結帳於 {rec.get('settle_date','')} · 單號 {rec.get('settle_no','')} · 帳本 {rec.get('ledger_count',0)} 筆</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='font-size:13px; color:#C2410C; font-weight:800; margin-bottom:4px;'>總支出：${rec.get('total',0):,.0f}（每人 ${rec.get('fair_share',0):,.0f}）</div>", unsafe_allow_html=True)
+                    for m, paid in rec.get("member_paid", {}).items():
+                        diff = paid - rec.get("fair_share", 0)
+                        tag = f"<span style='color:#558B6E;'>應收回 ${diff:,.0f}</span>" if diff >= 0 else f"<span style='color:#E4572E;'>應補 ${abs(diff):,.0f}</span>"
+                        st.markdown(f"<div style='font-size:12px;'>{m}：已付 ${paid:,.0f} → {tag}</div>", unsafe_allow_html=True)
+                    extras = rec.get("extra_items", [])
+                    if extras:
+                        st.markdown("<div style='font-size:12px; font-weight:700; color:#8A5A2B; margin-top:6px;'>額外項目：</div>", unsafe_allow_html=True)
+                        for ex in extras:
+                            note_suffix = f"（{ex.get('note','')}）" if ex.get("note") else ""
+                            amt_sign = "+" if ex.get("type") == "收入" else "-"
+                            st.markdown(f"<div style='font-size:12px; color:#3D322C;'>· {ex.get('desc','')}{note_suffix} {amt_sign}${ex.get('amount',0):,.0f}（{ex.get('payer','')}）</div>", unsafe_allow_html=True)
+
+    # --- 0.5 儲蓄/收入目標設定 (Expander) ---
     with st.expander("🐷 儲蓄/收入目標", expanded=False):
         with st.popover("➕ 新增目標", use_container_width=True):
             g_name = st.text_input("目標名稱", placeholder="例如：今年存 10 萬")
