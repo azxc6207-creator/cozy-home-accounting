@@ -259,6 +259,7 @@ if "person_filter" not in st.session_state: st.session_state.person_filter = "�
 if "keyword_search" not in st.session_state: st.session_state.keyword_search = ""
 if "savings_goals" not in st.session_state: st.session_state.savings_goals = []
 if "settlement_history" not in st.session_state: st.session_state.settlement_history = []
+if "personal_budgets" not in st.session_state: st.session_state.personal_budgets = {}
 if "temp_settle_extras" not in st.session_state: st.session_state.temp_settle_extras = []
 if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
@@ -294,7 +295,8 @@ def save_and_sync():
         "fixed_transactions": st.session_state.fixed_transactions,
         "projects": st.session_state.projects,
         "savings_goals": st.session_state.savings_goals,
-        "settlement_history": st.session_state.settlement_history
+        "settlement_history": st.session_state.settlement_history,
+        "personal_budgets": st.session_state.personal_budgets
     }
     
     settings_df = pd.DataFrame([{
@@ -372,6 +374,7 @@ def load_data_and_recover_settings():
                 if "projects" in settings: st.session_state.projects = settings["projects"]
                 if "savings_goals" in settings: st.session_state.savings_goals = settings["savings_goals"]
                 if "settlement_history" in settings: st.session_state.settlement_history = settings["settlement_history"]
+                if "personal_budgets" in settings: st.session_state.personal_budgets = settings["personal_budgets"]
             except: pass
             
         st.session_state.expenses_df = df[df["ID"] != "SYS_SETTINGS"].copy()
@@ -729,6 +732,25 @@ with tab_home:
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
+
+        has_personal_budget = any(b > 0 for b in st.session_state.personal_budgets.values())
+        if has_personal_budget:
+            st.markdown("<div style='font-size:15px; font-weight:900; color:#C2410C; margin-top:16px; margin-bottom:8px; border-bottom:1px solid #F5DFAE; padding-bottom:4px;'>👤 本月個人預算目標</div>", unsafe_allow_html=True)
+            for m, budget in st.session_state.personal_budgets.items():
+                if budget > 0:
+                    spent = curr_m_exp[curr_m_exp["記帳人"] == m]["金額"].sum()
+                    pct = (spent / budget) * 100
+                    color = "#558B6E" if pct < 70 else "#E9C46A" if pct < 90 else "#E07A5F"
+                    st.markdown(f"""
+                    <div style='margin-bottom: 10px;'>
+                        <div style='display:flex; justify-content:space-between; font-size:13px; font-weight:700; color:#8A5A2B; margin-bottom:4px;'>
+                            <span>{m} ({pct:.1f}%)</span><span>{spent:,.0f} / {budget:,.0f}</span>
+                        </div>
+                        <div style='width: 100%; background-color: #F5DFAE; border-radius: 6px; height: 8px; overflow:hidden;'>
+                            <div style='width: {min(pct, 100)}%; background-color: {color}; height: 100%; border-radius: 6px;'></div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     # ==========================================
@@ -1009,6 +1031,29 @@ with tab_settings:
                     st.rerun()
 
     # --- 1. 預算設定 (Expander) ---
+    with st.expander("👤 個人預算目標", expanded=False):
+        st.markdown("<div style='font-size:12px; color:#A9895C; margin-bottom:8px;'>設定每位成員每月的個人支出上限（依「記帳人」欄位計算，不分類別）。</div>", unsafe_allow_html=True)
+        for m in st.session_state.members:
+            with st.container(border=True):
+                pb_col1, pb_col2 = st.columns([3, 2])
+                current_pb = st.session_state.personal_budgets.get(m, 0)
+                pb_col1.write(f"**{m}**")
+                pb_col1.markdown(f"<div style='font-size:12px; color:#A9895C;'>目前預算: ${current_pb:,}</div>", unsafe_allow_html=True)
+                with pb_col2:
+                    with st.popover("設定預算", use_container_width=True):
+                        new_pb = st.number_input(f"設定 {m} 月預算", min_value=0, value=current_pb, step=500, key=f"pb_input_{m}")
+                        pbtn1, pbtn2 = st.columns(2)
+                        if pbtn1.button("儲存", key=f"btn_pb_{m}", type="primary", use_container_width=True):
+                            st.toast("💾 儲存中...", icon="⏳")
+                            st.session_state.personal_budgets[m] = new_pb
+                            save_and_sync()
+                            st.rerun()
+                        if pbtn2.button("清除", key=f"btn_pb_clr_{m}", use_container_width=True):
+                            st.toast("💾 清除中...", icon="⏳")
+                            st.session_state.personal_budgets[m] = 0
+                            save_and_sync()
+                            st.rerun()
+
     with st.expander("⚠️ 分類預算設定", expanded=False):
         for c in st.session_state.expense_categories:
             with st.container(border=True):
