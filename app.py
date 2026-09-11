@@ -260,6 +260,8 @@ if "keyword_search" not in st.session_state: st.session_state.keyword_search = "
 if "savings_goals" not in st.session_state: st.session_state.savings_goals = []
 if "settlement_history" not in st.session_state: st.session_state.settlement_history = []
 if "personal_budgets" not in st.session_state: st.session_state.personal_budgets = {}
+if "e_form_reset_n" not in st.session_state: st.session_state.e_form_reset_n = 0
+if "i_form_reset_n" not in st.session_state: st.session_state.i_form_reset_n = 0
 if "temp_settle_extras" not in st.session_state: st.session_state.temp_settle_extras = []
 if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
@@ -395,43 +397,41 @@ if st.session_state.get("sync_error"):
 # ==========================================
 def expense_entry_fragment():
     st.markdown("### 💸 新增支出")
+    e_n = st.session_state.e_form_reset_n
     e_date = st.date_input("支出日期", st.session_state.cal_selected_date, key="e_date_input")
     e_payer = st.selectbox("付款人", st.session_state.members, key="e_payer_input")
     e_cat = st.selectbox("支出分類", st.session_state.expense_categories, key="e_cat_input")
-    e_item = st.text_input("消費項目", placeholder="例如：麵包", key="e_item_input")
-    e_amount_str = st.text_input("金額 ($)", key="e_amount_str_input", placeholder="可輸入算式，如 120+35")
+    e_item = st.text_input("消費項目", placeholder="例如：麵包", key=f"e_item_input_{e_n}")
+    e_amount_str = st.text_input("金額 ($)", key=f"e_amount_str_input_{e_n}", placeholder="可輸入算式，如 120+35")
     e_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="e_proj_input")
-    e_note = st.text_input("備註 (非必填)", key="e_note_input")
+    e_note = st.text_input("備註 (非必填)", key=f"e_note_input_{e_n}")
     if st.button("確認新增", type="primary", use_container_width=True, key="e_submit_btn"):
         st.toast("💾 儲存中...", icon="⏳")
         e_amount = parse_math_expr(e_amount_str)
         new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp()*1000)}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(e_proj) if e_proj != "無" else ""}])
         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
         save_and_sync()
-        st.session_state.pop("e_item_input", None)
-        st.session_state.pop("e_note_input", None)
-        st.session_state.pop("e_amount_str_input", None)
+        st.session_state.e_form_reset_n += 1  # 換一個全新 key，強制輸入框重新生成、真正清空畫面
         st.toast("🎉 支出新增成功！")
         st.rerun()  # 這裡要整頁重跑，讓外面的明細清單／總計立刻反映新增的這一筆
 
 def income_entry_fragment():
     st.markdown("### ✨ 新增收入")
+    i_n = st.session_state.i_form_reset_n
     i_date = st.date_input("收入日期", st.session_state.cal_selected_date, key="i_date_input")
     i_receiver = st.selectbox("收款人", st.session_state.members, key="i_receiver_input")
     i_cat = st.selectbox("收入分類", st.session_state.income_categories, key="i_cat_input")
-    i_item = st.text_input("收入項目", placeholder="例如：薪資", key="i_item_input")
-    i_amount_str = st.text_input("金額 ($)", key="i_amount_str_input", placeholder="可輸入算式，如 1000+500")
+    i_item = st.text_input("收入項目", placeholder="例如：薪資", key=f"i_item_input_{i_n}")
+    i_amount_str = st.text_input("金額 ($)", key=f"i_amount_str_input_{i_n}", placeholder="可輸入算式，如 1000+500")
     i_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="i_proj_input")
-    i_note = st.text_input("備註 (非必填)", key="i_note_input")
+    i_note = st.text_input("備註 (非必填)", key=f"i_note_input_{i_n}")
     if st.button("確認新增", type="primary", use_container_width=True, key="i_submit_btn"):
         st.toast("💾 儲存中...", icon="⏳")
         i_amount = parse_math_expr(i_amount_str)
         new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp()*1000)}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
         save_and_sync()
-        st.session_state.pop("i_item_input", None)
-        st.session_state.pop("i_note_input", None)
-        st.session_state.pop("i_amount_str_input", None)
+        st.session_state.i_form_reset_n += 1  # 換一個全新 key，強制輸入框重新生成、真正清空畫面
         st.toast("🎉 收入新增成功！")
         st.rerun()  # 這裡要整頁重跑，讓外面的明細清單／總計立刻反映新增的這一筆
 
