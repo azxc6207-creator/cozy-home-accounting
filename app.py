@@ -395,6 +395,7 @@ if st.session_state.get("sync_error"):
 # ==========================================
 # 4.5 記支出／記收入彈窗
 # ==========================================
+@st.fragment
 def expense_entry_fragment():
     st.markdown("### 💸 新增支出")
     e_n = st.session_state.e_form_reset_n
@@ -406,15 +407,15 @@ def expense_entry_fragment():
     e_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="e_proj_input")
     e_note = st.text_input("備註 (非必填)", key=f"e_note_input_{e_n}")
     if st.button("確認新增", type="primary", use_container_width=True, key="e_submit_btn"):
-        st.toast("💾 儲存中...", icon="⏳")
         e_amount = parse_math_expr(e_amount_str)
         new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp()*1000)}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(e_proj) if e_proj != "無" else ""}])
         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
         save_and_sync()
         st.session_state.e_form_reset_n += 1  # 換一個全新 key，強制輸入框重新生成、真正清空畫面
-        st.toast("🎉 支出新增成功！")
-        st.rerun()  # 這裡要整頁重跑，讓外面的明細清單／總計立刻反映新增的這一筆
+        st.toast("🎉 支出新增成功！可以接著輸入下一筆")
+        st.rerun(scope="fragment")  # 只重跑這個彈窗，不動整頁，才能秒速接著輸入下一筆
 
+@st.fragment
 def income_entry_fragment():
     st.markdown("### ✨ 新增收入")
     i_n = st.session_state.i_form_reset_n
@@ -426,14 +427,13 @@ def income_entry_fragment():
     i_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="i_proj_input")
     i_note = st.text_input("備註 (非必填)", key=f"i_note_input_{i_n}")
     if st.button("確認新增", type="primary", use_container_width=True, key="i_submit_btn"):
-        st.toast("💾 儲存中...", icon="⏳")
         i_amount = parse_math_expr(i_amount_str)
         new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp()*1000)}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
         save_and_sync()
         st.session_state.i_form_reset_n += 1  # 換一個全新 key，強制輸入框重新生成、真正清空畫面
-        st.toast("🎉 收入新增成功！")
-        st.rerun()  # 這裡要整頁重跑，讓外面的明細清單／總計立刻反映新增的這一筆
+        st.toast("🎉 收入新增成功！可以接著輸入下一筆")
+        st.rerun(scope="fragment")  # 只重跑這個彈窗，不動整頁，才能秒速接著輸入下一筆
 
 # ==========================================
 # 5. 主選單 Header & 分頁
