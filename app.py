@@ -7,6 +7,7 @@ import calendar
 import streamlit.components.v1 as components
 import json
 import threading
+import requests
 from streamlit.runtime.scriptrunner import add_script_run_ctx
 
 # ==========================================
@@ -243,6 +244,27 @@ def parse_math_expr(expr_str):
     except:
         return 0.0
 
+def _send_line_broadcast(message):
+    """實際發送 LINE 通知的動作，丟到背景執行緒跑，不卡住畫面"""
+    try:
+        token = st.secrets["line"]["channel_access_token"]
+    except Exception:
+        return
+    try:
+        requests.post(
+            "https://api.line.me/v2/bot/message/broadcast",
+            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            json={"messages": [{"type": "text", "text": message}]},
+            timeout=6
+        )
+    except Exception:
+        pass
+
+def send_line_notification(message):
+    """依照設定決定要不要發送 LINE 記帳通知（非同步，不影響記帳速度）"""
+    if st.session_state.get("line_notify_enabled", False):
+        threading.Thread(target=_send_line_broadcast, args=(message,), daemon=True).start()
+
 # ==========================================
 # 3. Session State 初始化預設值
 # ==========================================
@@ -262,6 +284,7 @@ if "settlement_history" not in st.session_state: st.session_state.settlement_his
 if "personal_budgets" not in st.session_state: st.session_state.personal_budgets = {}
 if "e_form_reset_n" not in st.session_state: st.session_state.e_form_reset_n = 0
 if "i_form_reset_n" not in st.session_state: st.session_state.i_form_reset_n = 0
+if "line_notify_enabled" not in st.session_state: st.session_state.line_notify_enabled = False
 if "temp_settle_extras" not in st.session_state: st.session_state.temp_settle_extras = []
 if "memos" not in st.session_state: st.session_state.memos = [{"id": 1, "text": "確認下個月水電費轉帳帳號"}]
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = [{"id": 101, "item": "鮮奶 🥛"}]
@@ -298,7 +321,8 @@ def save_and_sync():
         "projects": st.session_state.projects,
         "savings_goals": st.session_state.savings_goals,
         "settlement_history": st.session_state.settlement_history,
-        "personal_budgets": st.session_state.personal_budgets
+        "personal_budgets": st.session_state.personal_budgets,
+        "line_notify_enabled": st.session_state.line_notify_enabled
     }
     
     settings_df = pd.DataFrame([{
@@ -377,6 +401,7 @@ def load_data_and_recover_settings():
                 if "savings_goals" in settings: st.session_state.savings_goals = settings["savings_goals"]
                 if "settlement_history" in settings: st.session_state.settlement_history = settings["settlement_history"]
                 if "personal_budgets" in settings: st.session_state.personal_budgets = settings["personal_budgets"]
+                if "line_notify_enabled" in settings: st.session_state.line_notify_enabled = settings["line_notify_enabled"]
             except: pass
             
         st.session_state.expenses_df = df[df["ID"] != "SYS_SETTINGS"].copy()
@@ -411,6 +436,7 @@ def expense_entry_fragment():
         new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp()*1000)}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(e_proj) if e_proj != "無" else ""}])
         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
         save_and_sync()
+        send_line_notification(f"💸 {e_payer} 新增了一筆支出\n{e_cat}｜{e_item.strip() if e_item else '未填寫'}\n金額：${e_amount:,.0f}")
         st.session_state.e_form_reset_n += 1  # 換一個全新 key，強制輸入框重新生成、真正清空畫面
         st.toast("🎉 支出新增成功！可以接著輸入下一筆")
         st.rerun(scope="fragment")  # 只重跑這個彈窗，不動整頁，才能秒速接著輸入下一筆
@@ -431,6 +457,7 @@ def income_entry_fragment():
         new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp()*1000)}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
         st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
         save_and_sync()
+        send_line_notification(f"✨ {i_receiver} 新增了一筆收入\n{i_cat}｜{i_item.strip() if i_item else '未填寫'}\n金額：${i_amount:,.0f}")
         st.session_state.i_form_reset_n += 1  # 換一個全新 key，強制輸入框重新生成、真正清空畫面
         st.toast("🎉 收入新增成功！可以接著輸入下一筆")
         st.rerun(scope="fragment")  # 只重跑這個彈窗，不動整頁，才能秒速接著輸入下一筆
@@ -978,6 +1005,17 @@ with tab_shopping:
 
 with tab_settings:
     st.subheader("⚙️ 小窩進階設定")
+
+    # --- -1. LINE 記帳通知 (Expander) ---
+    with st.expander("📣 LINE 記帳通知", expanded=False):
+        st.markdown("<div style='font-size:12px; color:#A9895C; margin-bottom:8px;'>設定好 LINE Bot（Channel access token）並加好友後，開啟下方開關，每次記支出/收入成功都會發送 LINE 通知。</div>", unsafe_allow_html=True)
+        line_enabled = st.checkbox("啟用記帳通知", value=st.session_state.line_notify_enabled, key="line_notify_toggle")
+        if line_enabled != st.session_state.line_notify_enabled:
+            st.session_state.line_notify_enabled = line_enabled
+            save_and_sync()
+        if st.button("🔔 測試發送", use_container_width=True):
+            send_line_notification("✅ 這是一則測試通知，收到代表設定成功！")
+            st.toast("已送出測試通知，請檢查 LINE（若沒收到，檢查 Secrets 的 token 跟有沒有加好友）")
 
     # --- 0. 結帳歷史紀錄查詢 (Expander) ---
     with st.expander("📜 結帳歷史紀錄", expanded=False):
