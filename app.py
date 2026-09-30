@@ -894,7 +894,56 @@ with tab_home:
 # ==========================================
 with tab_charts:
     st.subheader("📊 統計圖表視覺化分析")
-    
+
+    # ==========================================
+    # 📈 歷年/月支出趨勢：可自選資料種類、成員、顯示區間（年/月）
+    # ==========================================
+    st.markdown("<h4 style='text-align:center; color:#C2410C; margin-top:4px;'>📈 歷年/月收支趨勢</h4>", unsafe_allow_html=True)
+    with st.container(border=True):
+        t_col1, t_col2, t_col3 = st.columns(3)
+        with t_col1:
+            trend_type = st.selectbox("資料種類", ["支出", "收入", "淨額（收入-支出）"], key="trend_type_sel")
+        with t_col2:
+            trend_people_opts = ["全部成員"] + st.session_state.members
+            trend_person = st.selectbox("成員", trend_people_opts, key="trend_person_sel")
+        with t_col3:
+            trend_granularity = st.selectbox("顯示區間", ["以月為區間", "以年為區間"], key="trend_granularity_sel")
+
+        trend_df = st.session_state.expenses_df.copy()
+        if not trend_df.empty:
+            trend_df["日期_dt"] = pd.to_datetime(trend_df["日期"])
+            if trend_person != "全部成員":
+                trend_df = trend_df[trend_df["記帳人"] == trend_person]
+
+            if trend_granularity == "以年為區間":
+                trend_df["期間"] = trend_df["日期_dt"].dt.year.astype(str)
+            else:
+                trend_df["期間"] = trend_df["日期_dt"].dt.strftime("%Y-%m")
+
+            if trend_type == "淨額（收入-支出）":
+                inc_sum = trend_df[trend_df["類型"] == "收入"].groupby("期間")["金額"].sum()
+                exp_sum = trend_df[trend_df["類型"] == "支出"].groupby("期間")["金額"].sum()
+                trend_data = inc_sum.subtract(exp_sum, fill_value=0).reset_index()
+                trend_data.columns = ["期間", "金額"]
+                bar_color = "#558B6E"
+            else:
+                sub_df = trend_df[trend_df["類型"] == trend_type]
+                trend_data = sub_df.groupby("期間")["金額"].sum().reset_index()
+                bar_color = "#F5A623" if trend_type == "支出" else "#558B6E"
+
+            trend_data = trend_data.sort_values("期間")
+
+            if trend_data.empty:
+                st.info("此條件下尚無數據。")
+            else:
+                fig_trend = px.bar(trend_data, x="期間", y="金額", text_auto=',.0f', color_discrete_sequence=[bar_color])
+                fig_trend.update_layout(font=dict(size=13), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="", yaxis_title="")
+                st.plotly_chart(fig_trend, use_container_width=True, config={'displayModeBar': False})
+        else:
+            st.info("目前尚無資料。")
+
+    st.divider()
+
     # 📌 圖表區：新增分析區間選擇器
     with st.container(border=True):
         st.markdown("<div style='font-size:15px; font-weight:800; color:#C2410C; margin-bottom:8px;'>📅 選擇分析區間</div>", unsafe_allow_html=True)
