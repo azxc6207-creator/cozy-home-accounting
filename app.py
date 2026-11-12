@@ -47,7 +47,8 @@ st.markdown("""
         0%, 100% { background-position: 0% 0%, 0% 0%, 0% 0%, 0% 0%, 0% 0%; }
         50%      { background-position: 4% 4%, 0% 0%, 0% 0%, 0% 0%, 0% 0%; }
     }
-    .stApp { animation: bgPatternDrift 24s ease-in-out infinite !important; }
+    /* ⚡ 效能：背景漂浮動畫會讓整個畫面每一幀都重繪（手機上選單會卡頓），已關閉，改為靜態背景 */
+    .stApp { animation: none !important; }
     
     /* 🚫 徹底隱藏 Streamlit 官方 Logo、頂端選單與頁尾 */
     #MainMenu, footer, header, [data-testid="stHeader"] { visibility: hidden !important; display: none !important; }
@@ -66,7 +67,7 @@ st.markdown("""
     /* 📌 日曆永遠置頂 */
     div[data-testid="stVerticalBlockBorderWrapper"]:has(.sticky-marker) {
         position: -webkit-sticky !important; position: sticky !important; top: 0px !important; z-index: 99999 !important;
-        backdrop-filter: blur(14px) !important; background: rgba(253, 249, 245, 0.97) !important; margin-top: -10px !important;
+        background: rgba(253, 249, 245, 0.97) !important; margin-top: -10px !important;
         border-radius: 0 0 16px 16px !important; box-shadow: 0 6px 16px rgba(160, 120, 85, 0.12) !important; border-bottom: 2px solid #F5DFAE !important;
     }
 
