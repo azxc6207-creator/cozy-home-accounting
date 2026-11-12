@@ -174,7 +174,8 @@ components.html(
             const inPopover = btn.closest('div[data-testid="stPopoverBody"]');
 
             // 🗓️ 日曆日期按鈕（不在彈窗裡）：固定 38x38 圓角正方形
-            if (!inPopover && /^\d{1,2}$/.test(txt)) {
+            if (!inPopover && /^\d{1,2}$/.test(txt) && btn.dataset.sq !== '1') {
+                btn.dataset.sq = '1';
                 btn.style.setProperty('width', '38px', 'important');
                 btn.style.setProperty('height', '38px', 'important');
                 btn.style.setProperty('min-width', '38px', 'important');
@@ -223,10 +224,16 @@ components.html(
     // ⚡ 用 MutationObserver 即時監看畫面變化：一旦 Streamlit 重新渲染出新的按鈕，馬上套用樣式，
     // 不用等下一次 setInterval，避免點擊後短暫「打回原型」的閃爍
     fixCalendarButtons();
-    const observer = new MutationObserver(() => { fixCalendarButtons(); });
+    // ⚡ 效能：把短時間內大量的畫面變動合併成「每個畫面幀只處理一次」，避免明細多時每次重新渲染被連續觸發上百次
+    let fixScheduled = false;
+    const observer = new MutationObserver(() => {
+        if (fixScheduled) return;
+        fixScheduled = true;
+        requestAnimationFrame(() => { fixScheduled = false; fixCalendarButtons(); });
+    });
     observer.observe(doc.body, { childList: true, subtree: true });
 
-    setInterval(optimizeMobileInputs, 600); 
+    setInterval(optimizeMobileInputs, 1500); 
     </script>
     """,
     height=0, width=0
@@ -416,6 +423,114 @@ if "expenses_df" not in st.session_state:
 if st.session_state.get("sync_error"):
     st.toast(f"⚠️ 雲端同步失敗，資料僅暫存在畫面上，請檢查網路後重新操作一次：{st.session_state.sync_error}", icon="⚠️")
     st.session_state.sync_error = None
+
+# ==========================================
+# ⚡ 效能：圖表與日期解析快取（資料沒變就不重算、不重畫）
+# ==========================================
+def with_date_dt(df):
+    """回傳多一欄「日期_dt」（date 型態）的副本；空表直接回傳"""
+    out = df.copy()
+    if not out.empty:
+        out["日期_dt"] = pd.to_datetime(out["日期"], errors="coerce").dt.date
+    return out
+
+@st.cache_data(show_spinner=False)
+def build_trend_fig(df, trend_type, trend_person, trend_granularity):
+    """歷年/月趨勢圖：回傳 plotly 圖或 None（無資料）。df 只含必要欄位，資料沒變就直接用快取"""
+    d = df.copy()
+    d["日期_dt"] = pd.to_datetime(d["日期"], errors="coerce")
+    if trend_person != "全部成員":
+        d = d[d["記帳人"] == trend_person]
+    if trend_granularity == "以年為區間":
+        d["期間"] = d["日期_dt"].dt.year.astype(str)
+    else:
+        d["期間"] = d["日期_dt"].dt.strftime("%Y-%m")
+    if trend_type == "淨額（收入-支出）":
+        inc_sum = d[d["類型"] == "收入"].groupby("期間")["金額"].sum()
+        exp_sum = d[d["類型"] == "支出"].groupby("期間")["金額"].sum()
+        data = inc_sum.subtract(exp_sum, fill_value=0).reset_index()
+        data.columns = ["期間", "金額"]
+        bar_color = "#558B6E"
+    else:
+        data = d[d["類型"] == trend_type].groupby("期間")["金額"].sum().reset_index()
+        bar_color = "#F5A623" if trend_type == "支出" else "#558B6E"
+    data = data.sort_values("期間")
+    if data.empty:
+        return None
+    fig = px.bar(data, x="期間", y="金額", text_auto=',.0f', color_discrete_sequence=[bar_color])
+    fig.update_layout(font=dict(size=13), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="", yaxis_title="")
+    return fig
+
+@st.cache_data(show_spinner=False)
+def build_period_charts(df, chart_start, chart_end):
+    """圓餅圖／分類長條圖／專案長條圖：回傳 [(標題, 圖)]，沒支出回傳 None，區間無資料回傳 []"""
+    d = df.copy()
+    d["日期_dt"] = pd.to_datetime(d["日期"], errors="coerce").dt.date
+    d = d[(d["日期_dt"] >= chart_start) & (d["日期_dt"] <= chart_end)]
+    if d.empty:
+        return []
+    exp_df = d[d["類型"] == "支出"]
+    if exp_df.empty:
+        return None
+    out = []
+    fig_pie = px.pie(exp_df, names="類別", values="金額", hole=0.45, color_discrete_sequence=["#F5A623", "#FFC857", "#E4572E", "#C2410C", "#FFD37D"])
+    fig_pie.update_layout(font=dict(size=14), legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"), paper_bgcolor="rgba(0,0,0,0)")
+    out.append(("🍕 支出類別比例", fig_pie))
+    cat_sum = exp_df.groupby("類別")["金額"].sum().reset_index().sort_values(by="金額", ascending=False)
+    fig_bar = px.bar(cat_sum, x="類別", y="金額", color_discrete_sequence=["#F5A623"], text_auto=',.0f')
+    fig_bar.update_layout(font=dict(size=14), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="", yaxis_title="")
+    out.append(("📊 各分類累積支出", fig_bar))
+    proj_exp = exp_df[(exp_df["專案"].notna()) & (exp_df["專案"] != "無") & (exp_df["專案"] != "")]
+    if not proj_exp.empty:
+        proj_sum = proj_exp.groupby("專案")["金額"].sum().reset_index().sort_values(by="金額", ascending=False)
+        fig_proj = px.bar(proj_sum, x="專案", y="金額", text_auto=',.0f', color_discrete_sequence=["#E07A5F"])
+        fig_proj.update_layout(font=dict(size=14), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="", yaxis_title="")
+        out.append(("🎯 專案目標花費統計", fig_proj))
+    return out
+
+@st.dialog("✏️ 編輯紀錄")
+def edit_record_dialog(rec_id):
+    """整頁只在點下 ✏️ 時才建立「一個」編輯表單，不再替每一筆明細各建一個（明細愈多愈慢的主因）"""
+    match = st.session_state.expenses_df[st.session_state.expenses_df["ID"] == rec_id]
+    if match.empty:
+        st.warning("找不到這筆紀錄，可能已被刪除。")
+        return
+    row = match.iloc[0]
+    try:
+        r_date = datetime.strptime(row["日期"], "%Y-%m-%d")
+    except Exception:
+        r_date = datetime.now()
+    display_amt = int(row["金額"]) if row["金額"] % 1 == 0 else row["金額"]
+    with st.form(f"edit_form_{rec_id}"):
+        e_date_val = st.date_input("日期", r_date)
+        e_type_val = st.radio("類型", ["支出", "收入"], index=0 if row["類型"] == "支出" else 1, horizontal=True)
+        cats = st.session_state.expense_categories if e_type_val == "支出" else st.session_state.income_categories
+        cat_idx = cats.index(row["類別"]) if row["類別"] in cats else 0
+        e_cat_val = st.selectbox("分類", cats, index=cat_idx)
+        e_item_val = st.text_input("項目", value=row["項目"])
+        e_amt_val_str = st.text_input("金額 (支援算式)", value=str(display_amt))
+        p_val = row.get("專案", "無")
+        if pd.isna(p_val) or p_val == "": p_val = "無"
+        proj_idx = st.session_state.projects.index(p_val) if p_val in st.session_state.projects else 0
+        e_proj_val = st.selectbox("專案標籤", st.session_state.projects, index=proj_idx)
+        mem_idx = st.session_state.members.index(row["記帳人"]) if row["記帳人"] in st.session_state.members else 0
+        e_payer_val = st.selectbox("成員", st.session_state.members, index=mem_idx)
+        e_note_val = st.text_input("備註", value=row["備註"])
+        if st.form_submit_button("儲存修改", type="primary", use_container_width=True):
+            st.toast("💾 儲存中...", icon="⏳")
+            e_amt_val = parse_math_expr(e_amt_val_str)
+            edit_mask = st.session_state.expenses_df["ID"] == rec_id
+            # 一欄一欄分開寫，避免新版 pandas 對混合型態 dtype 的嚴格檢查報錯
+            st.session_state.expenses_df.loc[edit_mask, "日期"] = str(e_date_val)
+            st.session_state.expenses_df.loc[edit_mask, "類型"] = e_type_val
+            st.session_state.expenses_df.loc[edit_mask, "類別"] = e_cat_val
+            st.session_state.expenses_df.loc[edit_mask, "項目"] = e_item_val
+            st.session_state.expenses_df.loc[edit_mask, "金額"] = float(e_amt_val)
+            st.session_state.expenses_df.loc[edit_mask, "記帳人"] = e_payer_val
+            st.session_state.expenses_df.loc[edit_mask, "備註"] = e_note_val
+            st.session_state.expenses_df.loc[edit_mask, "專案"] = str(e_proj_val) if e_proj_val != "無" else ""
+            save_and_sync()
+            st.rerun()
 
 # ==========================================
 # 4.5 記支出／記收入彈窗
@@ -685,6 +800,7 @@ with tab_home:
             st.session_state.person_filter = picked_person
             st.session_state.keyword_search = picked_keyword.strip()
             st.session_state.filter_to_single_day = False
+            st.session_state.detail_limit = 40
             st.rerun()
 
         if q_col2.button("↺ 重置全部", use_container_width=True):
@@ -695,12 +811,13 @@ with tab_home:
             st.session_state.person_filter = "全部成員"
             st.session_state.keyword_search = ""
             st.session_state.filter_to_single_day = False
+            st.session_state.detail_limit = 40
             st.rerun()
 
     # 📊 取得過濾資料
     df_current = st.session_state.expenses_df.copy()
     if not df_current.empty:
-        df_current["日期_dt"] = pd.to_datetime(df_current["日期"]).dt.date
+        df_current["日期_dt"] = pd.to_datetime(df_current["日期"], errors="coerce").dt.date
         if st.session_state.filter_to_single_day:
             filtered_df = df_current[df_current["日期_dt"] == st.session_state.cal_selected_date]
         else:
@@ -738,7 +855,8 @@ with tab_home:
             st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:6px; font-size:14px;'><span style='font-weight:800; color:#3D322C;'>{member}</span><span><span style='color:#E4572E;'>支 {mem_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {mem_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
         st.markdown(f"<div style='display:flex; justify-content:space-between; margin-top:8px; padding-top:6px; border-top:1px dashed #F5DFAE; font-size:14px;'><span style='font-weight:900; color:#C2410C;'>🏠 小窩總計</span><span style='font-weight:800;'><span style='color:#E4572E;'>支 {total_exp:,.0f}</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span style='color:#558B6E;'>收 {total_inc:,.0f}</span></span></div>", unsafe_allow_html=True)
         
-        current_month_mask = (df_current["日期_dt"].apply(lambda d: d.year) == sel_year) & (df_current["日期_dt"].apply(lambda d: d.month) == sel_month)
+        _dts = pd.to_datetime(df_current["日期"], errors="coerce")
+        current_month_mask = (_dts.dt.year == sel_year) & (_dts.dt.month == sel_month)
         curr_m_exp = df_current[current_month_mask & (df_current["類型"] == "支出")]
         
         has_budget = any(b > 0 for b in st.session_state.category_budgets.values())
@@ -821,71 +939,41 @@ with tab_home:
         if filtered_df.empty:
             st.info("此區間內無紀錄。")
         else:
-            for idx, row in filtered_df.iterrows():
-                r_date = datetime.strptime(row["日期"], "%Y-%m-%d")
-                day_week_str = week_days_tw[r_date.weekday()]
-                
+            detail_limit = st.session_state.get("detail_limit", 40)
+            for row in filtered_df.head(detail_limit).to_dict("records"):
+                try:
+                    r_date = datetime.strptime(row["日期"], "%Y-%m-%d")
+                    date_str = f"{r_date.month}/{r_date.day}"
+                except Exception:
+                    date_str = row["日期"]
+                proj_str = str(row.get("專案", "") or "")
+                has_proj = proj_str.strip() != "" and proj_str.lower() != "nan" and proj_str != "無"
+                proj_tag = f"<span style='color:#F5A623; font-size:11px; border:1px solid #F0C888; padding:1px 4px; border-radius:4px; margin-right:4px; white-space:nowrap;'>{proj_str}</span>" if has_proj else ""
+                amt_color = "#558B6E" if row["類型"] == "收入" else "#E07A5F"
+                display_amt = int(row["金額"]) if row["金額"] % 1 == 0 else row["金額"]
+                sign = "+" if row["類型"] == "收入" else ""
+
                 with st.container(border=True):
                     c_name, c_amt, c_edit, c_del = st.columns([4, 2.6, 0.7, 0.7])
-                    
-                    with c_name:
-                        proj_val = row.get('專案', '')
-                        proj_str = str(proj_val) if proj_val is not None else ''
-                        has_proj = proj_str and proj_str.strip() != "" and proj_str.lower() != "nan" and proj_str != "無"
-                        proj_tag = f"<span style='color:#F5A623; font-size:11px; border:1px solid #F0C888; padding:1px 4px; border-radius:4px; margin-right:4px; white-space:nowrap;'>{proj_str}</span>" if has_proj else ""
-                        
-                        # 品項名稱改成可換行顯示，避免在較窄的手機螢幕上被裁切看不到完整內容
-                        st.markdown(f"<div style='font-size:15px; font-weight:800; color:#3D322C; line-height:1.3; word-break:break-word; overflow-wrap:break-word;'>{proj_tag}{row['項目']}</div>", unsafe_allow_html=True)
-                        st.markdown(f"<div style='font-size:11px; color:#A9895C; margin-top:4px;'>{row['記帳人']} · {r_date.month}/{r_date.day}</div>", unsafe_allow_html=True)
-                        
-                    with c_amt:
-                        amt_color = "#558B6E" if row["類型"] == "收入" else "#E07A5F"
-                        display_amt = int(row['金額']) if row['金額'] % 1 == 0 else row['金額']
-                        st.markdown(f"<div style='font-size:17px; font-weight:900; color:{amt_color}; margin-top:4px; text-align:right;'>{'+' if row['類型'] == '收入' else ''}{display_amt:,}</div>", unsafe_allow_html=True)
-                    
-                    with c_edit:
-                        with st.popover("✏️"):
-                            with st.form(f"edit_form_{row['ID']}"):
-                                e_date_val = st.date_input("日期", r_date)
-                                e_type_val = st.radio("類型", ["支出", "收入"], index=0 if row["類型"] == "支出" else 1)
-                                
-                                cats = st.session_state.expense_categories if e_type_val == "支出" else st.session_state.income_categories
-                                cat_idx = cats.index(row["類別"]) if row["類別"] in cats else 0
-                                e_cat_val = st.selectbox("分類", cats, index=cat_idx)
-                                
-                                e_item_val = st.text_input("項目", value=row["項目"])
-                                e_amt_val_str = st.text_input("金額 (支援算式)", value=str(display_amt))
-                                
-                                p_val = row.get("專案", "無")
-                                if pd.isna(p_val) or p_val == "": p_val = "無"
-                                proj_idx = st.session_state.projects.index(p_val) if p_val in st.session_state.projects else 0
-                                e_proj_val = st.selectbox("專案標籤", st.session_state.projects, index=proj_idx)
-                                
-                                mem_idx = st.session_state.members.index(row["記帳人"]) if row["記帳人"] in st.session_state.members else 0
-                                e_payer_val = st.selectbox("成員", st.session_state.members, index=mem_idx)
-                                e_note_val = st.text_input("備註", value=row["備註"])
-                                
-                                if st.form_submit_button("儲存修改", type="primary", use_container_width=True):
-                                    st.toast("💾 儲存中...", icon="⏳")
-                                    e_amt_val = parse_math_expr(e_amt_val_str)
-                                    edit_mask = st.session_state.expenses_df["ID"] == row["ID"]
-                                    # 新版 pandas 對「一次寫入多個混合型態欄位」的檢查變嚴格，改成一欄一欄分開寫，避免 dtype 衝突報錯
-                                    st.session_state.expenses_df.loc[edit_mask, "日期"] = str(e_date_val)
-                                    st.session_state.expenses_df.loc[edit_mask, "類型"] = e_type_val
-                                    st.session_state.expenses_df.loc[edit_mask, "類別"] = e_cat_val
-                                    st.session_state.expenses_df.loc[edit_mask, "項目"] = e_item_val
-                                    st.session_state.expenses_df.loc[edit_mask, "金額"] = float(e_amt_val)
-                                    st.session_state.expenses_df.loc[edit_mask, "記帳人"] = e_payer_val
-                                    st.session_state.expenses_df.loc[edit_mask, "備註"] = e_note_val
-                                    st.session_state.expenses_df.loc[edit_mask, "專案"] = str(e_proj_val) if e_proj_val != "無" else ""
-                                    save_and_sync()
-                                    st.rerun()
-                    with c_del:
-                        if st.button("🗑️", key=f"del_btn_{row['ID']}"):
-                            st.toast("💾 刪除中...", icon="🗑️")
-                            st.session_state.expenses_df = st.session_state.expenses_df[st.session_state.expenses_df["ID"] != row["ID"]]
-                            save_and_sync()
-                            st.rerun()
+                    # 每筆只用 1 個 markdown + 2 顆按鈕（原本約 25 個元件），大幅減少每次重新執行的負擔
+                    c_name.markdown(
+                        f"<div style='font-size:15px; font-weight:800; color:#3D322C; line-height:1.3; word-break:break-word; overflow-wrap:break-word;'>{proj_tag}{row['項目']}</div>"
+                        f"<div style='font-size:11px; color:#A9895C; margin-top:4px;'>{row['記帳人']} · {date_str}</div>",
+                        unsafe_allow_html=True)
+                    c_amt.markdown(f"<div style='font-size:17px; font-weight:900; color:{amt_color}; margin-top:4px; text-align:right;'>{sign}{display_amt:,}</div>", unsafe_allow_html=True)
+                    if c_edit.button("✏️", key=f"edit_btn_{row['ID']}"):
+                        edit_record_dialog(row["ID"])
+                    if c_del.button("🗑️", key=f"del_btn_{row['ID']}"):
+                        st.toast("💾 刪除中...", icon="🗑️")
+                        st.session_state.expenses_df = st.session_state.expenses_df[st.session_state.expenses_df["ID"] != row["ID"]]
+                        save_and_sync()
+                        st.rerun()
+
+            remaining = len(filtered_df) - detail_limit
+            if remaining > 0:
+                if st.button(f"⬇️ 載入更多（還有 {remaining} 筆）", use_container_width=True, key="detail_load_more"):
+                    st.session_state.detail_limit = detail_limit + 40
+                    st.rerun()
 
 
 
@@ -909,35 +997,12 @@ with tab_charts:
         with t_col3:
             trend_granularity = st.selectbox("顯示區間", ["以月為區間", "以年為區間"], key="trend_granularity_sel")
 
-        trend_df = st.session_state.expenses_df.copy()
-        if not trend_df.empty:
-            trend_df["日期_dt"] = pd.to_datetime(trend_df["日期"])
-            if trend_person != "全部成員":
-                trend_df = trend_df[trend_df["記帳人"] == trend_person]
-
-            if trend_granularity == "以年為區間":
-                trend_df["期間"] = trend_df["日期_dt"].dt.year.astype(str)
-            else:
-                trend_df["期間"] = trend_df["日期_dt"].dt.strftime("%Y-%m")
-
-            if trend_type == "淨額（收入-支出）":
-                inc_sum = trend_df[trend_df["類型"] == "收入"].groupby("期間")["金額"].sum()
-                exp_sum = trend_df[trend_df["類型"] == "支出"].groupby("期間")["金額"].sum()
-                trend_data = inc_sum.subtract(exp_sum, fill_value=0).reset_index()
-                trend_data.columns = ["期間", "金額"]
-                bar_color = "#558B6E"
-            else:
-                sub_df = trend_df[trend_df["類型"] == trend_type]
-                trend_data = sub_df.groupby("期間")["金額"].sum().reset_index()
-                bar_color = "#F5A623" if trend_type == "支出" else "#558B6E"
-
-            trend_data = trend_data.sort_values("期間")
-
-            if trend_data.empty:
+        _core = st.session_state.expenses_df[["日期", "類型", "記帳人", "金額"]]
+        if not _core.empty:
+            fig_trend = build_trend_fig(_core, trend_type, trend_person, trend_granularity)
+            if fig_trend is None:
                 st.info("此條件下尚無數據。")
             else:
-                fig_trend = px.bar(trend_data, x="期間", y="金額", text_auto=',.0f', color_discrete_sequence=[bar_color])
-                fig_trend.update_layout(font=dict(size=13), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="", yaxis_title="")
                 st.plotly_chart(fig_trend, use_container_width=True, config={'displayModeBar': False})
         else:
             st.info("目前尚無資料。")
@@ -951,41 +1016,16 @@ with tab_charts:
         chart_start = ch_col1.date_input("起始日期", st.session_state.start_date, key="chart_start")
         chart_end = ch_col2.date_input("結束日期", st.session_state.end_date, key="chart_end")
         
-    current_df = st.session_state.expenses_df.copy()
-    if not current_df.empty:
-        current_df["日期_dt"] = pd.to_datetime(current_df["日期"]).dt.date
-        chart_df = current_df[(current_df["日期_dt"] >= chart_start) & (current_df["日期_dt"] <= chart_end)]
-    else:
-        chart_df = pd.DataFrame()
-
-    if chart_df.empty: 
+    _charts = build_period_charts(st.session_state.expenses_df[["日期", "類型", "類別", "金額", "專案"]], chart_start, chart_end) if not st.session_state.expenses_df.empty else []
+    if _charts == []:
         st.info("此區間內尚無數據。")
+    elif _charts is None:
+        pass  # 區間內只有收入、沒有支出可畫
     else:
-        exp_df = chart_df[chart_df["類型"] == "支出"]
-        if not exp_df.empty:
-            # 1. 圓餅圖：支出類別比例
-            st.markdown("<h4 style='text-align:center; color:#E4572E; margin-top:20px;'>🍕 支出類別比例</h4>", unsafe_allow_html=True)
-            fig_pie = px.pie(exp_df, names="類別", values="金額", hole=0.45, color_discrete_sequence=["#F5A623", "#FFC857", "#E4572E", "#C2410C", "#FFD37D"])
-            fig_pie.update_layout(font=dict(size=14), legend=dict(orientation="h", y=-0.15, x=0.5, xanchor="center"), paper_bgcolor="rgba(0,0,0,0)")
-            st.plotly_chart(fig_pie, use_container_width=True, config={'displayModeBar': False})
+        for i, (c_title, c_fig) in enumerate(_charts):
+            st.markdown(f"<h4 style='text-align:center; color:#E4572E; margin-top:{20 if i == 0 else 4}px;'>{c_title}</h4>", unsafe_allow_html=True)
+            st.plotly_chart(c_fig, use_container_width=True, config={'displayModeBar': False})
             st.divider()
-            
-            # 2. 長條圖：各分類累積支出 (依金額由高到低排序)
-            st.markdown("<h4 style='text-align:center; color:#E4572E;'>📊 各分類累積支出</h4>", unsafe_allow_html=True)
-            cat_sum = exp_df.groupby("類別")["金額"].sum().reset_index().sort_values(by="金額", ascending=False)
-            fig_bar = px.bar(cat_sum, x="類別", y="金額", color_discrete_sequence=["#F5A623"], text_auto=',.0f')
-            fig_bar.update_layout(font=dict(size=14), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="", yaxis_title="")
-            st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
-            st.divider()
-            
-            # 3. 專案目標統計
-            proj_exp = exp_df[(exp_df["專案"].notna()) & (exp_df["專案"] != "無") & (exp_df["專案"] != "")]
-            if not proj_exp.empty:
-                st.markdown("<h4 style='text-align:center; color:#E4572E;'>🎯 專案目標花費統計</h4>", unsafe_allow_html=True)
-                proj_sum = proj_exp.groupby("專案")["金額"].sum().reset_index().sort_values(by="金額", ascending=False)
-                fig_proj = px.bar(proj_sum, x="專案", y="金額", text_auto=',.0f', color_discrete_sequence=["#E07A5F"])
-                fig_proj.update_layout(font=dict(size=14), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="", yaxis_title="")
-                st.plotly_chart(fig_proj, use_container_width=True, config={'displayModeBar': False})
 
 with tab_memo:
     st.subheader("💬 備忘錄")
