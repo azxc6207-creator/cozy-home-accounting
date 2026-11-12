@@ -110,6 +110,14 @@ st.markdown("""
     div[data-testid="stDateInput"] label { font-size: 16px !important; font-weight: 800 !important; color: #C2410C !important; }
     /* 🚫 下拉選單的輸入框直接關閉點擊互動，改由外層容器接收點擊來開啟選單 —— 這樣鍵盤在物理上就不可能被叫出來 */
     input[role="combobox"] { pointer-events: none !important; caret-color: transparent !important; }
+    /* ⚡ 下拉選單開啟速度：
+       1) touch-action: manipulation 讓 iOS 不必等待「是否雙擊縮放」的判斷，點下去立刻開（一般按鈕本來就有這個行為，所以按鈕很快、選單較慢）
+       2) 關掉選單展開時的淡入／位移動畫，避免多出 200~300ms 的視覺延遲 */
+    div[data-testid="stSelectbox"], div[data-testid="stSelectbox"] *, div[data-testid="stDateInput"], div[data-testid="stDateInput"] *,
+    div[data-baseweb="select"], div[data-baseweb="select"] * { touch-action: manipulation !important; -webkit-tap-highlight-color: transparent !important; }
+    div[data-baseweb="popover"], div[data-baseweb="popover"] *, ul[role="listbox"], ul[role="listbox"] *, li[role="option"] {
+        animation: none !important; transition: none !important;
+    }
     /* 📱 底部固定分頁列 (Bottom Tab Bar，取代原本頂部橫向導覽列) */
     .stTabs [data-baseweb="tab-list"] {
         position: fixed !important;
