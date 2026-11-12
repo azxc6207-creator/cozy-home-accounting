@@ -50,6 +50,9 @@ st.markdown("""
     /* ⚡ 效能：背景漂浮動畫會讓整個畫面每一幀都重繪（手機上選單會卡頓），已關閉，改為靜態背景 */
     .stApp { animation: none !important; }
     
+    /* 記帳彈窗內的表單：不要再多一層外框 */
+    div[data-testid="stPopoverBody"] div[data-testid="stForm"] { border: none !important; padding: 0 !important; }
+
     /* 🚫 徹底隱藏 Streamlit 官方 Logo、頂端選單與頁尾 */
     #MainMenu, footer, header, [data-testid="stHeader"] { visibility: hidden !important; display: none !important; }
     div[data-testid="stStatusWidget"], a[href*="streamlit.app"], .stAppToolbar, [data-testid="stToolbar"], [data-testid="stDecoration"], div[class*="viewerBadge"] { display: none !important; }
@@ -540,43 +543,45 @@ def edit_record_dialog(rec_id):
 def expense_entry_fragment():
     st.markdown("### 💸 新增支出")
     e_n = st.session_state.e_form_reset_n
-    e_date = st.date_input("支出日期", st.session_state.cal_selected_date, key="e_date_input")
-    e_payer = st.selectbox("付款人", st.session_state.members, key="e_payer_input")
-    e_cat = st.selectbox("支出分類", st.session_state.expense_categories, key="e_cat_input")
-    e_item = st.text_input("消費項目", placeholder="例如：麵包", key=f"e_item_input_{e_n}")
-    e_amount_str = st.text_input("金額 ($)", key=f"e_amount_str_input_{e_n}", placeholder="可輸入算式，如 120+35")
-    e_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="e_proj_input")
-    e_note = st.text_input("備註 (非必填)", key=f"e_note_input_{e_n}")
-    if st.button("確認新增", type="primary", use_container_width=True, key="e_submit_btn"):
-        e_amount = parse_math_expr(e_amount_str)
-        new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp()*1000)}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(e_proj) if e_proj != "無" else ""}])
-        st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
-        save_and_sync()
-        send_line_notification(f"💸 {e_payer} 新增了一筆支出\n{e_cat}｜{e_item.strip() if e_item else '未填寫'}\n金額：${e_amount:,.0f}")
-        st.session_state.e_form_reset_n += 1  # 換一個全新 key，強制輸入框重新生成、真正清空畫面
-        st.toast("🎉 支出新增成功！可以接著輸入下一筆")
-        st.rerun(scope="fragment")  # 只重跑這個彈窗，不動整頁，才能秒速接著輸入下一筆
+    with st.form("e_entry_form", clear_on_submit=False):
+        e_date = st.date_input("支出日期", st.session_state.cal_selected_date, key="e_date_input")
+        e_payer = st.selectbox("付款人", st.session_state.members, key="e_payer_input")
+        e_cat = st.selectbox("支出分類", st.session_state.expense_categories, key="e_cat_input")
+        e_item = st.text_input("消費項目", placeholder="例如：麵包", key=f"e_item_input_{e_n}")
+        e_amount_str = st.text_input("金額 ($)", key=f"e_amount_str_input_{e_n}", placeholder="可輸入算式，如 120+35")
+        e_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="e_proj_input")
+        e_note = st.text_input("備註 (非必填)", key=f"e_note_input_{e_n}")
+        if st.form_submit_button("確認新增", type="primary", use_container_width=True):
+            e_amount = parse_math_expr(e_amount_str)
+            new_row = pd.DataFrame([{"ID": f"EXP-{int(datetime.now().timestamp()*1000)}", "日期": str(e_date), "類型": "支出", "類別": str(e_cat), "項目": e_item.strip() if e_item else "未填寫", "金額": float(e_amount), "記帳人": str(e_payer), "備註": str(e_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(e_proj) if e_proj != "無" else ""}])
+            st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
+            save_and_sync()
+            send_line_notification(f"💸 {e_payer} 新增了一筆支出\n{e_cat}｜{e_item.strip() if e_item else '未填寫'}\n金額：${e_amount:,.0f}")
+            st.session_state.e_form_reset_n += 1  # 換一個全新 key，強制輸入框重新生成、真正清空畫面
+            st.toast("🎉 支出新增成功！可以接著輸入下一筆")
+            st.rerun(scope="fragment")  # 只重跑這個彈窗，不動整頁，才能秒速接著輸入下一筆
 
 @st.fragment
 def income_entry_fragment():
     st.markdown("### ✨ 新增收入")
     i_n = st.session_state.i_form_reset_n
-    i_date = st.date_input("收入日期", st.session_state.cal_selected_date, key="i_date_input")
-    i_receiver = st.selectbox("收款人", st.session_state.members, key="i_receiver_input")
-    i_cat = st.selectbox("收入分類", st.session_state.income_categories, key="i_cat_input")
-    i_item = st.text_input("收入項目", placeholder="例如：薪資", key=f"i_item_input_{i_n}")
-    i_amount_str = st.text_input("金額 ($)", key=f"i_amount_str_input_{i_n}", placeholder="可輸入算式，如 1000+500")
-    i_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="i_proj_input")
-    i_note = st.text_input("備註 (非必填)", key=f"i_note_input_{i_n}")
-    if st.button("確認新增", type="primary", use_container_width=True, key="i_submit_btn"):
-        i_amount = parse_math_expr(i_amount_str)
-        new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp()*1000)}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
-        st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
-        save_and_sync()
-        send_line_notification(f"✨ {i_receiver} 新增了一筆收入\n{i_cat}｜{i_item.strip() if i_item else '未填寫'}\n金額：${i_amount:,.0f}")
-        st.session_state.i_form_reset_n += 1  # 換一個全新 key，強制輸入框重新生成、真正清空畫面
-        st.toast("🎉 收入新增成功！可以接著輸入下一筆")
-        st.rerun(scope="fragment")  # 只重跑這個彈窗，不動整頁，才能秒速接著輸入下一筆
+    with st.form("i_entry_form", clear_on_submit=False):
+        i_date = st.date_input("收入日期", st.session_state.cal_selected_date, key="i_date_input")
+        i_receiver = st.selectbox("收款人", st.session_state.members, key="i_receiver_input")
+        i_cat = st.selectbox("收入分類", st.session_state.income_categories, key="i_cat_input")
+        i_item = st.text_input("收入項目", placeholder="例如：薪資", key=f"i_item_input_{i_n}")
+        i_amount_str = st.text_input("金額 ($)", key=f"i_amount_str_input_{i_n}", placeholder="可輸入算式，如 1000+500")
+        i_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="i_proj_input")
+        i_note = st.text_input("備註 (非必填)", key=f"i_note_input_{i_n}")
+        if st.form_submit_button("確認新增", type="primary", use_container_width=True):
+            i_amount = parse_math_expr(i_amount_str)
+            new_row = pd.DataFrame([{"ID": f"INC-{int(datetime.now().timestamp()*1000)}", "日期": str(i_date), "類型": "收入", "類別": str(i_cat), "項目": i_item.strip() if i_item else "未填寫", "金額": float(i_amount), "記帳人": str(i_receiver), "備註": str(i_note), "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": str(i_proj) if i_proj != "無" else ""}])
+            st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
+            save_and_sync()
+            send_line_notification(f"✨ {i_receiver} 新增了一筆收入\n{i_cat}｜{i_item.strip() if i_item else '未填寫'}\n金額：${i_amount:,.0f}")
+            st.session_state.i_form_reset_n += 1  # 換一個全新 key，強制輸入框重新生成、真正清空畫面
+            st.toast("🎉 收入新增成功！可以接著輸入下一筆")
+            st.rerun(scope="fragment")  # 只重跑這個彈窗，不動整頁，才能秒速接著輸入下一筆
 
 # ==========================================
 # 5. 主選單 Header & 分頁
@@ -768,7 +773,8 @@ with tab_home:
     st.markdown(f"<h2 style='text-align:center; color:#C2410C; font-weight:900; font-size:18px; margin:10px 0 6px 0;'>{display_title}</h2>", unsafe_allow_html=True)
 
     # 🔍 篩選查詢：日期區間、類別、成員整合在同一個區塊，設定好按「套用篩選」一次套用
-    with st.container(border=True):
+    # ⚡ 用表單包起來：選下拉選單時不會立刻讓整頁重新執行，只有按「套用篩選」才送出一次
+    with st.form("filter_form"):
         st.markdown("<h3 style='color:#C2410C; margin-bottom:8px; font-size:16px;'>🔍 篩選查詢</h3>", unsafe_allow_html=True)
         picked_range = st.date_input("日期區間", value=(st.session_state.start_date, st.session_state.end_date), key="unified_date_picker")
 
@@ -791,7 +797,7 @@ with tab_home:
         picked_keyword = st.text_input("🔎 搜尋備註/項目關鍵字", value=st.session_state.keyword_search, placeholder="例如：牙醫")
 
         q_col1, q_col2 = st.columns(2)
-        if q_col1.button("✅ 套用篩選", type="primary", use_container_width=True):
+        if q_col1.form_submit_button("✅ 套用篩選", type="primary", use_container_width=True):
             if isinstance(picked_range, tuple) and len(picked_range) == 2:
                 st.session_state.start_date, st.session_state.end_date = picked_range[0], picked_range[1]
             elif isinstance(picked_range, tuple) and len(picked_range) == 1:
@@ -804,7 +810,7 @@ with tab_home:
             st.session_state.detail_limit = 40
             st.rerun()
 
-        if q_col2.button("↺ 重置全部", use_container_width=True):
+        if q_col2.form_submit_button("↺ 重置全部", use_container_width=True):
             today = date.today()
             st.session_state.start_date = date(today.year, today.month, 1)
             st.session_state.end_date = date(today.year, today.month, calendar.monthrange(today.year, today.month)[1])
