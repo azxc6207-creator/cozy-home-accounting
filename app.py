@@ -629,18 +629,32 @@ with tab_home:
     with st.container(border=True):
         st.markdown("<span class='sticky-marker'></span>", unsafe_allow_html=True)
         
-        cal_head_1, cal_head_2, cal_head_3 = st.columns([1.5, 0.9, 0.7])
+        # ⚡ 年月切換：點「切換年月」彈出小視窗（開啟不用連線、瞬間出現），裡面用按鈕選年與月。
+        # 用 on_change 回呼在重新執行「之前」就更新日期，不會多重跑一次
+        def _on_cal_change():
+            cur = st.session_state.cal_selected_date
+            y_txt = st.session_state.get("cal_year_pick")
+            m_txt = st.session_state.get("cal_month_pick")
+            y = int(y_txt[:-1]) if y_txt else cur.year
+            m = int(m_txt[:-1]) if m_txt else cur.month
+            st.session_state.cal_selected_date = date(y, m, 1)
+
+        cal_head_1, cal_head_2 = st.columns([1.5, 1.2])
         with cal_head_1:
             st.markdown(f"<div style='font-weight:900; font-size:19px; color:#3D322C; padding-top:4px;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
         with cal_head_2:
-            year_list = list(range(2020, 2035))
-            sel_year = st.selectbox("切換年份", year_list, index=year_list.index(st.session_state.cal_selected_date.year), label_visibility="collapsed")
-        with cal_head_3:
-            sel_month = st.selectbox("切換月份", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
-
-        if sel_year != st.session_state.cal_selected_date.year or sel_month != st.session_state.cal_selected_date.month:
-            st.session_state.cal_selected_date = date(sel_year, sel_month, 1)
-            st.rerun()
+            with st.popover("切換年月", use_container_width=True):
+                _cur = st.session_state.cal_selected_date
+                _years = [f"{y}年" for y in range(2020, 2035)]
+                _months = [f"{m}月" for m in range(1, 13)]
+                if hasattr(st, "pills"):
+                    st.pills("年", _years, selection_mode="single", default=f"{_cur.year}年", key="cal_year_pick", on_change=_on_cal_change)
+                    st.pills("月", _months, selection_mode="single", default=f"{_cur.month}月", key="cal_month_pick", on_change=_on_cal_change)
+                else:
+                    st.radio("年", _years, index=_years.index(f"{_cur.year}年"), horizontal=True, key="cal_year_pick", on_change=_on_cal_change)
+                    st.radio("月", _months, index=_cur.month - 1, horizontal=True, key="cal_month_pick", on_change=_on_cal_change)
+        sel_year = st.session_state.cal_selected_date.year
+        sel_month = st.session_state.cal_selected_date.month
 
         w_cols = st.columns(7)
         for idx, w_name in enumerate(["日", "一", "二", "三", "四", "五", "六"]):
