@@ -23,7 +23,12 @@ st.set_page_config(
 # ==========================================
 # 2. 終極防跑版 CSS + 日曆置頂 + 專案標籤隱藏與字體優化
 # ==========================================
-st.markdown("""
+# 🔬 效能診斷開關：網址後面加 ?t=nojs（不載入腳本）、?t=nocss（不載入自訂樣式）、?t=bare（兩者都不載入），
+#    用來比對是哪一段造成下拉選單延遲。平常不加參數就是完整版。
+_PERF_MODE = st.query_params.get("t", "")
+
+if _PERF_MODE not in ("nocss", "bare"):
+  st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap');
 
@@ -157,7 +162,8 @@ st.markdown("""
 # ==========================================
 # ⚡ 隱藏 JavaScript: 僅啟動金額數字鍵盤、日期輸入框防鍵盤、與平台浮標隱藏（保證日曆 100% 靈敏點擊）
 # ==========================================
-components.html(
+if _PERF_MODE not in ("nojs", "bare"):
+  components.html(
     r"""
     <script>
     const doc = window.parent.document;
