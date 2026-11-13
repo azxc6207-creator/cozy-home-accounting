@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 import plotly.express as px
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import calendar
 import streamlit.components.v1 as components
 import json
@@ -647,9 +647,202 @@ def income_entry_fragment():
             st.rerun(scope="fragment")  # 只重跑這個彈窗，不動整頁，才能秒速接著輸入下一筆
 
 # ==========================================
+# 🎤 語音／文字快速記帳（Siri 捷徑 → 開啟網址 ?voice=文字 → 解析後顯示確認卡 → 按確認才寫入）
+# ==========================================
+_CN_DIGIT = {"零": 0, "〇": 0, "一": 1, "二": 2, "兩": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9}
+_CN_UNIT = {"十": 10, "百": 100, "千": 1000}
+_CN_NUM_CHARS = "零〇一二兩三四五六七八九十百千萬"
+
+def _cn_to_int(s):
+    """中文數字轉整數：一百二十→120、三千五→3500、兩萬→20000、一百五→150"""
+    total = section = num = 0
+    last_unit = None
+    for ch in s:
+        if ch in _CN_DIGIT:
+            num = _CN_DIGIT[ch]
+        elif ch in _CN_UNIT:
+            section += (num if num else 1) * _CN_UNIT[ch]
+            num = 0
+            last_unit = _CN_UNIT[ch]
+        elif ch == "萬":
+            section += num
+            total += (section if section else 1) * 10000
+            section = num = 0
+            last_unit = None
+    if num and last_unit in (100, 1000) and len(s) >= 2 and s[-2] in "百千":
+        num = num * (last_unit // 10)  # 「一百五」= 150
+    return total + section + num
+
+_VOICE_EXPENSE_RULES = [
+    ("餐", ["早餐", "午餐", "晚餐", "宵夜", "早午餐", "吃", "飯", "餐", "飲料", "咖啡", "便當", "麵", "點心", "麥當勞", "手搖", "火鍋"]),
+    ("交通", ["捷運", "公車", "計程車", "加油", "油錢", "停車", "高鐵", "火車", "uber", "交通", "機票", "車票"]),
+    ("日用", ["日用", "衛生紙", "洗衣", "清潔", "家具", "雜貨", "超市", "全聯", "costco", "好市多", "家樂福", "洗髮", "牙膏"]),
+    ("水電", ["水費", "電費", "瓦斯", "網路費", "電信", "手機費", "房租", "管理費"]),
+    ("娛樂", ["電影", "遊戲", "旅遊", "唱歌", "娛樂", "訂閱", "netflix", "演唱會", "門票"]),
+    ("醫療", ["看醫生", "藥", "牙醫", "掛號", "診所", "醫院", "醫療", "健檢"]),
+]
+_VOICE_INCOME_RULES = [
+    ("薪資", ["薪水", "薪資", "月薪", "發薪"]),
+    ("獎金", ["獎金", "紅包", "年終", "禮金"]),
+    ("投資", ["股利", "股息", "投資", "利息", "配息"]),
+    ("兼職", ["兼職", "副業", "接案", "外快"]),
+]
+_VOICE_INCOME_WORDS = ["收入", "薪水", "薪資", "獎金", "紅包", "領到", "收到", "賺", "進帳", "股利", "股息", "利息", "入帳"]
+
+def _pick_category(cats, rules, text):
+    """依關鍵字規則，在使用者「實際擁有的分類」裡找出最符合的；找不到就用「其他」或第一個"""
+    low = text.lower()
+    for frag, kws in rules:
+        if any(k in low for k in kws):
+            for c in cats:
+                if frag in c:
+                    return c
+    for c in cats:
+        if "其他" in c:
+            return c
+    return cats[0] if cats else ""
+
+def parse_voice_text(text, members, expense_cats, income_cats, today=None):
+    """把「今天鼠寶支付晚餐費用100元」解析成 日期／成員／類型／分類／項目／金額。純函式，方便測試"""
+    import re
+    today = today or date.today()
+    raw = (text or "").strip()
+    work = raw.replace("，", " ").replace(",", "").replace("。", " ")
+    notes = []
+
+    # 日期
+    d = today
+    m1 = re.search(r"(\d{1,2})\s*月\s*(\d{1,2})\s*[日號号]", work)
+    m2 = re.search(r"(?<!\d)(\d{1,2})\s*[/／]\s*(\d{1,2})(?!\d)", work)
+    date_span = None
+    if "大前天" in work:
+        d = today - timedelta(days=3); date_span = "大前天"
+    elif "前天" in work:
+        d = today - timedelta(days=2); date_span = "前天"
+    elif "昨天" in work or "昨日" in work:
+        d = today - timedelta(days=1); date_span = "昨天" if "昨天" in work else "昨日"
+    elif "今天" in work or "今日" in work:
+        date_span = "今天" if "今天" in work else "今日"
+    elif m1 or m2:
+        mm = m1 or m2
+        try:
+            d = date(today.year, int(mm.group(1)), int(mm.group(2)))
+            date_span = mm.group(0)
+        except ValueError:
+            notes.append("日期看不懂，已用今天")
+    if date_span:
+        work = work.replace(date_span, " ", 1)
+
+    # 金額（優先「數字＋元/塊」，其次中文數字＋元/塊，最後取最後一個數字）
+    amount, amt_span = None, None
+    ma = re.search(r"(\d+(?:\.\d+)?)\s*(?:元|塊|块|圓|圆|NT\$?|台幣)", work)
+    if ma:
+        amount, amt_span = float(ma.group(1)), ma.group(0)
+    else:
+        mc = re.search(r"([%s]+)\s*(?:元|塊|块|圓|圆)" % _CN_NUM_CHARS, work)
+        if mc:
+            amount, amt_span = float(_cn_to_int(mc.group(1))), mc.group(0)
+        else:
+            nums = list(re.finditer(r"\d+(?:\.\d+)?", work))
+            if nums:
+                amount, amt_span = float(nums[-1].group(0)), nums[-1].group(0)
+            else:
+                mc2 = re.search(r"([%s]{2,})" % _CN_NUM_CHARS, work)
+                if mc2:
+                    amount, amt_span = float(_cn_to_int(mc2.group(1))), mc2.group(1)
+    if amt_span:
+        work = work.replace(amt_span, " ", 1)
+    if not amount:
+        notes.append("沒聽到金額，請手動補上")
+        amount = 0.0
+
+    # 成員
+    payer = None
+    for m in sorted(members, key=len, reverse=True):
+        if m and m in work:
+            payer = m
+            work = work.replace(m, " ", 1)
+            break
+    if payer is None:
+        notes.append("沒聽到是誰付的，請確認成員")
+        payer = members[0] if members else ""
+
+    # 類型與分類
+    is_income = any(w in raw for w in _VOICE_INCOME_WORDS)
+    rtype = "收入" if is_income else "支出"
+    cats = income_cats if is_income else expense_cats
+    rules = _VOICE_INCOME_RULES if is_income else _VOICE_EXPENSE_RULES
+    category = _pick_category(cats, rules, raw)
+
+    # 項目：去掉動詞、贅詞後剩下的字
+    item = re.sub(r"(支付|付款|付了|花費|花了|買了|刷了|刷卡|記一筆|記帳|新增一筆|新增|一筆|總共|共計|費用|金額|收入|收到|領到|入帳|，|：|:|\.)", " ", work)
+    item = re.sub(r"(^|\s)[付花買刷用的了給]+(?=\S)", " ", item)
+    item = re.sub(r"\s+", "", item).strip("的了")
+    if not item:
+        item = "未填寫"
+    return {"type": rtype, "date": d, "payer": payer, "category": category, "item": item, "amount": amount, "notes": notes}
+
+def _clear_voice_param():
+    try:
+        if "voice" in st.query_params:
+            del st.query_params["voice"]
+    except Exception:
+        pass
+    st.session_state.voice_pending = ""
+
+def render_voice_card():
+    """若有待確認的語音文字（網址帶 ?voice=… 或手動輸入），顯示解析結果讓使用者確認後才寫入"""
+    import hashlib
+    text = st.session_state.get("voice_pending") or st.query_params.get("voice", "")
+    if isinstance(text, list):
+        text = text[0] if text else ""
+    text = (text or "").strip()
+    if not text:
+        return
+    parsed = parse_voice_text(text, st.session_state.members, st.session_state.expense_categories, st.session_state.income_categories)
+    sig = hashlib.md5(text.encode("utf-8")).hexdigest()[:8]
+    with st.container(border=True):
+        st.markdown(f"<div style='font-size:15px; font-weight:900; color:#C2410C;'>🎤 語音記帳確認</div><div style='font-size:13px; color:#8A5A2B; margin:4px 0 8px 0;'>聽到的內容：「{text}」</div>", unsafe_allow_html=True)
+        for n in parsed["notes"]:
+            st.warning(n)
+        rtype = pick_one("類型", ["支出", "收入"], key=f"v_type_{sig}", default=parsed["type"])
+        cats = st.session_state.expense_categories if rtype == "支出" else st.session_state.income_categories
+        with st.form(f"voice_form_{sig}"):
+            v_date = st.date_input("日期", parsed["date"], key=f"v_date_{sig}")
+            v_payer = pick_one("成員", st.session_state.members, key=f"v_payer_{sig}", default=parsed["payer"])
+            default_cat = parsed["category"] if parsed["type"] == rtype else _pick_category(cats, _VOICE_EXPENSE_RULES if rtype == "支出" else _VOICE_INCOME_RULES, text)
+            v_cat = pick_one("分類", cats, key=f"v_cat_{sig}_{rtype}", default=default_cat)
+            v_item = st.text_input("項目", value=parsed["item"], key=f"v_item_{sig}")
+            v_amt = st.text_input("金額 ($)", value=str(int(parsed["amount"])) if parsed["amount"] % 1 == 0 else str(parsed["amount"]), key=f"v_amt_{sig}")
+            c1, c2 = st.columns(2)
+            ok = c1.form_submit_button("✅ 確認新增", type="primary", use_container_width=True)
+            cancel = c2.form_submit_button("取消", use_container_width=True)
+        if cancel:
+            _clear_voice_param()
+            st.rerun()
+        if ok:
+            amount = parse_math_expr(v_amt)
+            if not amount or amount <= 0:
+                st.error("金額要大於 0")
+                return
+            prefix = "EXP" if rtype == "支出" else "INC"
+            new_row = pd.DataFrame([{"ID": f"{prefix}-{int(datetime.now().timestamp()*1000)}", "日期": str(v_date), "類型": rtype, "類別": str(v_cat),
+                                     "項目": v_item.strip() or "未填寫", "金額": float(amount), "記帳人": str(v_payer), "備註": "語音記帳",
+                                     "結帳狀態": "未結帳", "結帳單號": "", "已同意人": "", "專案": ""}])
+            st.session_state.expenses_df = pd.concat([st.session_state.expenses_df, new_row], ignore_index=True)
+            save_and_sync()
+            icon = "💸" if rtype == "支出" else "✨"
+            send_line_notification(f"{icon} {v_payer} 新增了一筆{rtype}\n{v_cat}｜{v_item.strip() or '未填寫'}\n金額：${amount:,.0f}")
+            st.toast("🎉 已新增！")
+            _clear_voice_param()
+            st.rerun()
+
+# ==========================================
 # 5. 主選單 Header & 分頁
 # ==========================================
 st.markdown("<h2 style='color:#C2410C; font-weight:900; margin-bottom:10px;'>🏠 小窩記帳 🐾</h2>", unsafe_allow_html=True)
+
+render_voice_card()  # 有待確認的語音／文字記帳時，在所有分頁上方顯示確認卡
 
 tab_home, tab_charts, tab_memo, tab_shopping, tab_settings = st.tabs([
     "🏠 主頁", "📊 圖表", "💬 備忘", "🛒 購物", "⚙️ 設定"
@@ -839,6 +1032,13 @@ with tab_home:
                     st.success("🎉 已完成結帳！")
                     st.rerun()
 
+    # 🎤 文字／語音快速記帳（也可用於測試：直接輸入一句話，看解析結果）
+    with st.expander("🎤 語音／文字快速記帳", expanded=False):
+        _vt = st.text_input("說一句話或打一句話", placeholder="例如：今天鼠寶支付晚餐費用100元", key="voice_text_input", label_visibility="collapsed")
+        if st.button("解析這句話", use_container_width=True, key="voice_parse_btn"):
+            st.session_state.voice_pending = _vt.strip()
+            st.rerun()
+
     # 📌 顯示當前檢視區間標題
     if st.session_state.filter_to_single_day:
         display_title = f"📅 {st.session_state.cal_selected_date}"
@@ -860,7 +1060,9 @@ with tab_home:
         all_categories = ["全部類別"] + st.session_state.expense_categories + st.session_state.income_categories
         all_people = ["全部成員"] + st.session_state.members
         _frn = st.session_state.get("filter_reset_n", 0)
-        picked_category = pick_one("篩選類別（前段為支出、後段為收入）", all_categories, key=f"f_cat_pick_{_frn}", default=st.session_state.category_filter)
+        # 摺疊列標題顯示「目前已套用」的類別；展開後在裡面點選，按「套用篩選」才生效（表單內不連線，點選瞬間完成）
+        with st.expander(f"篩選類別：{st.session_state.category_filter}", expanded=False):
+            picked_category = pick_one("篩選類別（前段為支出、後段為收入）", all_categories, key=f"f_cat_pick_{_frn}", default=st.session_state.category_filter)
         picked_person = pick_one("篩選成員", all_people, key=f"f_person_pick_{_frn}", default=st.session_state.person_filter)
 
         picked_keyword = st.text_input("🔎 搜尋備註/項目關鍵字", value=st.session_state.keyword_search, placeholder="例如：牙醫")
