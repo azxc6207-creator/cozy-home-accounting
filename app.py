@@ -796,6 +796,7 @@ def _clear_voice_param():
     except Exception:
         pass
     st.session_state.voice_pending = ""
+    st.session_state.voice_input_n = st.session_state.get("voice_input_n", 0) + 1  # 換新 key，輸入框下次就是空的
 
 def render_voice_card():
     """若有待確認的語音文字（網址帶 ?voice=… 或手動輸入），顯示解析結果讓使用者確認後才寫入"""
@@ -1041,7 +1042,7 @@ with tab_home:
 
     # 🎤 文字／語音快速記帳（也可用於測試：直接輸入一句話，看解析結果）
     with st.expander("🎤 語音／文字快速記帳", expanded=False):
-        _vt = st.text_input("說一句話或打一句話", placeholder="例如：今天鼠寶支付晚餐費用100元", key="voice_text_input", label_visibility="collapsed")
+        _vt = st.text_input("說一句話或打一句話", placeholder="例如：今天鼠寶支付晚餐費用100元", key=f"voice_text_input_{st.session_state.get('voice_input_n', 0)}", label_visibility="collapsed")
         if st.button("解析這句話", use_container_width=True, key="voice_parse_btn"):
             st.session_state.voice_pending = _vt.strip()
             st.rerun()
