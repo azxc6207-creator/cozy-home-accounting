@@ -575,10 +575,10 @@ def expense_entry_fragment():
     with st.form("e_entry_form", clear_on_submit=False):
         e_date = st.date_input("支出日期", st.session_state.cal_selected_date, key="e_date_input")
         e_payer = pick_one("付款人", st.session_state.members, key="e_payer_pick")
-        e_cat = st.selectbox("支出分類", st.session_state.expense_categories, key="e_cat_input")
+        e_cat = pick_one("支出分類", st.session_state.expense_categories, key="e_cat_pick")
         e_item = st.text_input("消費項目", placeholder="例如：麵包", key=f"e_item_input_{e_n}")
         e_amount_str = st.text_input("金額 ($)", key=f"e_amount_str_input_{e_n}", placeholder="可輸入算式，如 120+35")
-        e_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="e_proj_input")
+        e_proj = pick_one("專案目標 (選填)", st.session_state.projects, key="e_proj_pick")
         e_note = st.text_input("備註 (非必填)", key=f"e_note_input_{e_n}")
         if st.form_submit_button("確認新增", type="primary", use_container_width=True):
             e_amount = parse_math_expr(e_amount_str)
@@ -597,10 +597,10 @@ def income_entry_fragment():
     with st.form("i_entry_form", clear_on_submit=False):
         i_date = st.date_input("收入日期", st.session_state.cal_selected_date, key="i_date_input")
         i_receiver = pick_one("收款人", st.session_state.members, key="i_receiver_pick")
-        i_cat = st.selectbox("收入分類", st.session_state.income_categories, key="i_cat_input")
+        i_cat = pick_one("收入分類", st.session_state.income_categories, key="i_cat_pick")
         i_item = st.text_input("收入項目", placeholder="例如：薪資", key=f"i_item_input_{i_n}")
         i_amount_str = st.text_input("金額 ($)", key=f"i_amount_str_input_{i_n}", placeholder="可輸入算式，如 1000+500")
-        i_proj = st.selectbox("專案目標 (選填)", st.session_state.projects, key="i_proj_input")
+        i_proj = pick_one("專案目標 (選填)", st.session_state.projects, key="i_proj_pick")
         i_note = st.text_input("備註 (非必填)", key=f"i_note_input_{i_n}")
         if st.form_submit_button("確認新增", type="primary", use_container_width=True):
             i_amount = parse_math_expr(i_amount_str)
@@ -629,18 +629,23 @@ with tab_home:
     with st.container(border=True):
         st.markdown("<span class='sticky-marker'></span>", unsafe_allow_html=True)
         
-        cal_head_1, cal_head_2, cal_head_3 = st.columns([1.5, 0.9, 0.7])
-        with cal_head_1:
-            st.markdown(f"<div style='font-weight:900; font-size:19px; color:#3D322C; padding-top:4px;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
-        with cal_head_2:
-            year_list = list(range(2020, 2035))
-            sel_year = st.selectbox("切換年份", year_list, index=year_list.index(st.session_state.cal_selected_date.year), label_visibility="collapsed")
-        with cal_head_3:
-            sel_month = st.selectbox("切換月份", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
-            
-        if sel_year != st.session_state.cal_selected_date.year or sel_month != st.session_state.cal_selected_date.month:
-            st.session_state.cal_selected_date = date(sel_year, sel_month, 1)
-            st.rerun()
+        # ⚡ 年月切換改成箭頭按鈕（« 上一年｜‹ 上一月｜月份標題｜› 下一月｜» 下一年），不再用下拉選單，點下去立刻切換
+        # 用 on_click 回呼：在這次重新執行「之前」就改好日期，不需要再多 rerun 一次
+        def _shift_cal(delta_months):
+            cur = st.session_state.cal_selected_date
+            idx = cur.year * 12 + (cur.month - 1) + delta_months
+            y, m0 = divmod(idx, 12)
+            y = min(max(y, 2020), 2034)
+            st.session_state.cal_selected_date = date(y, m0 + 1, 1)
+
+        h1, h2, h3, h4, h5 = st.columns([0.7, 0.7, 2.4, 0.7, 0.7])
+        h1.button("«", key="cal_prev_year", on_click=_shift_cal, args=(-12,))
+        h2.button("‹", key="cal_prev_month", on_click=_shift_cal, args=(-1,))
+        h3.markdown(f"<div style='font-weight:900; font-size:18px; color:#3D322C; padding-top:4px; text-align:center; white-space:nowrap;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
+        h4.button("›", key="cal_next_month", on_click=_shift_cal, args=(1,))
+        h5.button("»", key="cal_next_year", on_click=_shift_cal, args=(12,))
+        sel_year = st.session_state.cal_selected_date.year
+        sel_month = st.session_state.cal_selected_date.month
 
         w_cols = st.columns(7)
         for idx, w_name in enumerate(["日", "一", "二", "三", "四", "五", "六"]):
@@ -809,16 +814,11 @@ with tab_home:
 
         DIVIDER_EXPENSE = "── 支出 ──"
         DIVIDER_INCOME = "── 收入 ──"
-        all_categories = ["全部類別", DIVIDER_EXPENSE] + st.session_state.expense_categories + [DIVIDER_INCOME] + st.session_state.income_categories
+        all_categories = ["全部類別"] + st.session_state.expense_categories + st.session_state.income_categories
         all_people = ["全部成員"] + st.session_state.members
-        f_col1, f_col2 = st.columns(2)
-        with f_col1:
-            picked_category = st.selectbox(
-                "篩選類別", all_categories,
-                index=all_categories.index(st.session_state.category_filter) if st.session_state.category_filter in all_categories else 0
-            )
-        with f_col2:
-            picked_person = pick_one("篩選成員", all_people, key=f"f_person_pick_{st.session_state.get('filter_reset_n', 0)}", default=st.session_state.person_filter)
+        _frn = st.session_state.get("filter_reset_n", 0)
+        picked_category = pick_one("篩選類別（前段為支出、後段為收入）", all_categories, key=f"f_cat_pick_{_frn}", default=st.session_state.category_filter)
+        picked_person = pick_one("篩選成員", all_people, key=f"f_person_pick_{_frn}", default=st.session_state.person_filter)
 
         picked_keyword = st.text_input("🔎 搜尋備註/項目關鍵字", value=st.session_state.keyword_search, placeholder="例如：牙醫")
 
