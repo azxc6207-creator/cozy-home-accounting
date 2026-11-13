@@ -442,6 +442,21 @@ if st.session_state.get("sync_error"):
     st.toast(f"⚠️ 雲端同步失敗，資料僅暫存在畫面上，請檢查網路後重新操作一次：{st.session_state.sync_error}", icon="⚠️")
     st.session_state.sync_error = None
 
+def pick_one(label, options, key, default=None):
+    """單選按鈕組（取代下拉選單：點一下就選好，手機上不用展開清單，反應比 selectbox 快）。
+    舊版 Streamlit 沒有 pills 時，自動退回橫向 radio。永遠回傳一個有效選項，不會是 None。"""
+    options = list(options)
+    if not options:
+        return None
+    if default not in options:
+        default = options[0]
+    if key in st.session_state and st.session_state[key] not in options:
+        del st.session_state[key]
+    if hasattr(st, "pills"):
+        v = st.pills(label, options, selection_mode="single", default=default, key=key)
+        return v if v in options else default
+    return st.radio(label, options, index=options.index(default), horizontal=True, key=key)
+
 # ==========================================
 # ⚡ 效能：圖表與日期解析快取（資料沒變就不重算、不重畫）
 # ==========================================
@@ -559,7 +574,7 @@ def expense_entry_fragment():
     e_n = st.session_state.e_form_reset_n
     with st.form("e_entry_form", clear_on_submit=False):
         e_date = st.date_input("支出日期", st.session_state.cal_selected_date, key="e_date_input")
-        e_payer = st.selectbox("付款人", st.session_state.members, key="e_payer_input")
+        e_payer = pick_one("付款人", st.session_state.members, key="e_payer_pick")
         e_cat = st.selectbox("支出分類", st.session_state.expense_categories, key="e_cat_input")
         e_item = st.text_input("消費項目", placeholder="例如：麵包", key=f"e_item_input_{e_n}")
         e_amount_str = st.text_input("金額 ($)", key=f"e_amount_str_input_{e_n}", placeholder="可輸入算式，如 120+35")
@@ -581,7 +596,7 @@ def income_entry_fragment():
     i_n = st.session_state.i_form_reset_n
     with st.form("i_entry_form", clear_on_submit=False):
         i_date = st.date_input("收入日期", st.session_state.cal_selected_date, key="i_date_input")
-        i_receiver = st.selectbox("收款人", st.session_state.members, key="i_receiver_input")
+        i_receiver = pick_one("收款人", st.session_state.members, key="i_receiver_pick")
         i_cat = st.selectbox("收入分類", st.session_state.income_categories, key="i_cat_input")
         i_item = st.text_input("收入項目", placeholder="例如：薪資", key=f"i_item_input_{i_n}")
         i_amount_str = st.text_input("金額 ($)", key=f"i_amount_str_input_{i_n}", placeholder="可輸入算式，如 1000+500")
@@ -803,10 +818,7 @@ with tab_home:
                 index=all_categories.index(st.session_state.category_filter) if st.session_state.category_filter in all_categories else 0
             )
         with f_col2:
-            picked_person = st.selectbox(
-                "篩選成員", all_people,
-                index=all_people.index(st.session_state.person_filter) if st.session_state.person_filter in all_people else 0
-            )
+            picked_person = pick_one("篩選成員", all_people, key=f"f_person_pick_{st.session_state.get('filter_reset_n', 0)}", default=st.session_state.person_filter)
 
         picked_keyword = st.text_input("🔎 搜尋備註/項目關鍵字", value=st.session_state.keyword_search, placeholder="例如：牙醫")
 
@@ -830,6 +842,7 @@ with tab_home:
             st.session_state.end_date = date(today.year, today.month, calendar.monthrange(today.year, today.month)[1])
             st.session_state.category_filter = "全部類別"
             st.session_state.person_filter = "全部成員"
+            st.session_state.filter_reset_n = st.session_state.get("filter_reset_n", 0) + 1
             st.session_state.keyword_search = ""
             st.session_state.filter_to_single_day = False
             st.session_state.detail_limit = 40
