@@ -629,23 +629,18 @@ with tab_home:
     with st.container(border=True):
         st.markdown("<span class='sticky-marker'></span>", unsafe_allow_html=True)
         
-        # ⚡ 年月切換改成箭頭按鈕（« 上一年｜‹ 上一月｜月份標題｜› 下一月｜» 下一年），不再用下拉選單，點下去立刻切換
-        # 用 on_click 回呼：在這次重新執行「之前」就改好日期，不需要再多 rerun 一次
-        def _shift_cal(delta_months):
-            cur = st.session_state.cal_selected_date
-            idx = cur.year * 12 + (cur.month - 1) + delta_months
-            y, m0 = divmod(idx, 12)
-            y = min(max(y, 2020), 2034)
-            st.session_state.cal_selected_date = date(y, m0 + 1, 1)
+        cal_head_1, cal_head_2, cal_head_3 = st.columns([1.5, 0.9, 0.7])
+        with cal_head_1:
+            st.markdown(f"<div style='font-weight:900; font-size:19px; color:#3D322C; padding-top:4px;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
+        with cal_head_2:
+            year_list = list(range(2020, 2035))
+            sel_year = st.selectbox("切換年份", year_list, index=year_list.index(st.session_state.cal_selected_date.year), label_visibility="collapsed")
+        with cal_head_3:
+            sel_month = st.selectbox("切換月份", list(range(1, 13)), index=st.session_state.cal_selected_date.month - 1, label_visibility="collapsed")
 
-        h1, h2, h3, h4, h5 = st.columns([0.7, 0.7, 2.4, 0.7, 0.7])
-        h1.button("«", key="cal_prev_year", on_click=_shift_cal, args=(-12,))
-        h2.button("‹", key="cal_prev_month", on_click=_shift_cal, args=(-1,))
-        h3.markdown(f"<div style='font-weight:900; font-size:18px; color:#3D322C; padding-top:4px; text-align:center; white-space:nowrap;'>📅 {st.session_state.cal_selected_date.strftime('%Y年%m月')}</div>", unsafe_allow_html=True)
-        h4.button("›", key="cal_next_month", on_click=_shift_cal, args=(1,))
-        h5.button("»", key="cal_next_year", on_click=_shift_cal, args=(12,))
-        sel_year = st.session_state.cal_selected_date.year
-        sel_month = st.session_state.cal_selected_date.month
+        if sel_year != st.session_state.cal_selected_date.year or sel_month != st.session_state.cal_selected_date.month:
+            st.session_state.cal_selected_date = date(sel_year, sel_month, 1)
+            st.rerun()
 
         w_cols = st.columns(7)
         for idx, w_name in enumerate(["日", "一", "二", "三", "四", "五", "六"]):
@@ -679,16 +674,16 @@ with tab_home:
                 st.markdown("### 🐾 結帳專區")
 
                 # 📅 結帳區間選擇：本月 / 自訂月份 / 自訂日期區間
-                period_mode = st.radio("結帳區間", ["本月", "自訂月份", "自訂日期區間"], horizontal=True, key="settle_period_mode")
+                period_mode = pick_one("結帳區間", ["本月", "自訂月份", "自訂日期區間"], key="settle_period_pick")
                 today = date.today()
                 if period_mode == "本月":
                     p_start = date(today.year, today.month, 1)
                     p_end = date(today.year, today.month, calendar.monthrange(today.year, today.month)[1])
                 elif period_mode == "自訂月份":
-                    sm_col1, sm_col2 = st.columns(2)
-                    year_opts = list(range(2020, 2035))
-                    sel_y = sm_col1.selectbox("年", year_opts, index=year_opts.index(today.year), key="settle_sel_year")
-                    sel_m = sm_col2.selectbox("月", list(range(1, 13)), index=today.month - 1, key="settle_sel_month")
+                    year_opts = [f"{y}年" for y in range(today.year - 4, today.year + 2)]
+                    month_opts = [f"{m}月" for m in range(1, 13)]
+                    sel_y = int(pick_one("年", year_opts, key="settle_year_pick", default=f"{today.year}年")[:-1])
+                    sel_m = int(pick_one("月", month_opts, key="settle_month_pick", default=f"{today.month}月")[:-1])
                     p_start = date(sel_y, sel_m, 1)
                     p_end = date(sel_y, sel_m, calendar.monthrange(sel_y, sel_m)[1])
                 else:
@@ -721,9 +716,9 @@ with tab_home:
                     ex_desc = st.text_input("項目說明", placeholder="例如：代墊的計程車費")
                     ex_col1, ex_col2 = st.columns(2)
                     ex_amount = ex_col1.number_input("金額", min_value=0.0, step=10.0)
-                    ex_type = ex_col2.selectbox("類型", ["支出", "收入"])
+                    ex_type = pick_one("類型", ["支出", "收入"], key="settle_ex_type_pick")
                     ex_col3, ex_col4 = st.columns(2)
-                    ex_payer = ex_col3.selectbox("由誰支付/收取", st.session_state.members)
+                    ex_payer = pick_one("由誰支付/收取", st.session_state.members, key="settle_ex_payer_pick")
                     ex_note = ex_col4.text_input("備註 (選填)")
                     if st.form_submit_button("加入結帳清單", use_container_width=True):
                         if ex_desc and ex_amount > 0:
