@@ -87,6 +87,8 @@ if _PERF_MODE not in ("nocss", "bare"):
 
     /* 📲 Popover 彈窗安全高度與 iOS 原生滑動支援 (大幅增加底部留白防遮擋) */
     div[data-testid="stPopoverBody"] { 
+        width: min(464px, calc(100vw - 16px)) !important;
+        min-width: min(464px, calc(100vw - 16px)) !important;
         max-height: 65vh !important; 
         overflow-y: auto !important; 
         -webkit-overflow-scrolling: touch !important; 
