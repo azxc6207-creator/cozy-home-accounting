@@ -676,7 +676,7 @@ def _cn_to_int(s):
 _VOICE_EXPENSE_RULES = [
     ("餐", ["早餐", "午餐", "晚餐", "宵夜", "早午餐", "吃", "飯", "餐", "飲料", "咖啡", "便當", "麵", "點心", "麥當勞", "手搖", "火鍋"]),
     ("交通", ["捷運", "公車", "計程車", "加油", "油錢", "停車", "高鐵", "火車", "uber", "交通", "機票", "車票"]),
-    ("日用", ["日用", "衛生紙", "洗衣", "清潔", "家具", "雜貨", "超市", "全聯", "costco", "好市多", "家樂福", "洗髮", "牙膏"]),
+    ("日用", ["日用", "衛生紙", "洗衣", "清潔", "家具", "雜貨", "超市", "全聯", "costco", "好市多", "家樂福", "洗髮", "牙膏", "充電器", "電器", "家電", "線材", "配件", "電池", "燈泡", "收納", "鍋", "碗", "3c", "手機殼", "延長線"]),
     ("水電", ["水費", "電費", "瓦斯", "網路費", "電信", "手機費", "房租", "管理費"]),
     ("娛樂", ["電影", "遊戲", "旅遊", "唱歌", "娛樂", "訂閱", "netflix", "演唱會", "門票"]),
     ("醫療", ["看醫生", "藥", "牙醫", "掛號", "診所", "醫院", "醫療", "健檢"]),
@@ -735,7 +735,7 @@ def parse_voice_text(text, members, expense_cats, income_cats, today=None):
 
     # 金額（優先「數字＋元/塊」，其次中文數字＋元/塊，最後取最後一個數字）
     amount, amt_span = None, None
-    ma = re.search(r"(\d+(?:\.\d+)?)\s*(?:元|塊|块|圓|圆|NT\$?|台幣)", work)
+    ma = re.search(r"(?:NT)?\s*[$＄]\s*(\d+(?:\.\d+)?)", work) or re.search(r"(\d+(?:\.\d+)?)\s*(?:元|塊|块|圓|圆|NT\$?|台幣)", work)
     if ma:
         amount, amt_span = float(ma.group(1)), ma.group(0)
     else:
@@ -756,15 +756,22 @@ def parse_voice_text(text, members, expense_cats, income_cats, today=None):
         notes.append("沒聽到金額，請手動補上")
         amount = 0.0
 
-    # 成員
+    # 成員：比對時忽略名字裡的表情符號、空白（例如成員叫「🐹 鼠寶」，講「鼠寶」也要對得到）
     payer = None
-    for m in sorted(members, key=len, reverse=True):
-        if m and m in work:
+    cores = [(m, re.sub(r"[^\w\u4e00-\u9fff]", "", m)) for m in members]
+    for m, core in sorted(cores, key=lambda x: len(x[1]), reverse=True):
+        if core and core in work:
             payer = m
-            work = work.replace(m, " ", 1)
+            work = work.replace(core, " ", 1)
             break
     if payer is None:
-        notes.append("沒聽到是誰付的，請確認成員")
+        # 沒對到任何成員：把句首「某某＋動詞」的某某當作講話者，從項目中移除，並提醒使用者
+        ms = re.match(r"\s*(\S{2,4}?)(?=支付|付款|買|付|花|刷|吃|用)", work)
+        if ms:
+            notes.append(f"聽到「{ms.group(1)}」，但成員清單裡沒有這個名字，請確認成員")
+            work = work.replace(ms.group(1), " ", 1)
+        else:
+            notes.append("沒聽到是誰付的，請確認成員")
         payer = members[0] if members else ""
 
     # 類型與分類
