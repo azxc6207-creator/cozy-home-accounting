@@ -457,6 +457,38 @@ def pick_one(label, options, key, default=None):
         return v if v in options else default
     return st.radio(label, options, index=options.index(default), horizontal=True, key=key)
 
+def pick_choice(label, options, key, default=None, mode="popover", compact=False):
+    """「點開才出現選項」版本：按鈕/摺疊列顯示目前選擇，點開後是一組按鈕，選了就更新。
+    點開這一步只在手機上處理、瞬間出現；選擇用 on_change 回呼處理，不會多重跑一次。
+    mode="popover"：獨立彈出視窗；mode="expander"：摺疊列（用在「已經在彈窗裡」的地方，因為彈窗裡不能再開彈窗）。
+    compact=True：按鈕只顯示選到的值，標題另外放在上方小字。"""
+    options = list(options)
+    if not options:
+        return None
+    vkey = f"{key}__val"
+    pkey = f"{key}__pill"
+    if vkey not in st.session_state or st.session_state[vkey] not in options:
+        st.session_state[vkey] = default if default in options else options[0]
+    if pkey in st.session_state and st.session_state[pkey] not in options:
+        del st.session_state[pkey]
+
+    def _cb():
+        v = st.session_state.get(pkey)
+        if v in options:
+            st.session_state[vkey] = v
+
+    cur = st.session_state[vkey]
+    if compact:
+        st.caption(label)
+    text = cur if compact else f"{label}：{cur}"
+    box = st.popover(text, use_container_width=True) if mode == "popover" else st.expander(text, expanded=False)
+    with box:
+        if hasattr(st, "pills"):
+            st.pills(label, options, selection_mode="single", default=cur, key=pkey, on_change=_cb, label_visibility="collapsed")
+        else:
+            st.radio(label, options, index=options.index(cur), horizontal=True, key=pkey, on_change=_cb, label_visibility="collapsed")
+    return st.session_state[vkey]
+
 # ==========================================
 # ⚡ 效能：圖表與日期解析快取（資料沒變就不重算、不重畫）
 # ==========================================
@@ -572,10 +604,10 @@ def edit_record_dialog(rec_id):
 def expense_entry_fragment():
     st.markdown("### 💸 新增支出")
     e_n = st.session_state.e_form_reset_n
+    e_payer = pick_choice("付款人", st.session_state.members, key="e_payer_ch", mode="expander")
+    e_cat = pick_choice("支出分類", st.session_state.expense_categories, key="e_cat_ch", mode="expander")
     with st.form("e_entry_form", clear_on_submit=False):
         e_date = st.date_input("支出日期", st.session_state.cal_selected_date, key="e_date_input")
-        e_payer = pick_one("付款人", st.session_state.members, key="e_payer_pick")
-        e_cat = pick_one("支出分類", st.session_state.expense_categories, key="e_cat_pick")
         e_item = st.text_input("消費項目", placeholder="例如：麵包", key=f"e_item_input_{e_n}")
         e_amount_str = st.text_input("金額 ($)", key=f"e_amount_str_input_{e_n}", placeholder="可輸入算式，如 120+35")
         e_proj = pick_one("專案目標 (選填)", st.session_state.projects, key="e_proj_pick")
@@ -594,10 +626,10 @@ def expense_entry_fragment():
 def income_entry_fragment():
     st.markdown("### ✨ 新增收入")
     i_n = st.session_state.i_form_reset_n
+    i_receiver = pick_choice("收款人", st.session_state.members, key="i_receiver_ch", mode="expander")
+    i_cat = pick_choice("收入分類", st.session_state.income_categories, key="i_cat_ch", mode="expander")
     with st.form("i_entry_form", clear_on_submit=False):
         i_date = st.date_input("收入日期", st.session_state.cal_selected_date, key="i_date_input")
-        i_receiver = pick_one("收款人", st.session_state.members, key="i_receiver_pick")
-        i_cat = pick_one("收入分類", st.session_state.income_categories, key="i_cat_pick")
         i_item = st.text_input("收入項目", placeholder="例如：薪資", key=f"i_item_input_{i_n}")
         i_amount_str = st.text_input("金額 ($)", key=f"i_amount_str_input_{i_n}", placeholder="可輸入算式，如 1000+500")
         i_proj = pick_one("專案目標 (選填)", st.session_state.projects, key="i_proj_pick")
@@ -1033,12 +1065,12 @@ with tab_charts:
     with st.container(border=True):
         t_col1, t_col2, t_col3 = st.columns(3)
         with t_col1:
-            trend_type = st.selectbox("資料種類", ["支出", "收入", "淨額（收入-支出）"], key="trend_type_sel")
+            trend_type = pick_choice("資料種類", ["支出", "收入", "淨額（收入-支出）"], key="trend_type_ch", compact=True)
         with t_col2:
             trend_people_opts = ["全部成員"] + st.session_state.members
-            trend_person = st.selectbox("成員", trend_people_opts, key="trend_person_sel")
+            trend_person = pick_choice("成員", trend_people_opts, key="trend_person_ch", compact=True)
         with t_col3:
-            trend_granularity = st.selectbox("顯示區間", ["以月為區間", "以年為區間"], key="trend_granularity_sel")
+            trend_granularity = pick_choice("顯示區間", ["以月為區間", "以年為區間"], key="trend_granularity_ch", compact=True)
 
         _core = st.session_state.expenses_df[["日期", "類型", "記帳人", "金額"]]
         if not _core.empty:
